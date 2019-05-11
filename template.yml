@@ -453,12 +453,12 @@ Resources:
         - hive
         - pig
         - spark
-      BootstrapActions:
-        - Name: Install TaskRunner
-          ScriptBootstrapAction:
-            Path:
-            Args:
-              -
+      # BootstrapActions:
+      #   - Name: Install TaskRunner
+      #     ScriptBootstrapAction:
+      #       Path:
+      #       Args:
+      #         -
       Instances:
         AdditionalMasterSecurityGroups:
           - !Ref SecurityGroup
