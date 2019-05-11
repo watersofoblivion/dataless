@@ -156,7 +156,7 @@ Resources:
           ToPort: 8443
           CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
-        - IpProtocol: - 1
+        - IpProtocol: -1
           CidrIp: 0.0.0.0/0
 
   ############
