@@ -14,16 +14,680 @@ Parameters:
     Type: String
     Description: The name for a project pipeline stage, such as Staging or Prod, for which resources are provisioned and deployed.
     Default: ''
+  DNSDomainName:
+    Type: String
+    Default: ''
+  DNSName:
+    Type: String
+    Default: ''
+  ValidationDomain:
+    Type: String
+    Default: ''
+
+Conditions:
+  DNS: !Not [!And [!Equals [!Ref DNSDomainName, ""], [!Equals [!Ref DNSName, ""]], [!Equals [!Ref ValidationDomain, ""]]]]
+
+Outputs:
+  BaseURL:
+    Value: !If
+      - DNS
+      - !Ref DNSName
+      - !Sub "https://${API}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${Stage}"
+  DistributionDomainName:
+    Value:
+    Condition: DNS
+
+Mappings:
+  AMIs:
+    us-east-1:
+      PV64Instance: ami-0023040df18933030
+    us-west-2:
+      PV64Instance: ami-afe1c0d7
+    eu-west-1:
+      PV64Instance: ami-0c651f40f9861388f
+    ap-southeast-2:
+      PV64Instance: ami-0d783a243942fbe54
+    ap-northeast-1:
+      PV64Instance: ami-0f16a2ca7efacfa65
 
 Globals:
   Function:
+    Runtime: go1.x
+    CodeUri: ../lambdas.zip
+    Tracing: Active
     AutoPublishAlias: live
     DeploymentPreference:
       Enabled: true
       Type: Canary10Percent5Minutes
       Role: !Ref CodeDeployRole
+  Api:
+    TracingEnabled: true
+    EndpointConfiguration: EDGE
+  SimpleTable:
+    SSESpecification:
+      SSEEnabled: true
 
 Resources:
+  ##########
+  # Bucket #
+  ##########
+
+  Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+
+  #######
+  # VPC #
+  #######
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 172.31.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcIc: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: 172.31.0.0/16
+      MapPublicIpOnLaunch: true
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  Route:
+    Type: AWS::EC2::Route
+    DependsOn:
+      - GatewayAttachment
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref Gateway
+      RouteTableId: !Ref RouteTable
+
+  Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SecurityGroup
+      GroupDescription: Default Security Group
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8443
+          ToPort: 8443
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: - 1
+          CidrIp: 0.0.0.0/0
+
+  ############
+  # Redshift #
+  ############
+
+  RedshiftClusterSecurityGroup:
+    Type: AWS::Redshift::ClusterSecurityGroup
+    Properties:
+      Description: Redshift Cluster Security Group
+
+  RedshiftClusterSecurityGroupIngress:
+    Type: AWS::Redshift::ClusterSecurityGroupIngress
+    Properties:
+      ClusterSecurityGroupName: !Ref RedshiftClusterSecurityGroup
+      CIDRIP: 0.0.0.0/0
+
+  RedshiftClusterSubnetGroup:
+    Type: AWS::Redshift::ClusterSubnetGroup
+    Properties:
+      Description: Redshift Cluster Subnet Group
+      SubnetIds:
+        - !Ref Subnet
+
+  Redshift:
+    Type: AWS::Redshift::Cluster
+    Properties:
+      ClusterType: single-node
+      ClusterIdentifer: !Sub "${AWS::StackName}-${AWS::Region}-redshift-cluster"
+      DBName: "warehouse"
+      Encrypted: true
+      MasterUsername: "warehouse"
+      MasterUserPassword: "War340u5e!"
+      NodeType: dc2.large
+      ClusterSubnetGroupName: !Ref RedshiftClusterSubnetGroup
+      VpcSecurityGroupIds:
+        - !Ref SecurityGroup
+        - !GetAtt VPC.DefaultSecurityGroup
+      PubliclyAccessible: true
+      AvailabilityZone: !GetAtt Subnet.AvailabilityZone
+
+  ############
+  # Instance #
+  ############
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "ec2.${AWS::URLSuffix}"
+                - !Sub "elasticmapreduce.${AWS::URLSuffix}"
+                - !Sub "iam.${AWS::URLSuffix}"
+                - !Sub "s3.${AWS::URLSuffix}"
+                - !Sub "sqs.${AWS::URLSuffix}"
+                - !Sub "logs.${AWS::Region}.${AWS::URLSuffix}"
+                - !Sub "autoscaling.${AWS::URLSuffix}"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforDataPipelineRole
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref InstanceRole
+
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstsanceProfile: !Ref InstanceProfile
+      ImageId: !FindInMap
+        - AMIs
+        - !Ref AWS::Region
+        - PV64Instance
+      SecurityGroupIds:
+        - !Ref SecurityGroup
+        - !GetAtt VPC.DefaultSecurityGroup
+      SubnetId: !Ref Subnet
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash
+            set -x -e
+
+            # Install task runner
+            aws s3 cp "s3://datapipeline-us-east-1/us-east-1/software/latest/TaskRunner/TaskRunner-1.0.jar" "${!HOME}/TaskRunner-1.0.jar"
+            nohup java -jar "${!HOME}/TaskRunner-1.0.jar" --workerGroup="${AWS::StackName}-${AWS::Region}-instance-worker-group" --region="${AWS::Region}" --logUri="s3://${Logs}/task-runner/instance/" &
+
+  #######
+  # EMR #
+  #######
+
+  EMRJobFlowRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "ec2.${AWS::URLPrefix}"
+                - !Sub "elasticmapreduce.${AWS::URLPrefix}"
+                - !Sub "iam.${AWS::URLPrefix}"
+                - !Sub "s3.${AWS::URLPrefix}"
+                - !Sub "sqs.${AWS::URLPrefix}"
+                - !Sub "logs.${AWS::Region}.${AWS::URLPrefix}"
+                - !Sub "autoscaling.${AWS::URLPrefix}"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforEC2Role
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforDataPipelineRole
+      Policies:
+        - PolicyName: JobFlow
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - cloudwatch:*
+                  - dynamodb:*
+                  - ec2:Describe*
+                  - elasticmapreduce:Describe*
+                  - elasticmapreduce:ListBootstrapActions
+                  - elasticmapreduce:ListClusters
+                  - elasticmapreduce:ListInstanceGroups
+                  - elasticmapreduce:ListInstances
+                  - elasticmapreduce:ListSteps
+                  - kinesis:CreateStream
+                  - kinesis:DeleteStream
+                  - kinesis:DescribeStream
+                  - kinesis:GetRecords
+                  - kinesis:GetShardIterator
+                  - kinesis:MergeShards
+                  - kinesis:PutRecord
+                  - kinesis:SplitShard
+                  - rds:Describe*
+                  - s3:*
+                  - sdb:*
+                  - sns:*
+                  - sqs:*
+                  - glue:CreateDatabase
+                  - glue:UpdateDatabase
+                  - glue:DeleteDatabase
+                  - glue:GetDatabase
+                  - glue:GetDatabases
+                  - glue:CreateTable
+                  - glue:UpdateTable
+                  - glue:DeleteTable
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:GetTableVersions
+                  - glue:CreatePartition
+                  - glue:BatchCreatePartition
+                  - glue:UpdatePartition
+                  - glue:DeletePartition
+                  - glue:BatchDeletePartition
+                  - glue:GetPartition
+                  - glue:GetPartitions
+                  - glue:BatchGetPartition
+                  - glue:CreateUserDefinedFunction
+                  - glue:UpdateUserDefinedFunction
+                  - glue:DeleteUserDefinedFunction
+                  - glue:GetUserDefinedFunction
+                  - glue:GetUserDefinedFunctions
+                Effect: Allow
+                Resource: "*"
+              - Action:
+                  - cloudwatch:*
+                  - datapipeline:*
+                  - dynamodb:*
+                  - ec2:Describe*
+                  - elasticmapreduce:AddJobFlowSteps
+                  - elasticmapreduce:Describe*
+                  - elasticmapreduce:ListInstance*
+                  - rds:Describe*
+                  - redshift:DescribeClusters
+                  - redshift:DescribeClusterSecurityGroups
+                  - s3:*
+                  - sdb:*
+                  - sns:*
+                  - sqs:*
+                Effect: Allow
+                Resource: "*"
+
+  EMRProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref EMRJobFlowRole
+
+  EMRServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "ec2.${AWS::URLSuffix}"
+                - !Sub "elasticmapreduce.${AWS::URLSuffix}"
+                - !Sub "iam.${AWS::URLSuffix}"
+                - !Sub "s3.${AWS::URLSuffix}"
+                - !Sub "sqs.${AWS::URLSuffix}"
+                - !Sub "logs.${AWS::Region}.${AWS::URLSuffix}"
+                - !Sub "autoscaling.${AWS::URLSuffix}"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceRole
+      Policies:
+        - PolicyName: Service
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - ec2:AuthorizeSecurityGroupEgress
+                  - ec2:AuthorizeSecurityGroupIngress
+                  - ec2:CancelSpotInstanceRequests
+                  - ec2:CreateNetworkInterface
+                  - ec2:CreateSecurityGroup
+                  - ec2:CreateTags
+                  - ec2:DeleteNetworkInterface
+                  - ec2:DeleteSecurityGroup
+                  - ec2:DeleteTags
+                  - ec2:DescribeAvailabilityZones
+                  - ec2:DescribeAccountAttributes
+                  - ec2:DescribeDhcpOptions
+                  - ec2:DescribeImages
+                  - ec2:DescribeInstanceStatus
+                  - ec2:DescribeInstances
+                  - ec2:DescribeKeyPairs
+                  - ec2:DescribeNetworkAcls
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:DescribePrefixLists
+                  - ec2:DescribeRouteTables
+                  - ec2:DescribeSecurityGroups
+                  - ec2:DescribeSpotInstanceRequests
+                  - ec2:DescribeSpotPriceHistory
+                  - ec2:DescribeSubnets
+                  - ec2:DescribeTags
+                  - ec2:DescribeVpcAttribute
+                  - ec2:DescribeVpcEndpoints
+                  - ec2:DescribeVpcEndpointServices
+                  - ec2:DescribeVpcs
+                  - ec2:DetachNetworkInterface
+                  - ec2:ModifyImageAttribute
+                  - ec2:ModifyInstanceAttribute
+                  - ec2:RequestSpotInstances
+                  - ec2:RevokeSecurityGroupEgress
+                  - ec2:RunInstances
+                  - ec2:TerminateInstances
+                  - ec2:DeleteVolume
+                  - ec2:DescribeVolumeStatus
+                  - ec2:DescribeVolumes
+                  - ec2:DetachVolume
+                  - iam:GetRole
+                  - iam:GetRolePolicy
+                  - iam:ListInstanceProfiles
+                  - iam:ListRolePolicies
+                  - iam:PassRole
+                  - s3:CreateBucket
+                  - s3:Get*
+                  - s3:List*
+                  - sdb:BatchPutAttributes
+                  - sdb:Select
+                  - sqs:CreateQueue
+                  - sqs:Delete*
+                  - sqs:GetQueue*
+                  - sqs:PurgeQueue
+                  - sqs:ReceiveMessage
+                  - cloudwatch:PutMetricAlarm
+                  - cloudwatch:DescribeAlarms
+                  - cloudwatch:DeleteAlarms
+                  - application-autoscaling:RegisterScalableTarget
+                  - application-autoscaling:DeregisterScalableTarget
+                  - application-autoscaling:PutScalingPolicy
+                  - application-autoscaling:DeleteScalingPolicy
+                  - application-autoscaling:Describe*
+                Effect: Allow
+                Resource: "*"
+
+  EMR:
+    Type: AWS::EMR::Cluster
+    Properties:
+      Application:
+        - hive
+        - pig
+        - spark
+      BootstrapActions:
+        - Name: Install TaskRunner
+          ScriptBootstrapAction:
+            Path:
+            Args:
+              -
+      Instances:
+        AdditionalMasterSecurityGroups:
+          - !Ref SecurityGroup
+          - !GetAtt VPC.DefaultSecurityGroup
+        AdditionalSlaveSecurityGroups:
+          - !Ref SecurityGroup
+          - !GetAtt VPC.DefaultSecurityGroup
+        Ec2SubnetId: !Ref Subnet
+        MasterInstanceGroup:
+          InstanceCount: 1
+          InstanceType: m1.medium
+        CoreInstanceGroup:
+          InstanceCount: 1
+          InstanceType: m1.medium
+        TerminationProtected: false
+      JobFlowRole: !Ref EMRProfile
+      Name: !Sub "${AWS::StackName}-${AWS::Region}-warehouse-emr-cluster"
+      ReleaseLabel: emr-5.17.0
+      ServiceRole: !Ref EMRServiceRole
+      LogUri: !Sub "s3://${Bucket}/logs/emr"
+
+  ####################
+  # Delivery Streams #
+  ####################
+
+  DeliveryStreamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "firehose.${AWS::URLSuffix}"
+      Policies:
+        - PolicyName: Execution
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - s3:PutObject*
+                Effect: Allow
+                Resource:
+                  - !Sub "${Bucket.Arn}/data/raw/ad/impressions/*"
+                  - !Sub "${Bucket.Arn}/data/raw/ad/clicks/*"
+
+  AdImpressionsDeliveryStream:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      DeliveryStreamType: DirectPut
+      S3DestinationConfiguration:
+        BucketARN: !GetAtt Bucket.Arn
+        Prefix: data/raw/ad/impressions/
+        BufferingHints:
+          IntervalInSeconds: 900
+          SizeInMBs: 128
+        CompressionFormat: GZIP
+        RoleARN: !GetAtt DeliveryStreamRole.Arn
+
+  AdClicksDeliveryStream:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      DeliveryStreamType: DirectPut
+      S3DestinationConfiguration:
+        BucketARN: !GetAtt Bucket.Arn
+        Prefix: data/raw/ad/clicks/
+        BufferingHints:
+          IntervalInSeconds: 900
+          SizeInMBs: 128
+        CompressionFormat: GZIP
+        RoleARN: !GetAtt DeliveryStreamRole.Arn
+
+  #######
+  # API #
+  #######
+
+  APIRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "apigateway.${AWS::URLSuffix}"
+      Policies:
+        - PolicyName: Execution
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - firehose:PutRecordBatch
+                Effect: Allow
+                Resource:
+                  - !GetAtt AdImpressionsDeliveryStream.Arn
+                  - !GetAtt AdClicksDeliveryStream.Arn
+
+  API:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+      DefinitionUri: api.yml
+      Variables:
+        APIRole: !Ref APIRole
+        AdImpressionsDeliveryStream: !Ref AdImpressionsDeliveryStream
+        AdClicksDeliveryStream: !Ref AdClicksDeliveryStream
+
+  Certificate:
+    Type: AWS::CertificateManager::Certificate
+    Condition: DNS
+    Properties:
+      DomainName: !Ref DNSName
+      DomainValidationOptions:
+        - DomainName: !Ref DNSName
+          ValidationDomain: !Ref ValidationDomain
+
+  DomainName:
+    Type: AWS::ApiGateway::DomainName
+    Condition: DNS
+    Properties:
+      CertificateArn: !Ref Certificate
+      DomainName: !Ref DNSName
+
+  BasePathMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Condition: DNS
+    Properties:
+      DomainName: !Ref DomainName
+      RestApiId: !Ref API
+      Stage: !Ref API.Stage
+
+  #######
+  # DNS #
+  #######
+
+  HostedZone:
+    Type: AWS::Route53::HostedZone
+    Condition: DNS
+    Properties:
+      Name: !Ref DNSDomainName
+
+  RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Condition: DNS
+    Properties:
+      HostedZoneId: !Ref HostedZone
+      RecordSets:
+        - Type: A
+          Name: !Ref DNSName
+          AliasTarget:
+            DNSName: !GetAtt DomainName.DistributionDomainName
+            HostedZoneId: Z2FDTNDATAQYW2
+
+  #############
+  # Data Lake #
+  #############
+
+  GlueDatabase:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Name: Warehouse
+
+  # GlueRawAdImpressionsTable:
+  #   Type: AWS::Glue::Table
+  #   DependsOn:
+  #     - Database
+  #
+  # GlueRawAdClicksTable:
+  #   Type: AWS::Glue::Table
+  #   DependsOn:
+  #     - Database
+  #   Properties:
+  #     CatalogId: !Ref AWS::AccountId
+  #     DatabaseName: !Ref GlueDatabase
+  #     TableInput:
+  #       Name: raw-ad-clicks
+  #       Description: Raw Ad Clicks
+  #       TableType: EXTERNAL_TABLE
+  #       Parameters: |
+  #         {
+  #           "classification": "json"
+  #         }
+  #       PartitionKeys:
+  #         - Name: year
+  #           Type: int
+  #         - Name: month
+  #           Type: int
+  #         - Name: day
+  #           Type: int
+  #         - Name: hour
+  #           Type: int
+  #       StorageDescriptor:
+  #         OutputFormat:
+  #         Columns:
+  #           - Name: user
+  #             Type: string
+  #           - Name: ad
+  #             Type: string
+  #           - Name: timestamp
+  #             Type: datetime
+  #
+  # GlueLakeAdImpressionsTable:
+  #   Type: AWS::Glue::Table
+  #   DependsOn:
+  #     - Database
+  #
+  # GlueLakeAdClicksTable:
+  #   Type: AWS::Glue::Table
+  #   DependsOn:
+  #     - Database
+  #
+  # GlueAdImpressionsCrawler:
+  #   Type: AWS::Glue::Crawler
+  #
+  # GlueAdClicksCrawler:
+  #   Type: AWS::Glue::Crawler
+
+  #################
+  ### Generated ###
+  #################
+
   GetHelloWorld:
     Type: AWS::Serverless::Function
     Properties:
