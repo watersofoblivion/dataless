@@ -123,7 +123,7 @@ Resources:
       - GatewayAttachment
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref Gateway
+      GatewayId: !Ref InternetGateway
       RouteTableId: !Ref RouteTable
 
   Association:
