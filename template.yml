@@ -266,13 +266,13 @@ Resources:
             Effect: Allow
             Principal:
               Service:
-                - !Sub "ec2.${AWS::URLPrefix}"
-                - !Sub "elasticmapreduce.${AWS::URLPrefix}"
-                - !Sub "iam.${AWS::URLPrefix}"
-                - !Sub "s3.${AWS::URLPrefix}"
-                - !Sub "sqs.${AWS::URLPrefix}"
-                - !Sub "logs.${AWS::Region}.${AWS::URLPrefix}"
-                - !Sub "autoscaling.${AWS::URLPrefix}"
+                - !Sub "ec2.${AWS::URLSuffix}"
+                - !Sub "elasticmapreduce.${AWS::URLSuffix}"
+                - !Sub "iam.${AWS::URLSuffix}"
+                - !Sub "s3.${AWS::URLSuffix}"
+                - !Sub "sqs.${AWS::URLSuffix}"
+                - !Sub "logs.${AWS::Region}.${AWS::URLSuffix}"
+                - !Sub "autoscaling.${AWS::URLSuffix}"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforEC2Role
         - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforDataPipelineRole
