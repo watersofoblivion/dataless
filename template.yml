@@ -28,7 +28,7 @@ Parameters:
     Default: ''
 
 Conditions:
-  DNS: !Not [!And [!Equals [!Ref DNSDomainName, ""], [!Equals [!Ref DNSName, ""]], [!Equals [!Ref ValidationDomain, ""]]]]
+  DNS: !Not [!And [!Equals [!Ref DNSDomainName, ""], !Equals [!Ref DNSName, ""], !Equals [!Ref ValidationDomain, ""]]]
 
 Outputs:
   BaseURL:
