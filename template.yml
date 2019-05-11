@@ -36,9 +36,6 @@ Outputs:
       - DNS
       - !Ref DNSName
       - !Sub "https://${API}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${Stage}"
-  DistributionDomainName:
-    Value:
-    Condition: DNS
 
 Mappings:
   AMIs:
