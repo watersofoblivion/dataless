@@ -1,6 +1,11 @@
 {
-  "Tags":
-  {
+  "Tags": {
     "awscodestar:projectArn":"arn:$PARTITION$:codestar:$AWS_REGION$:$ACCOUNT_ID$:project/$PROJECT_ID$"
+  },
+  "Parameters": {
+    "Stage": "$STAGE_NAME$",
+    "DNSDomainName": "$DNS_DOMAIN_NAME$",
+    "DNSName": "$DNS_NAME$",
+    "ValidationDomain": "$VALIDATION_DOMAIN$"
   }
 }

@@ -16,12 +16,15 @@ Parameters:
     Default: ''
   DNSDomainName:
     Type: String
+    Description: The domain name in Route53, such as example.com, this warehouse is served from.
     Default: ''
   DNSName:
     Type: String
+    Description: The base DNS name, such as warehouse.example.com, this warehouse is served from.  Must be a the DNSDomainName or a subdomain of it.
     Default: ''
   ValidationDomain:
     Type: String
+    Description: The DNS domain to validate ACM certificates against, such as example.com.  Should be a the DNSDomainName.
     Default: ''
 
 Conditions:
