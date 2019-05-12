@@ -10,6 +10,12 @@ Parameters:
   CodeDeployRole:
     Type: String
     Description: IAM role to allow AWS CodeDeploy to manage deployment of AWS Lambda functions
+  CodeBucket:
+    Type: String
+    Description: The S3 bucket user code is stored in.
+  CodePrefix:
+    Type: String
+    Description: The prefix into the S3 bucket code is stored in.
   Stage:
     Type: String
     Description: The name for a project pipeline stage, such as Staging or Prod, for which resources are provisioned and deployed.
@@ -983,7 +989,7 @@ Resources:
             Effect: Allow
             Principal:
               Service:
-                - !Sub "apigateway.${AWS::URLSuffix}"
+                - !Sub "glue.${AWS::URLSuffix}"
       Policies:
         - PolicyName: Execution
           PolicyDocument:
@@ -995,6 +1001,11 @@ Resources:
                 Resource:
                   - !Sub "${Bucket.Arn}/data/raw/ad/impressions/*"
                   - !Sub "${Bucket.Arn}/data/raw/ad/clicks/*"
+              - Action:
+                  - s3:ListBucket*
+                Effect: Allow
+                Resource:
+                  - !GetAtt Bucket.Arn
 
   GlueRawAdImpressionsCrawler:
     Type: AWS::Glue::Crawler

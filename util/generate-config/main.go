@@ -10,13 +10,13 @@ import (
 )
 
 func main() {
-
 	var (
 		partition                                              = os.Getenv("PARTITION")
 		region                                                 = os.Getenv("AWS_REGION")
 		accountID                                              = os.Getenv("ACCOUNT_ID")
 		projectID                                              = os.Getenv("PROJECT_ID")
 		stageName                                              string
+		codeBucket, codePrefix                                 string
 		dnsDomainName, dnsName, validationDomain, hostedZoneID string
 		enableEC2Instance, enableEMRCluster, enableRedshift    string
 		ec2InstanceSize                                        string
@@ -31,6 +31,8 @@ func main() {
 	flag.StringVar(&region, "region", region, "The region containing the CodeStar project")
 	flag.StringVar(&accountID, "account-id", accountID, "The AWS account containing the CodeStar project")
 	flag.StringVar(&projectID, "project-id", projectID, "The CodeStar project")
+	flag.StringVar(&codeBucket, "code-bucket", codeBucket, "The bucket containing user code to run")
+	flag.StringVar(&codePrefix, "code-prefix", codePrefix, "The prefix into the bucket containing user code to run")
 	flag.StringVar(&stageName, "stage", stageName, "The name for a project pipeline stage, such as Staging or Prod, for which resources are provisioned and deployed.")
 	flag.StringVar(&dnsDomainName, "dns-domain-name", dnsDomainName, "")
 	flag.StringVar(&dnsName, "dns-name", dnsName, "")
@@ -62,9 +64,22 @@ func main() {
 	if projectID == "" {
 		log.Fatal("${PROJECT_ID} not set")
 	}
-	projectARN := fmt.Sprintf("arn:%s:codestar:%s:%s:project/%s", partition, region, accountID, projectID)
 
-	parameters := make(map[string]interface{})
+	tags := map[string]interface{}{
+		"awscodestar:projectArn": fmt.Sprintf("arn:%s:codestar:%s:%s:project/%s", partition, region, accountID, projectID),
+	}
+
+	if codeBucket == "" {
+		log.Fatal("code bucket not set")
+	}
+	if codePrefix == "" {
+		log.Fatal("code prefix not set")
+	}
+
+	parameters := map[string]interface{}{
+		"CodeBucket": codeBucket,
+		"CodePrefix": codePrefix,
+	}
 
 	// Stage
 	if stageName != "" {
@@ -120,12 +135,7 @@ func main() {
 		}
 	}
 
-	config := map[string]interface{}{
-		"Tags": map[string]interface{}{
-			"awscodestar:projectArn": projectARN,
-		},
-	}
-
+	config := map[string]interface{}{"Tags": tags}
 	if len(parameters) > 0 {
 		config["Parameters"] = parameters
 	}
