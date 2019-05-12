@@ -194,21 +194,23 @@ components:
         records:
           type: array
           items:
-            type: object
-            properties:
-              failed:
-                type: boolean
-              error_code:
-                type: string
-              error_message:
-                type: string
-            required:
-              - failed
-            additionalProperties: false
+            $ref: "#/components/schemas/BatchWriteRecord"
           minItems: 1
           maxItems: 500
       required:
-        - cycles
+        - records
+    BatchWriteRecord:
+      type: object
+      properties:
+        failed:
+          type: boolean
+        error_code:
+          type: string
+        error_message:
+          type: string
+      required:
+        - failed
+      additionalProperties: false
     Error:
       type: object
       properties:
