@@ -95,7 +95,7 @@ Conditions:
 Outputs:
   BaseURL:
     Value: !If
-      - DNS
+      - DNSEnabled
       - !Ref DNSName
       - !Sub "https://${API}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${Stage}"
 
