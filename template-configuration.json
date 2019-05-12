@@ -7,6 +7,16 @@
     "DNSDomainName": "$DNS_DOMAIN_NAME$",
     "DNSName": "$DNS_NAME$",
     "ValidationDomain": "$VALIDATION_DOMAIN$",
-    "HostedZoneID": "$HOSTED_ZONE_ID$"
+    "HostedZoneID": "$HOSTED_ZONE_ID$",
+    "EnableEC2Instance": "$ENABLE_EC2_INSTANCE$",
+    "EC2InstanceSize": "$EC2_INSTANCE_SIZE$",
+    "EnableEMRCluster": "$ENABLE_EMR_CLUSTER$",
+    "EMRMasterInstanceType": "$EMR_MASTER_INSTANCE_TYPE$",
+    "EMRMasterInstanceCount": "$EMR_MASTER_INSTANCE_COUNT$",
+    "EMRCoreInstanceType": "$EMR_CORE_INSTANCE_TYPE$",
+    "EMRCoreInstanceCount": "$EMR_CORE_INSTANCE_COUNT$",
+    "EnableRedshift": "$ENABLE_REDSHIFT$",
+    "RedshiftNodeType": "$REDSHIFT_NODE_TYPE$",
+    "RedshiftNumberOfNodes": "$REDSHIFT_NUMBER_OF_NODES$"
   }
 }

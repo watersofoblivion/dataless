@@ -30,10 +30,67 @@ Parameters:
     Type: String
     Description: The existing Hosted Zone to use.  Creates a Hosted Zone if not provided.
     Default: ''
+  EnableEC2Instance:
+    Type: Boolean
+    Description: Create an EC2 instance for use by Data Pipeline.
+    Default: false
+  EC2InstanceSize:
+    Type: String
+    Description: The instance size of the EC2 instance for use by Data Pipeline
+    Default: t2.nano
+  EnableEMRCluster:
+    Type: Boolean
+    Description: Create an EMR cluster .
+    Default: false
+  EMRMasterInstanceType:
+    Type: String
+    Description: The instance type of the master instances in the EMR cluster.
+    AllowedPattern: "[\u0020-\uD7FF\uE000-\uFFFD\uD800\uDC00-\uDBFF\uDFFF\r\n\t]*"
+    Default: m1.medium
+  EMRMasterInstanceCount:
+    Type: Number
+    Description: The number of master instances in the EMR cluster.
+    MinValue: 1
+    MaxValue: 256
+    Default: 1
+  EMRCoreInstanceType:
+    Type: String
+    Description: The instance type of the core instances in the EMR cluster.
+    AllowedPattern: "[\u0020-\uD7FF\uE000-\uFFFD\uD800\uDC00-\uDBFF\uDFFF\r\n\t]*"
+    Default: m1.medium
+  EMRCoreInstanceCount:
+    Type: Number
+    Description: The number of core instances in the EMR cluster.
+    MinValue: 1
+    MaxValue: 256
+    Default: 1
+  EnableRedshift:
+    Type: Boolean
+    Description: Create a Redshift cluster.
+    Default: false
+  RedshiftNodeType:
+    Type: String
+    Description: The type of instances in the Redshift cluster.
+    AllowedValues:
+      - dc2.large
+      - dc2.8xlarge
+      - ds2.xlarge
+      - ds2.8xlarge
+    Default: dc2.large
+  RedshiftNumberOfNodes:
+    Type: Number
+    Description: The number of nodes in the Redshift cluster.
+    MinValue: 1
+    MaxValue: 100
+    Default: 1
 
 Conditions:
-  DNS: !Not [!And [!Equals [!Ref DNSDomainName, ""], !Equals [!Ref DNSName, ""], !Equals [!Ref ValidationDomain, ""]]]
+  DNSEnabled: !Not [!And [!Equals [!Ref DNSDomainName, ""], !Equals [!Ref DNSName, ""], !Equals [!Ref ValidationDomain, ""]]]
   InternalHostedZone: !And [!Not [!And [!Equals [!Ref DNSDomainName, ""], !Equals [!Ref DNSName, ""], !Equals [!Ref ValidationDomain, ""]]], !Equals [!Ref HostedZoneID, ""]]
+  EC2InstanceEnabled: !Ref EnableEC2Instance
+  EMRClusterEnabled: !Ref EnableEMRCluster
+  RedshiftEnabled: !Ref EnableRedshift
+  RedshiftSingleNode: !Equals [!Ref RedshiftNumberOfNodes, 1]
 
 Outputs:
   BaseURL:
@@ -170,17 +227,20 @@ Resources:
 
   RedshiftClusterSecurityGroup:
     Type: AWS::Redshift::ClusterSecurityGroup
+    Condition: RedshiftEnabled
     Properties:
       Description: Redshift Cluster Security Group
 
   RedshiftClusterSecurityGroupIngress:
     Type: AWS::Redshift::ClusterSecurityGroupIngress
+    Condition: RedshiftEnabled
     Properties:
       ClusterSecurityGroupName: !Ref RedshiftClusterSecurityGroup
       CIDRIP: 0.0.0.0/0
 
   RedshiftClusterSubnetGroup:
     Type: AWS::Redshift::ClusterSubnetGroup
+    Condition: RedshiftEnabled
     Properties:
       Description: Redshift Cluster Subnet Group
       SubnetIds:
@@ -188,14 +248,16 @@ Resources:
 
   Redshift:
     Type: AWS::Redshift::Cluster
+    Condition: RedshiftEnabled
     Properties:
-      ClusterType: single-node
+      ClusterType: !If [RedshiftSingleNode, single-node, multi-node]
       ClusterIdentifier: !Sub "${AWS::StackName}-${AWS::Region}-redshift-cluster"
       DBName: "warehouse"
       Encrypted: true
       MasterUsername: "warehouse"
       MasterUserPassword: "War340u5e!"
-      NodeType: dc2.large
+      NodeType: !Ref RedshiftNodeType
+      NumberOfNodes: !Ref RedshiftNumberOfNodes
       ClusterSubnetGroupName: !Ref RedshiftClusterSubnetGroup
       VpcSecurityGroupIds:
         - !Ref SecurityGroup
@@ -209,6 +271,7 @@ Resources:
 
   InstanceRole:
     Type: AWS::IAM::Role
+    Condition: EC2InstanceEnabled
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -230,12 +293,14 @@ Resources:
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
+    Condition: EC2InstanceEnabled
     Properties:
       Roles:
         - !Ref InstanceRole
 
   Instance:
     Type: AWS::EC2::Instance
+    Condition: EC2InstanceEnabled
     Properties:
       IamInstanceProfile: !Ref InstanceProfile
       ImageId: !FindInMap
@@ -262,6 +327,7 @@ Resources:
 
   EMRJobFlowRole:
     Type: AWS::IAM::Role
+    Condition: EMREnabled
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -355,12 +421,14 @@ Resources:
 
   EMRProfile:
     Type: AWS::IAM::InstanceProfile
+    Condition: EMREnabled
     Properties:
       Roles:
         - !Ref EMRJobFlowRole
 
   EMRServiceRole:
     Type: AWS::IAM::Role
+    Condition: EMREnabled
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -453,6 +521,7 @@ Resources:
 
   EMR:
     Type: AWS::EMR::Cluster
+    Condition: EMREnabled
     Properties:
       Applications:
         - Name: hive
@@ -473,11 +542,11 @@ Resources:
           - !GetAtt VPC.DefaultSecurityGroup
         Ec2SubnetId: !Ref Subnet
         MasterInstanceGroup:
-          InstanceCount: 1
-          InstanceType: m1.medium
+          InstanceCount: !Ref EMRMasterInstanceCount
+          InstanceType: !Ref EMRMasterInstanceType
         CoreInstanceGroup:
-          InstanceCount: 1
-          InstanceType: m1.medium
+          InstanceCount: !Ref EMRCoreInstanceCount
+          InstanceType: !Ref EMRCoreInstanceType
         TerminationProtected: false
       JobFlowRole: !Ref EMRProfile
       Name: !Sub "${AWS::StackName}-${AWS::Region}-warehouse-emr-cluster"
@@ -808,7 +877,7 @@ Resources:
 
   Certificate:
     Type: AWS::CertificateManager::Certificate
-    Condition: DNS
+    Condition: DNSEnabled
     Properties:
       DomainName: !Ref DNSName
       DomainValidationOptions:
@@ -817,14 +886,14 @@ Resources:
 
   DomainName:
     Type: AWS::ApiGateway::DomainName
-    Condition: DNS
+    Condition: DNSEnabled
     Properties:
       CertificateArn: !Ref Certificate
       DomainName: !Ref DNSName
 
   BasePathMapping:
     Type: AWS::ApiGateway::BasePathMapping
-    Condition: DNS
+    Condition: DNSEnabled
     Properties:
       DomainName: !Ref DomainName
       RestApiId: !Ref API
@@ -842,7 +911,7 @@ Resources:
 
   RecordSetGroup:
     Type: AWS::Route53::RecordSetGroup
-    Condition: DNS
+    Condition: DNSEnabled
     Properties:
       HostedZoneId: !If [InternalHostedZone, !Ref HostedZone, !Ref HostedZoneID]
       RecordSets:

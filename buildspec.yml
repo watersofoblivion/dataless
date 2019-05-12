@@ -35,9 +35,11 @@ phases:
 
   build:
     commands:
+      # Build the tool to configure the application
+      - go build -o ${GOPATH}/bin/generate-config ./util/generate-config
 
-      # Build our go application
-      - go build -o main
+      # Build the go application
+      # - go build -o main
 
       # Copy static assets to S3, and package application with AWS CloudFormation/SAM
       - aws s3 cp --recursive public/ s3://$WEBSITE_S3_BUCKET/public/ --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
@@ -46,9 +48,36 @@ phases:
 
   post_build:
     commands:
+      - |
+        ${GOPATH}/bin/generate-config -o template-configuration.json \
+          -partition         ${PARTITION} \
+          -region            ${AWS_REGION} \
+          -account-id        ${ACCOUNT_ID} \
+          -project-id        ${PROJECT_ID} \
+          -stage             ${STAGE_NAME} \
+          -dns-domain-name   ${DNS_DOMAIN_NAME} \
+          -dns-name          ${DNS_NAME} \
+          -validation-domain ${VALIDATION_DOMAIN} \
+          -hosted-zone-id    ${HOSTED_ZONE_ID} \
+          $(if [ ${ENABLE_EC2_INSTANCE} != "" ]; then echo "-ec2"; done) \
+          -ec2-type          ${EC2_INSTANCE_TYPE} \
+          $(if [ ${ENABLE_EMR_CLUSTER} != "" ]; then echo "-emr"; done) \
+          -emr-master-type   ${EMR_MASTER_INSTANCE_TYPE} \
+          -emr-master-count  ${EMR_MASTER_INSTANCE_COUNT} \
+          -emr-core-type     ${EMR_CORE_INSTANCE_TYPE} \
+          -emr-core-count    ${EMR_CORE_INSTANCE_COUNT} \
+          $(if [ ${ENABLE_REDSHIFT} != "" ]; then echo "-redshift"; done) \
+          -redshift-type     ${REDSHIFT_NODE_TYPE} \
+          -redshift-count    ${REDSHIFT_NUMBER_OF_NODES}
       # Do not remove this statement. This command is required for AWS CodeStar projects.
       # Update the AWS Partition, AWS Region, account ID and project ID in the project ARN on template-configuration.json file so AWS CloudFormation can tag project resources.
-      - sed -i.bak 's/\$PARTITION\$/'${PARTITION}'/g;s/\$AWS_REGION\$/'${AWS_REGION}'/g;s/\$ACCOUNT_ID\$/'${ACCOUNT_ID}'/g;s/\$PROJECT_ID\$/'${PROJECT_ID}'/g;s/\$STAGE_NAME\$/'${STAGE_NAME}'/g;s/\$DNS_DOMAIN_NAME\$/'${DNS_DOMAIN_NAME}'/g;s/\$DNS_NAME\$/'${DNS_NAME}'/g;s/\$VALIDATION_DOMAIN\$/'${VALIDATION_DOMAIN}'/g;s/\$HOSTED_ZONE_ID\$/'${HOSTED_ZONE_ID}'/g' template-configuration.json
+      # - |
+      #   sed -i.bak \
+      #     -e 's/\$PARTITION\$/'${PARTITION}'/g' \
+      #     -e 's/\$AWS_REGION\$/'${AWS_REGION}'/g' \
+      #     -e 's/\$ACCOUNT_ID\$/'${ACCOUNT_ID}'/g' \
+      #     -e 's/\$PROJECT_ID\$/'${PROJECT_ID}'/g' \
+      #     template-configuration.json
 
 artifacts:
   type: zip
