@@ -36,14 +36,13 @@ phases:
   build:
     commands:
       # Build the tool to configure the application
-      - go build ./util/generate-config
+      - go build -o "${GOPATH}/bin/generate-config" ./util/generate-config
 
       # Build the go application
       # - go build -o main
 
       # Collect user code into a directory and copy to S3
-      - mkdir -p _user_code/
-      - aws s3 cp --recursive _user_code/ s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/
+      - aws s3 cp --recursive scripts/ s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/scripts/
 
       # Copy static assets to S3, and package application with AWS CloudFormation/SAM
       - aws s3 cp --recursive public/ "s3://${WEBSITE_S3_BUCKET}/public/" --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
