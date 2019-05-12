@@ -627,7 +627,7 @@ Resources:
     Properties:
       CatalogId: !Ref AWS::AccountId
       DatabaseInput:
-        Name: Warehouse
+        Name: warehouse
 
   # GlueRawAdImpressionsTable:
   #   Type: AWS::Glue::Table
