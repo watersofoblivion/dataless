@@ -31,17 +31,17 @@ Parameters:
     Description: The existing Hosted Zone to use.  Creates a Hosted Zone if not provided.
     Default: ''
   EnableEC2Instance:
-    Type: Boolean
-    Description: Create an EC2 instance for use by Data Pipeline.
-    Default: false
+    Type: String
+    Description: If non-empty, create an EC2 instance for use by Data Pipeline.
+    Default: ''
   EC2InstanceSize:
     Type: String
     Description: The instance size of the EC2 instance for use by Data Pipeline
     Default: t2.nano
   EnableEMRCluster:
-    Type: Boolean
-    Description: Create an EMR cluster .
-    Default: false
+    Type: String
+    Description: If non-empty, create an EMR cluster.
+    Default: ''
   EMRMasterInstanceType:
     Type: String
     Description: The instance type of the master instances in the EMR cluster.
@@ -65,9 +65,9 @@ Parameters:
     MaxValue: 256
     Default: 1
   EnableRedshift:
-    Type: Boolean
-    Description: Create a Redshift cluster.
-    Default: false
+    Type: String
+    Description: If non-empty, create a Redshift cluster.
+    Default: ''
   RedshiftNodeType:
     Type: String
     Description: The type of instances in the Redshift cluster.
@@ -87,9 +87,9 @@ Parameters:
 Conditions:
   DNSEnabled: !Not [!And [!Equals [!Ref DNSDomainName, ""], !Equals [!Ref DNSName, ""], !Equals [!Ref ValidationDomain, ""]]]
   InternalHostedZone: !And [!Not [!And [!Equals [!Ref DNSDomainName, ""], !Equals [!Ref DNSName, ""], !Equals [!Ref ValidationDomain, ""]]], !Equals [!Ref HostedZoneID, ""]]
-  EC2InstanceEnabled: !Ref EnableEC2Instance
-  EMRClusterEnabled: !Ref EnableEMRCluster
-  RedshiftEnabled: !Ref EnableRedshift
+  EC2InstanceEnabled: !Not [!Equals [!Ref EnableEC2Instance, ""]]
+  EMRClusterEnabled: !Not [!Equals [!Ref EnableEMRCluster, ""]]
+  RedshiftEnabled: !Not [!Equals [!Ref EnableRedshift, ""]]
   RedshiftSingleNode: !Equals [!Ref RedshiftNumberOfNodes, 1]
 
 Outputs:
@@ -932,46 +932,46 @@ Resources:
       DatabaseInput:
         Name: warehouse
 
-  # GlueRawAdImpressionsTable:
-  #   Type: AWS::Glue::Table
-  #   DependsOn:
-  #     - GlueDatabase
-  #   Properties:
-  #     CatalogId: !Ref AWS::AccountId
-  #     DatabaseName: !Ref GlueDatabase
-  #     TableInput:
-  #       Name: raw_ad_impressions
-  #       Description: Raw Ad Impressions
-  #       TableType: EXTERNAL_TABLE
-  #       Parameters: |
-  #         {
-  #           "classification": "json"
-  #         }
-  #       PartitionKeys:
-  #         - Name: year
-  #           Type: int
-  #         - Name: month
-  #           Type: int
-  #         - Name: day
-  #           Type: int
-  #         - Name: hour
-  #           Type: int
-  #       StorageDescriptor:
-  #         Compressed: true
-  #         InputFormat: org.apache.hadoop.mapred.TextInputFormat
-  #         OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
-  #         Columns:
-  #           - Name: user
-  #             Type: string
-  #           - Name: ad
-  #             Type: string
-  #           - Name: at
-  #             Type: timestamp
-  #         Location: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
-  #         SerdeInfo:
-  #           SerializationLibrary: org.apache.hive.hcatalog.data.JsonSerDe
-  #           Parameters:
-  #             paths: "ad,at,user"
+  GlueRawAdImpressionsTable:
+    Type: AWS::Glue::Table
+    DependsOn:
+      - GlueDatabase
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref GlueDatabase
+      TableInput:
+        Name: raw_ad_impressions
+        Description: Raw Ad Impressions
+        TableType: EXTERNAL_TABLE
+        Parameters: |
+          {
+            "classification": "json"
+          }
+        PartitionKeys:
+          - Name: year
+            Type: int
+          - Name: month
+            Type: int
+          - Name: day
+            Type: int
+          - Name: hour
+            Type: int
+        StorageDescriptor:
+          Compressed: true
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          Columns:
+            - Name: user
+              Type: string
+            - Name: ad
+              Type: string
+            - Name: at
+              Type: timestamp
+          Location: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
+          SerdeInfo:
+            SerializationLibrary: org.apache.hive.hcatalog.data.JsonSerDe
+            Parameters:
+              paths: "ad,at,user"
 
   # GlueRawAdImpressionsCrawler:
   #   Type: AWS::Glue::Crawler

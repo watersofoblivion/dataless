@@ -18,7 +18,7 @@ func main() {
 		projectID                                              = os.Getenv("PROJECT_ID")
 		stageName                                              string
 		dnsDomainName, dnsName, validationDomain, hostedZoneID string
-		enableEC2Instance, enableEMRCluster, enableRedshift    bool
+		enableEC2Instance, enableEMRCluster, enableRedshift    string
 		ec2InstanceSize                                        string
 		emrMasterInstanceType, emrCoreInstanceType             string
 		emrMasterInstanceCount, emrCoreInstanceCount           int
@@ -36,14 +36,14 @@ func main() {
 	flag.StringVar(&dnsName, "dns-name", dnsName, "")
 	flag.StringVar(&validationDomain, "validation-domain", validationDomain, "")
 	flag.StringVar(&hostedZoneID, "hosted-zone-id", hostedZoneID, "")
-	flag.BoolVar(&enableEC2Instance, "ec2", enableEC2Instance, "")
+	flag.StringVar(&enableEC2Instance, "ec2", enableEC2Instance, "")
 	flag.StringVar(&ec2InstanceSize, "ec2-type", ec2InstanceSize, "")
-	flag.BoolVar(&enableEMRCluster, "emr", enableEMRCluster, "")
+	flag.StringVar(&enableEMRCluster, "emr", enableEMRCluster, "")
 	flag.StringVar(&emrMasterInstanceType, "emr-master-type", emrMasterInstanceType, "")
 	flag.IntVar(&emrMasterInstanceCount, "emr-master-count", emrMasterInstanceCount, "")
 	flag.StringVar(&emrCoreInstanceType, "emr-core-type", emrCoreInstanceType, "")
 	flag.IntVar(&emrCoreInstanceCount, "emr-core-count", emrCoreInstanceCount, "")
-	flag.BoolVar(&enableRedshift, "redshift", enableRedshift, "")
+	flag.StringVar(&enableRedshift, "redshift", enableRedshift, "")
 	flag.StringVar(&redshiftNodeType, "redshift-type", redshiftNodeType, "")
 	flag.IntVar(&redshiftNumberOfNodes, "redshift-count", redshiftNumberOfNodes, "")
 	flag.StringVar(&output, "o", output, "The file to output to.  If not given, STDOUT is used.")
@@ -85,15 +85,15 @@ func main() {
 		parameters["HostedZoneID"] = hostedZoneID
 	}
 
-	if enableEC2Instance {
-		parameters["EnableEC2Instance"] = true
+	if enableEC2Instance != "" {
+		parameters["EnableEC2Instance"] = "true"
 		if ec2InstanceSize != "" {
 			parameters["EC2InstanceSize"] = ec2InstanceSize
 		}
 	}
 
-	if enableEMRCluster {
-		parameters["EnableEMRCluster"] = true
+	if enableEMRCluster != "" {
+		parameters["EnableEMRCluster"] = "true"
 
 		if emrMasterInstanceType != "" {
 			parameters["EMRMasterInstanceType"] = emrMasterInstanceType
@@ -109,8 +109,8 @@ func main() {
 		}
 	}
 
-	if enableRedshift {
-		parameters["EnableRedshift"] = true
+	if enableRedshift != "" {
+		parameters["EnableRedshift"] = "true"
 
 		if redshiftNodeType != "" {
 			parameters["RedshiftNodeType"] = redshiftNodeType
