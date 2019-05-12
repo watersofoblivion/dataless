@@ -17,7 +17,7 @@ paths:
       x-amazon-apigateway-integration:
         type: AWS
         httpMethod: POST
-        uri: arn:aws:apigateway:211516517942:firehose:action/PutRecordBatch
+        uri: arn:aws:apigateway:us-east-1:firehose:action/PutRecordBatch
         credentials: arn:aws:iam::211516517942:role/${stageVariables.APIRole}
         requestTemplates:
           application/json: !Sub |
@@ -81,7 +81,7 @@ paths:
       x-amazon-apigateway-integration:
         type: AWS
         httpMethod: POST
-        uri: arn:aws:apigateway:211516517942:firehose:action/PutRecordBatch
+        uri: arn:aws:apigateway:us-east-1:firehose:action/PutRecordBatch
         credentials: arn:aws:iam::211516517942:role/${stageVariables.APIRole}
         requestTemplates:
           application/json: !Sub |
@@ -141,8 +141,8 @@ components:
             $ref: "#/components/schemas/DataAdImpression"
           minItems: 1
           maxItems: 500
-        required:
-          - impressions
+      required:
+        - impressions
     DataAdImpression:
       type: object
       properties:
