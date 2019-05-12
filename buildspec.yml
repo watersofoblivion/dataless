@@ -59,14 +59,14 @@ phases:
           -dns-name          ${DNS_NAME} \
           -validation-domain ${VALIDATION_DOMAIN} \
           -hosted-zone-id    ${HOSTED_ZONE_ID} \
-          $(if [ ${ENABLE_EC2_INSTANCE} != "" ]; then echo "-ec2"; done) \
+          $(if [ ${ENABLE_EC2_INSTANCE} != "" ]; then echo "-ec2"; fi) \
           -ec2-type          ${EC2_INSTANCE_TYPE} \
-          $(if [ ${ENABLE_EMR_CLUSTER} != "" ]; then echo "-emr"; done) \
+          $(if [ ${ENABLE_EMR_CLUSTER} != "" ]; then echo "-emr"; fi) \
           -emr-master-type   ${EMR_MASTER_INSTANCE_TYPE} \
           -emr-master-count  ${EMR_MASTER_INSTANCE_COUNT} \
           -emr-core-type     ${EMR_CORE_INSTANCE_TYPE} \
           -emr-core-count    ${EMR_CORE_INSTANCE_COUNT} \
-          $(if [ ${ENABLE_REDSHIFT} != "" ]; then echo "-redshift"; done) \
+          $(if [ ${ENABLE_REDSHIFT} != "" ]; then echo "-redshift"; fi) \
           -redshift-type     ${REDSHIFT_NODE_TYPE} \
           -redshift-count    ${REDSHIFT_NUMBER_OF_NODES}
       # Do not remove this statement. This command is required for AWS CodeStar projects.
