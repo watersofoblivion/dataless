@@ -943,16 +943,16 @@ Resources:
         Name: raw_ad_impressions
         Description: Raw Ad Impressions
         TableType: EXTERNAL_TABLE
-        Parameters: '{ "classification": "json" }'
-        # PartitionKeys:
-        #   - Name: year
-        #     Type: int
-        #   - Name: month
-        #     Type: int
-        #   - Name: day
-        #     Type: int
-        #   - Name: hour
-        #     Type: int
+        # Parameters: '{"classification":"json"}'
+        PartitionKeys:
+          - Name: year
+            Type: int
+          - Name: month
+            Type: int
+          - Name: day
+            Type: int
+          - Name: hour
+            Type: int
         # StorageDescriptor:
         #   Location: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
         #   StoredAsSubdirectories: true
