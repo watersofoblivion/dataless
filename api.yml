@@ -17,7 +17,7 @@ paths:
       x-amazon-apigateway-integration:
         type: AWS
         httpMethod: POST
-        uri: arn:aws:apigateway:${stageVariables.Region}:firehose:action/PutRecordBatch
+        uri: arn:aws:apigateway::firehose:action/PutRecordBatch
         credentials: arn:aws:iam::211516517942:role/${stageVariables.APIRole}
         requestTemplates:
           application/json: !Sub |
@@ -81,7 +81,7 @@ paths:
       x-amazon-apigateway-integration:
         type: AWS
         httpMethod: POST
-        uri: arn:aws:apigateway:${stageVariables.Region}:firehose:action/PutRecordBatch
+        uri: arn:aws:apigateway::firehose:action/PutRecordBatch
         credentials: arn:aws:iam::211516517942:role/${stageVariables.APIRole}
         requestTemplates:
           application/json: !Sub |
