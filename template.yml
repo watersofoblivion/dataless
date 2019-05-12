@@ -1008,6 +1008,8 @@ Resources:
   #             - Name: at
   #               Type: timestamp
   #           Location: !Sub "s3://${Bucket}/data/lake/ad/impressions/"
+  #           SerdeInfo:
+  #             SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
 
   # GlueLakeAdImpressionsETLJob:
   #   Type: AWS::Glue::Job
@@ -1089,6 +1091,8 @@ Resources:
   #             - Name: at
   #               Type: timestamp
   #           Location: !Sub "s3://${Bucket}/data/lake/ad/clicks/"
+  #           SerdeInfo:
+  #             SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
 
   # GlueLakeAdClicksETLJob:
   #   Type: AWS::Glue::Job
