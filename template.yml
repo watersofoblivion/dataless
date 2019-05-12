@@ -1006,6 +1006,7 @@ Resources:
       Targets:
         S3Targets:
           - Path: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
+      TablePrefix: crawled_
       SchemaChangePolicy:
         UpdateBehavior: UPDATE_IN_DATABASE
         DeleteBehavior: LOG
