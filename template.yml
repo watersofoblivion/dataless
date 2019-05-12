@@ -899,7 +899,7 @@ Resources:
             - Name: at
               Type: datetime
           Location: !Sub "s3://${Bucket}/data/raw/ad/impressions"
-          SerDeInfo:
+          SerdeInfo:
             SerializationLibrary: org.apache.hive.hcatalog.data.JsonSerDe
 
             # org.apache.orc.mapreduce.OrcOutputFormat
@@ -980,10 +980,8 @@ Resources:
             - Name: at
               Type: datetime
           Location: !Sub "s3://${Bucket}/data/raw/ad/clicks"
-          SerDeInfo:
+          SerdeInfo:
             SerializationLibrary: org.apache.hive.hcatalog.data.JsonSerDe
-
-            #
 
   # GlueRawAdClicksCrawler:
   #   Type: AWS::Glue::Crawler
