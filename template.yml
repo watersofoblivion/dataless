@@ -966,7 +966,7 @@ Resources:
   #           - Name: ad
   #             Type: string
   #           - Name: at
-  #             Type: datetime
+  #             Type: timestamp
   #         Location: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
   #         SerdeInfo:
   #           SerializationLibrary: org.apache.hive.hcatalog.data.JsonSerDe
@@ -1006,7 +1006,7 @@ Resources:
   #             - Name: ad
   #               Type: string
   #             - Name: at
-  #               Type: datetime
+  #               Type: timestamp
   #           Location: !Sub "s3://${Bucket}/data/lake/ad/impressions/"
 
   # GlueLakeAdImpressionsETLJob:
@@ -1047,7 +1047,7 @@ Resources:
   #           - Name: ad
   #             Type: string
   #           - Name: at
-  #             Type: datetime
+  #             Type: timestamp
   #         Location: !Sub "s3://${Bucket}/data/raw/ad/clicks/"
   #         SerdeInfo:
   #           SerializationLibrary: org.apache.hive.hcatalog.data.JsonSerDe
@@ -1087,7 +1087,7 @@ Resources:
   #             - Name: ad
   #               Type: string
   #             - Name: at
-  #               Type: datetime
+  #               Type: timestamp
   #           Location: !Sub "s3://${Bucket}/data/lake/ad/clicks/"
 
   # GlueLakeAdClicksETLJob:

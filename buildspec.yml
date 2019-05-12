@@ -63,12 +63,12 @@ phases:
           -ec2-type          "${EC2_INSTANCE_TYPE}" \
           $(if [ "${ENABLE_EMR_CLUSTER}" != "" ]; then echo "-emr"; fi) \
           -emr-master-type   "${EMR_MASTER_INSTANCE_TYPE}" \
-          -emr-master-count  "${EMR_MASTER_INSTANCE_COUNT}" \
+          -emr-master-count  ${EMR_MASTER_INSTANCE_COUNT:-1} \
           -emr-core-type     "${EMR_CORE_INSTANCE_TYPE}" \
-          -emr-core-count    "${EMR_CORE_INSTANCE_COUNT}" \
+          -emr-core-count    "${EMR_CORE_INSTANCE_COUNT:-1}" \
           $(if [ "${ENABLE_REDSHIFT}" != "" ]; then echo "-redshift"; fi) \
           -redshift-type     "${REDSHIFT_NODE_TYPE}" \
-          -redshift-count    "${REDSHIFT_NUMBER_OF_NODES}"
+          -redshift-count    ${REDSHIFT_NUMBER_OF_NODES:-1}
       # Do not remove this statement. This command is required for AWS CodeStar projects.
       # Update the AWS Partition, AWS Region, account ID and project ID in the project ARN on template-configuration.json file so AWS CloudFormation can tag project resources.
       # - |
