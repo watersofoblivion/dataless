@@ -956,7 +956,7 @@ Resources:
             Type: int
         StorageDescriptor:
           Location: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
-          StoredAsSubdirectories: true
+          StoredAsSubDirectories: true
           Compressed: true
           InputFormat: org.apache.hadoop.mapred.TextInputFormat
           SerdeInfo:
@@ -996,7 +996,7 @@ Resources:
               Type: int
           StorageDescriptor:
             Location: !Sub "s3://${Bucket}/data/lake/ad/impressions/"
-            StoredAsSubdirectories: true
+            StoredAsSubDirectories: true
             InputFormat: org.apache.orc.mapreduce.OrcInputFormat
             SerdeInfo:
               SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
@@ -1037,7 +1037,7 @@ Resources:
             Type: int
         StorageDescriptor:
           Location: !Sub "s3://${Bucket}/data/raw/ad/clicks/"
-          StoredAsSubdirectories: true
+          StoredAsSubDirectories: true
           Compressed: true
           InputFormat: org.apache.hadoop.mapred.TextInputFormat
           SerdeInfo:
@@ -1077,7 +1077,7 @@ Resources:
               Type: int
           StorageDescriptor:
             Location: !Sub "s3://${Bucket}/data/lake/ad/clicks/"
-            StoredAsSubdirectories: true
+            StoredAsSubDirectories: true
             InputFormat: org.apache.orc.mapreduce.OrcInputFormat
             SerdeInfo:
               SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
