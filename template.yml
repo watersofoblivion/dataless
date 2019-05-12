@@ -185,7 +185,7 @@ Resources:
     Type: AWS::Redshift::Cluster
     Properties:
       ClusterType: single-node
-      ClusterIdentifer: !Sub "${AWS::StackName}-${AWS::Region}-redshift-cluster"
+      ClusterIdentifier: !Sub "${AWS::StackName}-${AWS::Region}-redshift-cluster"
       DBName: "warehouse"
       Encrypted: true
       MasterUsername: "warehouse"
