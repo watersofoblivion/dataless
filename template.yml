@@ -449,7 +449,7 @@ Resources:
   EMR:
     Type: AWS::EMR::Cluster
     Properties:
-      Application:
+      Applications:
         - hive
         - pig
         - spark
