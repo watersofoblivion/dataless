@@ -962,8 +962,7 @@ Resources:
           SerdeInfo:
             SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
             Parameters:
-              # paths: "ad,at,user"
-              paths: "user"
+              paths: "ad,at,user"
           OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
           Columns:
             - Name: user
