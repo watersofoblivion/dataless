@@ -6,6 +6,7 @@
     "Stage": "$STAGE_NAME$",
     "DNSDomainName": "$DNS_DOMAIN_NAME$",
     "DNSName": "$DNS_NAME$",
-    "ValidationDomain": "$VALIDATION_DOMAIN$"
+    "ValidationDomain": "$VALIDATION_DOMAIN$",
+    "HostedZoneID": "$HOSTED_ZONE_ID$"
   }
 }

@@ -48,7 +48,7 @@ phases:
     commands:
       # Do not remove this statement. This command is required for AWS CodeStar projects.
       # Update the AWS Partition, AWS Region, account ID and project ID in the project ARN on template-configuration.json file so AWS CloudFormation can tag project resources.
-      - sed -i.bak 's/\$PARTITION\$/'${PARTITION}'/g;s/\$AWS_REGION\$/'${AWS_REGION}'/g;s/\$ACCOUNT_ID\$/'${ACCOUNT_ID}'/g;s/\$PROJECT_ID\$/'${PROJECT_ID}'/g;s/\$STAGE_NAME\$/'${STAGE_NAME}'/g;s/\$DNS_DOMAIN_NAME\$/'${DNS_DOMAIN_NAME}'/g;s/\$DNS_NAME\$/'${DNS_NAME}'/g;s/\$VALIDATION_DOMAIN\$/'${VALIDATION_DOMAIN}'/g' template-configuration.json
+      - sed -i.bak 's/\$PARTITION\$/'${PARTITION}'/g;s/\$AWS_REGION\$/'${AWS_REGION}'/g;s/\$ACCOUNT_ID\$/'${ACCOUNT_ID}'/g;s/\$PROJECT_ID\$/'${PROJECT_ID}'/g;s/\$STAGE_NAME\$/'${STAGE_NAME}'/g;s/\$DNS_DOMAIN_NAME\$/'${DNS_DOMAIN_NAME}'/g;s/\$DNS_NAME\$/'${DNS_NAME}'/g;s/\$VALIDATION_DOMAIN\$/'${VALIDATION_DOMAIN}'/g;s/\$HOSTED_ZONE_ID\$/'${HOSTED_ZONE_ID}'/g' template-configuration.json
 
 artifacts:
   type: zip

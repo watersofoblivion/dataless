@@ -26,9 +26,14 @@ Parameters:
     Type: String
     Description: The DNS domain to validate ACM certificates against, such as example.com.  Should be a the DNSDomainName.
     Default: ''
+  HostedZoneID:
+    Type: String
+    Description: The existing Hosted Zone to use.  Creates a Hosted Zone if not provided.
+    Default: ''
 
 Conditions:
   DNS: !Not [!And [!Equals [!Ref DNSDomainName, ""], !Equals [!Ref DNSName, ""], !Equals [!Ref ValidationDomain, ""]]]
+  InternalHostedZone: !And [!Ref DNS, !Equals [!Ref HostedZoneID, ""]]
 
 Outputs:
   BaseURL:
@@ -831,7 +836,7 @@ Resources:
 
   HostedZone:
     Type: AWS::Route53::HostedZone
-    Condition: DNS
+    Condition: InternalHostedZone
     Properties:
       Name: !Ref DNSDomainName
 
@@ -839,7 +844,7 @@ Resources:
     Type: AWS::Route53::RecordSetGroup
     Condition: DNS
     Properties:
-      HostedZoneId: !Ref HostedZone
+      HostedZoneId: !If [InternalHostedZone, !Ref HostedZone, !Ref HostedZoneID]
       RecordSets:
         - Type: A
           Name: !Ref DNSName
