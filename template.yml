@@ -978,99 +978,6 @@ Resources:
             - Name: at
               Type: timestamp
 
-  CrawlerRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Action:
-              - sts:AssumeRole
-            Effect: Allow
-            Principal:
-              Service:
-                - !Sub "glue.${AWS::URLSuffix}"
-      Policies:
-        - PolicyName: Execution
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Action:
-                  - s3:GetObject*
-                Effect: Allow
-                Resource:
-                  - !Sub "${Bucket.Arn}/data/raw/ad/impressions/*"
-                  - !Sub "${Bucket.Arn}/data/raw/ad/clicks/*"
-              - Action:
-                  - s3:ListBucket*
-                Effect: Allow
-                Resource:
-                  - !GetAtt Bucket.Arn
-
-  GlueRawAdImpressionsCrawler:
-    Type: AWS::Glue::Crawler
-    Properties:
-      Name: raw_ad_impressions_crawler
-      Description: Crawls the raw ad impressions
-      Role: !GetAtt CrawlerRole.Arn
-      DatabaseName: !Ref GlueDatabase
-      Targets:
-        S3Targets:
-          - Path: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
-      TablePrefix: crawled_
-      SchemaChangePolicy:
-        UpdateBehavior: UPDATE_IN_DATABASE
-        DeleteBehavior: LOG
-      Configuration: |
-        {
-          "Version": 1.0,
-          "CrawlerOutput": {
-            "Partitions": {
-              "AddOrUpdateBehavior": "InheritFromTable"
-            },
-            "Tables": {
-              "AddOrUpdateBehavior": "MergeNewColumns"
-            }
-          }
-        }
-
-  GlueLakeAdImpressionsTable:
-    Type: AWS::Glue::Table
-    DependsOn:
-      - GlueDatabase
-    Properties:
-      CatalogId: !Ref AWS::AccountId
-      DatabaseName: !Ref GlueDatabase
-      TableInput:
-          Name: ad_impressions
-          Description: Ad Impressions
-          TableType: EXTERNAL_TABLE
-          Parameters:
-            classification: orc
-          PartitionKeys:
-            - Name: year
-              Type: int
-            - Name: month
-              Type: int
-          StorageDescriptor:
-            Location: !Sub "s3://${Bucket}/data/lake/ad/impressions/"
-            StoredAsSubDirectories: true
-            InputFormat: org.apache.orc.mapreduce.OrcInputFormat
-            SerdeInfo:
-              SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
-            OutputFormat: org.apache.orc.mapreduce.OrcOutputFormat
-            Columns:
-              - Name: user
-                Type: string
-              - Name: ad
-                Type: string
-              - Name: at
-                Type: timestamp
-
-  # GlueLakeAdImpressionsETLJob:
-  #   Type: AWS::Glue::Job
-  #   Properties:
-
   GlueRawAdClicksTable:
     Type: AWS::Glue::Table
     DependsOn:
@@ -1111,9 +1018,101 @@ Resources:
             - Name: at
               Type: timestamp
 
-  # GlueRawAdClicksCrawler:
-  #   Type: AWS::Glue::Crawler
-  #   Properties:
+  CrawlerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "glue.${AWS::URLSuffix}"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
+      Policies:
+        - PolicyName: Execution
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - s3:GetObject*
+                  - s3:PutObject*
+                Effect: Allow
+                Resource:
+                  - !Sub "${Bucket.Arn}/data/raw/ad/impressions/*"
+                  - !Sub "${Bucket.Arn}/data/raw/ad/clicks/*"
+              - Action:
+                  - s3:ListBucket*
+                Effect: Allow
+                Resource:
+                  - !GetAtt Bucket.Arn
+
+  GlueRawCrawler:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Name: raw_ad_impressions_crawler
+      Description: Crawls the raw ad impressions
+      Role: !GetAtt CrawlerRole.Arn
+      DatabaseName: !Ref GlueDatabase
+      Targets:
+        S3Targets:
+          - Path: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
+          - Path: !Sub "s3://${Bucket}/data/raw/ad/clicks/"
+      TablePrefix: crawled_
+      SchemaChangePolicy:
+        UpdateBehavior: UPDATE_IN_DATABASE
+        DeleteBehavior: LOG
+      Configuration: |
+        {
+          "Version": 1.0,
+          "CrawlerOutput": {
+            "Partitions": {
+              "AddOrUpdateBehavior": "InheritFromTable"
+            },
+            "Tables": {
+              "AddOrUpdateBehavior": "MergeNewColumns"
+            },
+            "Grouping": {
+              "TableGroupingPolicy": "CombineCompatibleSchemas"
+            }
+          }
+        }
+
+  GlueLakeAdImpressionsTable:
+    Type: AWS::Glue::Table
+    DependsOn:
+      - GlueDatabase
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref GlueDatabase
+      TableInput:
+          Name: ad_impressions
+          Description: Ad Impressions
+          TableType: EXTERNAL_TABLE
+          Parameters:
+            classification: orc
+          PartitionKeys:
+            - Name: year
+              Type: int
+            - Name: month
+              Type: int
+          StorageDescriptor:
+            Location: !Sub "s3://${Bucket}/data/lake/ad/impressions/"
+            StoredAsSubDirectories: true
+            InputFormat: org.apache.orc.mapreduce.OrcInputFormat
+            SerdeInfo:
+              SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
+            OutputFormat: org.apache.orc.mapreduce.OrcOutputFormat
+            Columns:
+              - Name: user
+                Type: string
+              - Name: ad
+                Type: string
+              - Name: at
+                Type: timestamp
 
   GlueLakeAdClicksTable:
     Type: AWS::Glue::Table
@@ -1147,6 +1146,10 @@ Resources:
                 Type: string
               - Name: at
                 Type: timestamp
+
+  # GlueLakeAdImpressionsETLJob:
+  #   Type: AWS::Glue::Job
+  #   Properties:
 
   # GlueLakeAdClicksETLJob:
   #   Type: AWS::Glue::Job
