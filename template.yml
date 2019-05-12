@@ -943,10 +943,10 @@ Resources:
         Name: raw_ad_impressions
         Description: Raw Ad Impressions
         TableType: EXTERNAL_TABLE
-        # Parameters: |
-        #   {
-        #     "classification": "json"
-        #   }
+        Parameters: |
+          {
+            "classification": "json"
+          }
         # PartitionKeys:
         #   - Name: year
         #     Type: int
