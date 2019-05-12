@@ -3,135 +3,133 @@ info:
   version: 0.1.0
   title: Warehouse Service
 paths:
-  /data:
-    /ad:
-      /impressions:
-        post:
-          summary: Record a batch of ad impressions
-          operationId: data-ad-impressions
-          requestBody:
-            description: A batch of ad impressions
-            required: true
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/DataAdImpressions"
-          x-amazon-apigateway-integration:
-            type: AWS
-            httpMethod: POST
-            uri: arn:aws:apigateway:us-east-1:firehose:action/PutRecordBatch
-            credentials: arn:aws:iam::211516517942:role/${stageVariables.APIRole}
-            requestTemplates:
-              application/json: !Sub |
-                #set($newline = "
-                ")
+  /data/ad/impressions:
+    post:
+      summary: Record a batch of ad impressions
+      operationId: data-ad-impressions
+      requestBody:
+        description: A batch of ad impressions
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DataAdImpressions"
+      x-amazon-apigateway-integration:
+        type: AWS
+        httpMethod: POST
+        uri: arn:aws:apigateway:us-east-1:firehose:action/PutRecordBatch
+        credentials: arn:aws:iam::211516517942:role/${stageVariables.APIRole}
+        requestTemplates:
+          application/json: !Sub |
+            #set($newline = "
+            ")
+            {
+              "DeliveryStreamName": "${stageVariables.AdImpressionsDeliveryStream}",
+              "Records": [
+                #foreach($elem in $input.path('$.impressions'))
+                #set($val = $input.json("$.impressions[$foreach.index]"))
+                #set($rec = "${!val}${!newline}")
+                { "Data": "$util.base64Encode($rec)" }#if($foreach.hasNext),#end
+                #end
+              ]
+            }
+        requestParameters:
+          integration.request.header.Content-Type: "'x-amz-json-1.1'"
+        responses:
+          '200':
+            statusCode: 200
+            responseTemplates:
+              application/json: |
                 {
-                  "DeliveryStreamName": "${stageVariables.AdImpressionsDeliveryStream}",
-                  "Records": [
-                    #foreach($elem in $input.path('$.impressions'))
-                    #set($val = $input.json("$.impressions[$foreach.index]"))
-                    #set($rec = "${!val}${!newline}")
-                    { "Data": "$util.base64Encode($rec)" }#if($foreach.hasNext),#end
+                  "failed_count": $input.path("$.FailedPutCount"),
+                  "records": [
+                    #foreach($record in $input.path("$.RequestResponses"))
+                    {
+                      #if($record.keySet().contains("ErrorCode"))
+                      "failed": true,
+                      "error_code": "$record.ErrorCode",
+                      "error_message": "$record.ErrorMessage"
+                      #else
+                      "failed": false
+                      #end
+                    }#if($foreach.hasNext),#end
                     #end
                   ]
                 }
-            requestParameters:
-              integration.request.header.Content-Type: "'x-amz-json-1.1'"
-            responses:
-              '200':
-                statusCode: 200
-                responseTemplates:
-                  application/json: |
-                    {
-                      "failed_count": $input.path("$.FailedPutCount"),
-                      "records": [
-                        #foreach($record in $input.path("$.RequestResponses"))
-                        {
-                          #if($record.keySet().contains("ErrorCode"))
-                          "failed": true,
-                          "error_code": "$record.ErrorCode",
-                          "error_message": "$record.ErrorMessage"
-                          #else
-                          "failed": false
-                          #end
-                        }#if($foreach.hasNext),#end
-                        #end
-                      ]
-                    }
-          responses:
-            '200':
-              description: |
-                The batch was processed.  Some impressions may not have
-                been processed.  The response contains a list of
-                impressions in the same order submitted, indicating which
-                succeeded and which failed.
-              content:
-                application/json:
-                  schema:
-                    $ref: "#/components/schemas/BatchWriteResponse"
-      /clicks:
-        post:
-          summary: Record a batch of ad clicks
-          operationId: data-ad-clicks
-          requestBody:
-            description: A batch of ad clicks
-            required: true
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/DataAdClicks"
-          x-amazon-apigateway-integration:
-            type: AWS
-            httpMethod: POST
-            uri: arn:aws:apigateway:us-east-1:firehose:action/PutRecordBatch
-            credentials: arn:aws:iam::211516517942:role/${stageVariables.APIRole}
-            requestTemplates:
-              application/json: !Sub |
-                #set($newline = "
-                ")
+      responses:
+        '200':
+          description: |
+            The batch was processed.  Some impressions may not have
+            been processed.  The response contains a list of
+            impressions in the same order submitted, indicating which
+            succeeded and which failed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchWriteResponse"
+  /data/ad/clicks:
+    post:
+      summary: Record a batch of ad clicks
+      operationId: data-ad-clicks
+      requestBody:
+        description: A batch of ad clicks
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DataAdClicks"
+      x-amazon-apigateway-integration:
+        type: AWS
+        httpMethod: POST
+        uri: arn:aws:apigateway:us-east-1:firehose:action/PutRecordBatch
+        credentials: arn:aws:iam::211516517942:role/${stageVariables.APIRole}
+        requestTemplates:
+          application/json: !Sub |
+            #set($newline = "
+            ")
+            {
+              "DeliveryStreamName": "${stageVariables.AdClicksDeliveryStream}",
+              "Records": [
+                #foreach($elem in $input.path('$.clicks'))
+                #set($val = $input.json("$.clicks[$foreach.index]"))
+                #set($rec = "${!val}${!newline}")
+                { "Data": "$util.base64Encode($rec)" }#if($foreach.hasNext),#end
+                #end
+              ]
+            }
+        requestParameters:
+          integration.request.header.Content-Type: "'x-amz-json-1.1'"
+        responses:
+          '200':
+            statusCode: 200
+            responseTemplates:
+              application/json: |
                 {
-                  "DeliveryStreamName": "${stageVariables.AdClicksDeliveryStream}",
-                  "Records": [
-                    #foreach($elem in $input.path('$.clicks'))
-                    #set($val = $input.json("$.clicks[$foreach.index]"))
-                    #set($rec = "${!val}${!newline}")
-                    { "Data": "$util.base64Encode($rec)" }#if($foreach.hasNext),#end
+                  "failed_count": $input.path("$.FailedPutCount"),
+                  "records": [
+                    #foreach($record in $input.path("$.RequestResponses"))
+                    {
+                      #if($record.keySet().contains("ErrorCode"))
+                      "failed": true,
+                      "error_code": "$record.ErrorCode",
+                      "error_message": "$record.ErrorMessage"
+                      #else
+                      "failed": false
+                      #end
+                    }#if($foreach.hasNext),#end
                     #end
                   ]
                 }
-            requestParameters:
-              integration.request.header.Content-Type: "'x-amz-json-1.1'"
-            responses:
-              '200':
-                statusCode: 200
-                responseTemplates:
-                  application/json: |
-                    {
-                      "failed_count": $input.path("$.FailedPutCount"),
-                      "records": [
-                        #foreach($record in $input.path("$.RequestResponses"))
-                        {
-                          #if($record.keySet().contains("ErrorCode"))
-                          "failed": true,
-                          "error_code": "$record.ErrorCode",
-                          "error_message": "$record.ErrorMessage"
-                          #else
-                          "failed": false
-                          #end
-                        }#if($foreach.hasNext),#end
-                        #end
-                      ]
-                    }
-          responses:
-            '200':
-              description: |
-                The batch was processed.  Some clicks may not have been
-                processed.  The response contains a list of clicks in the same
-                order submitted, indicating which succeeded and which failed.
-              content:
-                application/json:
-                  schema:
-                    $ref: "#/components/schemas/BatchWriteResponse"
+      responses:
+        '200':
+          description: |
+            The batch was processed.  Some clicks may not have been
+            processed.  The response contains a list of clicks in the same
+            order submitted, indicating which succeeded and which failed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchWriteResponse"
 components:
   schemas:
     DataAdImpressions:
