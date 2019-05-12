@@ -932,46 +932,46 @@ Resources:
       DatabaseInput:
         Name: warehouse
 
-  # GlueRawAdImpressionsTable:
-  #   Type: AWS::Glue::Table
-  #   DependsOn:
-  #     - GlueDatabase
-  #   Properties:
-  #     CatalogId: !Ref AWS::AccountId
-  #     DatabaseName: !Ref GlueDatabase
-  #     TableInput:
-  #       Name: raw_ad_impressions
-  #       Description: Raw Ad Impressions
-  #       TableType: EXTERNAL_TABLE
-  #       Parameters: |
-  #         {
-  #           "classification": "json"
-  #         }
-  #       PartitionKeys:
-  #         - Name: year
-  #           Type: int
-  #         - Name: month
-  #           Type: int
-  #         - Name: day
-  #           Type: int
-  #         - Name: hour
-  #           Type: int
-  #       StorageDescriptor:
-  #         Compressed: true
-  #         InputFormat: org.apache.hadoop.mapred.TextInputFormat
-  #         OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
-  #         Columns:
-  #           - Name: user
-  #             Type: string
-  #           - Name: ad
-  #             Type: string
-  #           - Name: at
-  #             Type: timestamp
-  #         Location: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
-  #         SerdeInfo:
-  #           SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
-  #           Parameters:
-  #             paths: "ad,at,user"
+  GlueRawAdImpressionsTable:
+    Type: AWS::Glue::Table
+    DependsOn:
+      - GlueDatabase
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref GlueDatabase
+      TableInput:
+        Name: raw_ad_impressions
+        Description: Raw Ad Impressions
+        # TableType: EXTERNAL_TABLE
+        Parameters: |
+          {
+            "classification": "json"
+          }
+        PartitionKeys:
+          - Name: year
+            Type: int
+          - Name: month
+            Type: int
+          - Name: day
+            Type: int
+          - Name: hour
+            Type: int
+        StorageDescriptor:
+          # Compressed: true
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          Columns:
+            - Name: user
+              Type: string
+            - Name: ad
+              Type: string
+            - Name: at
+              Type: timestamp
+          Location: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
+          SerdeInfo:
+            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+            Parameters:
+              paths: "ad,at,user"
 
   # GlueRawAdImpressionsCrawler:
   #   Type: AWS::Glue::Crawler
