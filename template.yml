@@ -88,7 +88,7 @@ Conditions:
   DNSEnabled: !Not [!And [!Equals [!Ref DNSDomainName, ""], !Equals [!Ref DNSName, ""], !Equals [!Ref ValidationDomain, ""]]]
   InternalHostedZone: !And [!Not [!And [!Equals [!Ref DNSDomainName, ""], !Equals [!Ref DNSName, ""], !Equals [!Ref ValidationDomain, ""]]], !Equals [!Ref HostedZoneID, ""]]
   EC2InstanceEnabled: !Not [!Equals [!Ref EnableEC2Instance, ""]]
-  EMRClusterEnabled: !Not [!Equals [!Ref EnableEMRCluster, ""]]
+  EMREnabled: !Not [!Equals [!Ref EnableEMRCluster, ""]]
   RedshiftEnabled: !Not [!Equals [!Ref EnableRedshift, ""]]
   RedshiftSingleNode: !Equals [!Ref RedshiftNumberOfNodes, 1]
 
@@ -969,7 +969,7 @@ Resources:
   #             Type: timestamp
   #         Location: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
   #         SerdeInfo:
-  #           SerializationLibrary: org.apache.hive.hcatalog.data.JsonSerDe
+  #           SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
   #           Parameters:
   #             paths: "ad,at,user"
 
@@ -1052,7 +1052,7 @@ Resources:
   #             Type: timestamp
   #         Location: !Sub "s3://${Bucket}/data/raw/ad/clicks/"
   #         SerdeInfo:
-  #           SerializationLibrary: org.apache.hive.hcatalog.data.JsonSerDe
+  #           SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
   #           Parameters:
   #             paths: "ad,at,user"
 
