@@ -107,7 +107,7 @@ Resources:
   Subnet:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcIc: !Ref VPC
+      VpcId: !Ref VPC
       AvailabilityZone: !Sub "${AWS::Region}a"
       CidrBlock: 172.31.0.0/16
       MapPublicIpOnLaunch: true
