@@ -972,9 +972,55 @@ Resources:
             - Name: at
               Type: timestamp
 
-  # GlueRawAdImpressionsCrawler:
-  #   Type: AWS::Glue::Crawler
-  #   Properties:
+  CrawlerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "apigateway.${AWS::URLSuffix}"
+      Policies:
+        - PolicyName: Execution
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - s3:GetObject*
+                Effect: Allow
+                Resource:
+                  - !Sub "${Bucket.Arn}/data/raw/ad/impressions/*"
+                  - !Sub "${Bucket.Arn}/data/raw/ad/clicks/*"
+
+  GlueRawAdImpressionsCrawler:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Name: raw_ad_impressions_crawler
+      Description: Crawls the raw ad impressions
+      Role: !GetAtt CrawlerRole.Arn
+      DatabaseName: !Ref GlueDatabase
+      Targets:
+        S3Targets:
+          - Path: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
+      SchemaChangePolicy:
+        UpdateBehavior: UPDATE_IN_DATABASE
+        DeleteBehavior: LOG
+      Configuration: |
+        {
+          "Version": 1.0,
+          "CrawlerOutput": {
+            "Partitions": {
+              "AddOrUpdateBehavior": "InheritFromTable"
+            },
+            "Tables": {
+              "AddOrUpdateBehavior": "MergeNewColumns"
+            }
+          }
+        }
 
   GlueLakeAdImpressionsTable:
     Type: AWS::Glue::Table
