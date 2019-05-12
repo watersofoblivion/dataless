@@ -18,7 +18,7 @@ paths:
         type: AWS
         httpMethod: POST
         uri: arn:aws:apigateway:${stageVariables.Region}:firehose:action/PutRecordBatch
-        credentials: arn:aws:iam::${stageVariables.AccountID}:role/${stageVariables.APIRole}
+        credentials: arn:aws:iam::211516517942:role/${stageVariables.APIRole}
         requestTemplates:
           application/json: !Sub |
             #set($newline = "
@@ -82,7 +82,7 @@ paths:
         type: AWS
         httpMethod: POST
         uri: arn:aws:apigateway:${stageVariables.Region}:firehose:action/PutRecordBatch
-        credentials: arn:aws:iam::${stageVariables.AccountID}:role/${stageVariables.APIRole}
+        credentials: arn:aws:iam::211516517942:role/${stageVariables.APIRole}
         requestTemplates:
           application/json: !Sub |
             #set($newline = "
