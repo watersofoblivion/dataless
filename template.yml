@@ -568,9 +568,6 @@ Resources:
       StageName: !Ref Stage
       DefinitionUri: api.yml
       Variables:
-        APIRole: !Ref APIRole
-        AccountID: !Ref AWS::AccountId
-        Region: !Ref AWS::Region
         AdImpressionsDeliveryStream: !Ref AdImpressionsDeliveryStream
         AdClicksDeliveryStream: !Ref AdClicksDeliveryStream
 
