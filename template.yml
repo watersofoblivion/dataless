@@ -232,7 +232,7 @@ Resources:
   Instance:
     Type: AWS::EC2::Instance
     Properties:
-      IamInstsanceProfile: !Ref InstanceProfile
+      IamInstanceProfile: !Ref InstanceProfile
       ImageId: !FindInMap
         - AMIs
         - !Ref AWS::Region
