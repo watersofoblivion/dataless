@@ -33,7 +33,7 @@ Parameters:
 
 Conditions:
   DNS: !Not [!And [!Equals [!Ref DNSDomainName, ""], !Equals [!Ref DNSName, ""], !Equals [!Ref ValidationDomain, ""]]]
-  InternalHostedZone: !And [!Ref DNS, !Equals [!Ref HostedZoneID, ""]]
+  InternalHostedZone: !And [DNS, !Equals [!Ref HostedZoneID, ""]]
 
 Outputs:
   BaseURL:
