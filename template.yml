@@ -569,7 +569,7 @@ Resources:
       DefinitionUri: api.yml
       Variables:
         APIRole: !Ref APIRole
-        AccountID: !Ref AWS::AccountID
+        AccountID: !Ref AWS::AccountId
         Region: !Ref AWS::Region
         AdImpressionsDeliveryStream: !Ref AdImpressionsDeliveryStream
         AdClicksDeliveryStream: !Ref AdClicksDeliveryStream
