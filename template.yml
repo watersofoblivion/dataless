@@ -455,9 +455,9 @@ Resources:
     Type: AWS::EMR::Cluster
     Properties:
       Applications:
-        - hive
-        - pig
-        - spark
+        - Name: hive
+        - Name: pig
+        - Name: spark
       # BootstrapActions:
       #   - Name: Install TaskRunner
       #     ScriptBootstrapAction:
