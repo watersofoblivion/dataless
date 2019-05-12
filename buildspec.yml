@@ -65,7 +65,7 @@ phases:
           -emr-master-type   "${EMR_MASTER_INSTANCE_TYPE}" \
           -emr-master-count  ${EMR_MASTER_INSTANCE_COUNT:-1} \
           -emr-core-type     "${EMR_CORE_INSTANCE_TYPE}" \
-          -emr-core-count    "${EMR_CORE_INSTANCE_COUNT:-1}" \
+          -emr-core-count    ${EMR_CORE_INSTANCE_COUNT:-1} \
           $(if [ "${ENABLE_REDSHIFT}" != "" ]; then echo "-redshift"; fi) \
           -redshift-type     "${REDSHIFT_NODE_TYPE}" \
           -redshift-count    ${REDSHIFT_NUMBER_OF_NODES:-1}
