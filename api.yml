@@ -17,7 +17,7 @@ paths:
       x-amazon-apigateway-integration:
         type: AWS
         httpMethod: POST
-        uri: arn:aws:apigateway::firehose:action/PutRecordBatch
+        uri: arn:aws:apigateway:us-east-1:firehose:action/PutRecordBatch
         # credentials: null
         requestTemplates:
           application/json: !Sub |
@@ -81,7 +81,7 @@ paths:
       x-amazon-apigateway-integration:
         type: AWS
         httpMethod: POST
-        uri: arn:aws:apigateway::firehose:action/PutRecordBatch
+        uri: arn:aws:apigateway:us-east-1:firehose:action/PutRecordBatch
         # credentials: null
         requestTemplates:
           application/json: !Sub |
@@ -130,6 +130,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/BatchWriteResponse"
+x-amazon-apigateway-request-validators:
+  all:
+    validateRequestBody: true
+    validateRequestParameters: true
+x-amazon-apigateway-request-validator: all
 components:
   schemas:
     DataAdImpressions:
@@ -143,6 +148,7 @@ components:
           maxItems: 500
       required:
         - impressions
+      additionalProperties: false
     DataAdImpression:
       type: object
       properties:
@@ -159,6 +165,7 @@ components:
         - timestamp
         - user
         - ad
+      additionalProperties: false
     DataAdClicks:
       type: object
       properties:
@@ -170,6 +177,7 @@ components:
           maxItems: 500
       required:
         - clicks
+      additionalProperties: false
     DataAdClick:
       type: object
       properties:
@@ -186,6 +194,7 @@ components:
         - timestamp
         - user
         - ad
+      additionalProperties: false
     BatchWriteResponse:
       type: object
       properties:
@@ -197,6 +206,7 @@ components:
           maxItems: 500
       required:
         - records
+      additionalProperties: false
     BatchWriteRecord:
       type: object
       properties:
@@ -221,8 +231,3 @@ components:
         - code
         - message
       additionalProperties: false
-x-amazon-apigateway-request-validators:
-  all:
-    validateRequestBody: true
-    validateRequestParameters: true
-x-amazon-apigateway-request-validator: all
