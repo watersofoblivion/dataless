@@ -942,13 +942,13 @@ Resources:
   # Data Lake #
   #############
 
-  Database:
-    Type: AWS::Glue::Database
-    Properties:
-      CatalogId: !Ref AWS::AccountId
-      DatabaseInput:
-        Name: warehouse
-
+  # Database:
+  #   Type: AWS::Glue::Database
+  #   Properties:
+  #     CatalogId: !Ref AWS::AccountId
+  #     DatabaseInput:
+  #       Name: warehouse
+  #
   # RawAdImpressionsTable:
   #   Type: AWS::Glue::Table
   #   DependsOn:
