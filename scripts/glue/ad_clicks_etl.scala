@@ -13,12 +13,12 @@ object GlueApp {
   def main(sysArgs: Array[String]) {
     val spark: SparkContext = new SparkContext()
     val glueContext: GlueContext = new GlueContext(spark)
-    val args = GlueArgParser.getResolvedOptions(sysArgs, Seq("JOB_NAME", "database-name", "raw-table-name", "table-name").toArray)
+    val args = GlueArgParser.getResolvedOptions(sysArgs, Seq("JOB_NAME" /*, "database-name", "raw-table-name", "table-name" */).toArray)
     Job.init(args("JOB_NAME"), glueContext, args.asJava)
 
-    val databaseName = args("database-name")
-    val rawTableName = args("raw-table-name")
-    val tableName = args("table-name")
+    // val databaseName = args("database-name")
+    // val rawTableName = args("raw-table-name")
+    // val tableName = args("table-name")
 
     val mappings = Seq(
       ("user", "string", "user", "string"),
@@ -30,15 +30,14 @@ object GlueApp {
 
     val projection = Seq("user", "ad", "at", "year", "month")
 
-    val adClicks = glueContext.getCatalogSource(database = databaseName, tableName = rawTableName).
+    val adClicks = glueContext.getCatalogSource("warehouse", "raw_ad_clicks").
       getDynamicFrame().
-      applyMapping(mappings = mappings).
-      selectFields(paths = projection).
-      resolveChoice(choiceOption = Some(ChoiceOption("MATCH_CATALOG")), database = Some(databaseName), tableName = Some(tableName)).
-      resolveChoice(choiceOption = Some(ChoiceOption("make_struct")))
+      applyMapping(mappings).
+      selectFields(projection).
+      resolveChoice(None, Some(ChoiceOption("MATCH_CATALOG")), Some("warehouse"), Some("ad_clicks")).
+      resolveChoice(None, Some(ChoiceOption("make_struct")))
 
-    glueContext.getCatalogSink(database = databaseName, tableName = tableName).
-      writeDynamicFrame(adClicks)
+    glueContext.getCatalogSink("warehouse", "ad_clicks").writeDynamicFrame(adClicks)
 
     Job.commit()
   }
