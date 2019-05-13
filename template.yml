@@ -1050,36 +1050,36 @@ Resources:
                 Resource:
                   - !GetAtt Bucket.Arn
 
-  # GlueRawCrawler:
-  #   Type: AWS::Glue::Crawler
-  #   Properties:
-  #     Name: raw_ad_impressions_crawler
-  #     Description: Crawls the raw ad impressions
-  #     Role: !GetAtt CrawlerRole.Arn
-  #     DatabaseName: !Ref GlueDatabase
-  #     Targets:
-  #       S3Targets:
-  #         - Path: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
-  #         - Path: !Sub "s3://${Bucket}/data/raw/ad/clicks/"
-  #     TablePrefix: crawled_
-  #     SchemaChangePolicy:
-  #       UpdateBehavior: UPDATE_IN_DATABASE
-  #       DeleteBehavior: LOG
-  #     Configuration: |
-  #       {
-  #         "Version": 1.0,
-  #         "CrawlerOutput": {
-  #           "Partitions": {
-  #             "AddOrUpdateBehavior": "InheritFromTable"
-  #           },
-  #           "Tables": {
-  #             "AddOrUpdateBehavior": "MergeNewColumns"
-  #           },
-  #           "Grouping": {
-  #             "TableGroupingPolicy": "CombineCompatibleSchemas"
-  #           }
-  #         }
-  #       }
+  GlueRawCrawler:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Name: raw_ad_impressions_crawler
+      Description: Crawls the raw ad impressions
+      Role: !GetAtt CrawlerRole.Arn
+      DatabaseName: !Ref GlueDatabase
+      Targets:
+        S3Targets:
+          - Path: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
+          - Path: !Sub "s3://${Bucket}/data/raw/ad/clicks/"
+      TablePrefix: crawled_
+      SchemaChangePolicy:
+        UpdateBehavior: UPDATE_IN_DATABASE
+        DeleteBehavior: LOG
+      Configuration: |
+        {
+          "Version": 1.0,
+          "CrawlerOutput": {
+            "Partitions": {
+              "AddOrUpdateBehavior": "InheritFromTable"
+            },
+            "Tables": {
+              "AddOrUpdateBehavior": "MergeNewColumns"
+            },
+            "Grouping": {
+              "TableGroupingPolicy": "CombineCompatibleSchemas"
+            }
+          }
+        }
 
   GlueLakeAdImpressionsTable:
     Type: AWS::Glue::Table
