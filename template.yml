@@ -820,7 +820,7 @@ Resources:
                   type: string
                   format: uuid
               required:
-                - timestamp
+                - at
                 - user
                 - ad
               additionalProperties: false
@@ -849,7 +849,7 @@ Resources:
                   type: string
                   format: uuid
               required:
-                - timestamp
+                - at
                 - user
                 - ad
               additionalProperties: false
@@ -940,20 +940,20 @@ Resources:
   # Data Lake #
   #############
 
-  GlueDatabase:
+  Database:
     Type: AWS::Glue::Database
     Properties:
       CatalogId: !Ref AWS::AccountId
       DatabaseInput:
         Name: warehouse
 
-  GlueRawAdImpressionsTable:
+  RawAdImpressionsTable:
     Type: AWS::Glue::Table
     DependsOn:
-      - GlueDatabase
+      - Database
     Properties:
       CatalogId: !Ref AWS::AccountId
-      DatabaseName: !Ref GlueDatabase
+      DatabaseName: !Ref Database
       TableInput:
         Name: raw_ad_impressions
         Description: Raw Ad Impressions
@@ -987,13 +987,13 @@ Resources:
             - Name: at
               Type: timestamp
 
-  GlueRawAdClicksTable:
+  RawAdClicksTable:
     Type: AWS::Glue::Table
     DependsOn:
-      - GlueDatabase
+      - Database
     Properties:
       CatalogId: !Ref AWS::AccountId
-      DatabaseName: !Ref GlueDatabase
+      DatabaseName: !Ref Database
       TableInput:
         Name: raw_ad_clicks
         Description: Raw Ad Clicks
@@ -1059,13 +1059,13 @@ Resources:
                 Resource:
                   - !GetAtt Bucket.Arn
 
-  GlueRawCrawler:
+  RawCrawler:
     Type: AWS::Glue::Crawler
     Properties:
-      Name: raw_ad_impressions_crawler
-      Description: Crawls the raw ad impressions
+      Name: raw_crawler
+      Description: Crawls the raw data
       Role: !GetAtt CrawlerRole.Arn
-      DatabaseName: !Ref GlueDatabase
+      DatabaseName: !Ref Database
       Targets:
         S3Targets:
           - Path: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
@@ -1090,13 +1090,13 @@ Resources:
           }
         }
 
-  GlueLakeAdImpressionsTable:
+  AdImpressionsTable:
     Type: AWS::Glue::Table
     DependsOn:
-      - GlueDatabase
+      - Database
     Properties:
       CatalogId: !Ref AWS::AccountId
-      DatabaseName: !Ref GlueDatabase
+      DatabaseName: !Ref Database
       TableInput:
           Name: ad_impressions
           Description: Ad Impressions
@@ -1123,13 +1123,13 @@ Resources:
               - Name: at
                 Type: timestamp
 
-  GlueLakeAdClicksTable:
+  AdClicksTable:
     Type: AWS::Glue::Table
     DependsOn:
-      - GlueDatabase
+      - Database
     Properties:
       CatalogId: !Ref AWS::AccountId
-      DatabaseName: !Ref GlueDatabase
+      DatabaseName: !Ref Database
       TableInput:
           Name: ad_clicks
           Description: Ad Clicks
@@ -1187,9 +1187,9 @@ Resources:
         ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_impressions_etl.py"
       DefaultArguments:
         "--enable-glue-datacatalog": ""
-        "--database-name": !Ref GlueDatabase
+        "--database-name": !Ref Database
         "--raw-table-name": raw_ad_impressions
-        "--table-name": !Ref GlueLakeAdImpressionsTable
+        "--table-name": !Ref AdImpressionsTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
       MaxRetries: 0
@@ -1207,9 +1207,9 @@ Resources:
         "--class": GlueApp
         "--enable-glue-datacatalog": ""
         "--enable-glue-datacatalog": ""
-        "--database-name": !Ref GlueDatabase
+        "--database-name": !Ref Database
         "--raw-table-name": raw_ad_impressions
-        "--table-name": !Ref GlueLakeAdImpressionsTable
+        "--table-name": !Ref AdImpressionsTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
       MaxRetries: 0
@@ -1225,9 +1225,9 @@ Resources:
       DefaultArguments:
         "--enable-glue-datacatalog": ""
         "--enable-glue-datacatalog": ""
-        "--database-name": !Ref GlueDatabase
+        "--database-name": !Ref Database
         "--raw-table-name": raw_ad_clicks
-        "--table-name": !Ref GlueLakeAdClicksTable
+        "--table-name": !Ref AdClicksTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
       MaxRetries: 0
@@ -1245,9 +1245,9 @@ Resources:
         "--class": GlueApp
         "--enable-glue-datacatalog": ""
         "--enable-glue-datacatalog": ""
-        "--database-name": !Ref GlueDatabase
+        "--database-name": !Ref Database
         "--raw-table-name": raw_ad_clicks
-        "--table-name": !Ref GlueLakeAdClicksTable
+        "--table-name": !Ref AdClicksTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
       MaxRetries: 0
