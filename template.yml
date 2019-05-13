@@ -168,6 +168,8 @@ Resources:
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Condition: VPCEnabled
+    DependsOn:
+      - VPC
 
   GatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
