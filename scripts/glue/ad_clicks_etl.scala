@@ -33,7 +33,9 @@ object GlueApp {
       applyMapping(mappings, false).
       resolveChoice(Seq.empty[ResolveSpec], Some(ChoiceOption("MATCH_CATALOG")), Some("warehouse"), Some("ad_clicks"))
 
-    glueContext.getCatalogSink("warehouse", "ad_clicks").writeDynamicFrame(adClicks)
+    val partitioning = JsonOptions("""{"partitionKeys":["year","month"]}""")
+    glueContext.getCatalogSink("warehouse", "ad_clicks", additionalOptions = partitioning).
+      writeDynamicFrame(adClicks)
 
     Job.commit()
   }
