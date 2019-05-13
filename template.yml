@@ -1168,10 +1168,10 @@ Resources:
                 Effect: Allow
                 Resource: "*"
 
-  GlueAdImpressionsETLJob:
+  GlueAdImpressionsPythonJob:
     Type: AWS::Glue::Job
     Properties:
-      Name: ad-impressions-etl-job
+      Name: ad-impressions-python-job
       Role: !GetAtt GlueETLJobRole.Arn
       Command:
         Name: glueetl
@@ -1182,15 +1182,47 @@ Resources:
         MaxConcurrentRuns: 1
       MaxRetries: 0
 
-  GlueAdClicksETLJob:
+  GlueAdImpressionsScalaJob:
     Type: AWS::Glue::Job
     Properties:
-      Name: ad-clicks-etl-job
+      Name: ad-impressions-scala-job
+      Role: !GetAtt GlueETLJobRole.Arn
+      Command:
+        Name: glueetl
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_impressions_etl.scala"
+      DefaultArguments:
+        "--job-language": scala
+        "--class": GlueApp
+        "--enable-glue-datacatalog": ""
+      ExecutionProperty:
+        MaxConcurrentRuns: 1
+      MaxRetries: 0
+
+  GlueAdClicksPythonJob:
+    Type: AWS::Glue::Job
+    Properties:
+      Name: ad-clicks-python-job
       Role: !GetAtt GlueETLJobRole.Arn
       Command:
         Name: glueetl
         ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_clicks_etl.py"
       DefaultArguments:
+        "--enable-glue-datacatalog": ""
+      ExecutionProperty:
+        MaxConcurrentRuns: 1
+      MaxRetries: 0
+
+  GlueAdClicksScalaJob:
+    Type: AWS::Glue::Job
+    Properties:
+      Name: ad-clicks-scala-job
+      Role: !GetAtt GlueETLJobRole.Arn
+      Command:
+        Name: glueetl
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_clicks_etl.scala"
+      DefaultArguments:
+        "--job-language": scala
+        "--class": GlueApp
         "--enable-glue-datacatalog": ""
       ExecutionProperty:
         MaxConcurrentRuns: 1
