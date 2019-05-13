@@ -1050,36 +1050,36 @@ Resources:
                 Resource:
                   - !GetAtt Bucket.Arn
 
-  GlueRawCrawler:
-    Type: AWS::Glue::Crawler
-    Properties:
-      Name: raw_ad_impressions_crawler
-      Description: Crawls the raw ad impressions
-      Role: !GetAtt CrawlerRole.Arn
-      DatabaseName: !Ref GlueDatabase
-      Targets:
-        S3Targets:
-          - Path: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
-          - Path: !Sub "s3://${Bucket}/data/raw/ad/clicks/"
-      TablePrefix: crawled_
-      SchemaChangePolicy:
-        UpdateBehavior: UPDATE_IN_DATABASE
-        DeleteBehavior: LOG
-      Configuration: |
-        {
-          "Version": 1.0,
-          "CrawlerOutput": {
-            "Partitions": {
-              "AddOrUpdateBehavior": "InheritFromTable"
-            },
-            "Tables": {
-              "AddOrUpdateBehavior": "MergeNewColumns"
-            },
-            "Grouping": {
-              "TableGroupingPolicy": "CombineCompatibleSchemas"
-            }
-          }
-        }
+  # GlueRawCrawler:
+  #   Type: AWS::Glue::Crawler
+  #   Properties:
+  #     Name: raw_ad_impressions_crawler
+  #     Description: Crawls the raw ad impressions
+  #     Role: !GetAtt CrawlerRole.Arn
+  #     DatabaseName: !Ref GlueDatabase
+  #     Targets:
+  #       S3Targets:
+  #         - Path: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
+  #         - Path: !Sub "s3://${Bucket}/data/raw/ad/clicks/"
+  #     TablePrefix: crawled_
+  #     SchemaChangePolicy:
+  #       UpdateBehavior: UPDATE_IN_DATABASE
+  #       DeleteBehavior: LOG
+  #     Configuration: |
+  #       {
+  #         "Version": 1.0,
+  #         "CrawlerOutput": {
+  #           "Partitions": {
+  #             "AddOrUpdateBehavior": "InheritFromTable"
+  #           },
+  #           "Tables": {
+  #             "AddOrUpdateBehavior": "MergeNewColumns"
+  #           },
+  #           "Grouping": {
+  #             "TableGroupingPolicy": "CombineCompatibleSchemas"
+  #           }
+  #         }
+  #       }
 
   GlueLakeAdImpressionsTable:
     Type: AWS::Glue::Table
@@ -1147,13 +1147,54 @@ Resources:
               - Name: at
                 Type: timestamp
 
-  # GlueLakeAdImpressionsETLJob:
-  #   Type: AWS::Glue::Job
-  #   Properties:
+  GlueETLJobRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+            - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "glue.${AWS::URLSuffix}"
+      Policies:
+        - PolicyName: "root"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action: *
+                Effect: Allow
+                Resource: *
 
-  # GlueLakeAdClicksETLJob:
-  #   Type: AWS::Glue::Job
-  #   Properties:
+  GlueAdImpressionsETLJob:
+    Type: AWS::Glue::Job
+    Properties:
+      Name: ad-impressions-etl-job
+      Role: !GetAtt GlueLakeETLJobRole.Arn
+      Command:
+        Name: glueetl
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_impressions_etl.py"
+      DefaultArguments:
+        "--enable-glue-datacatalog": ""
+      ExecutionProperty:
+        MaxConcurrentRuns: 1
+      MaxRetries: 0
+
+  GlueAdClicksETLJob:
+    Type: AWS::Glue::Job
+    Properties:
+      Name: ad-impressions-etl-job
+      Role: !GetAtt GlueLakeETLJobRole.Arn
+      Command:
+        Name: glueetl
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_clicks_etl.py"
+      DefaultArguments:
+        "--enable-glue-datacatalog": ""
+      ExecutionProperty:
+        MaxConcurrentRuns: 1
+      MaxRetries: 0
 
   #################
   ### Generated ###
