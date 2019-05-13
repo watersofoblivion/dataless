@@ -20,9 +20,9 @@ object GlueApp {
   val mappings = Seq(
     MappingSpec("user", "string", "user", "string"),
     MappingSpec("ad", "string", "ad", "string"),
-    MappingSpec("at", "timestamp", "at", "timestamp"),
-    MappingSpec("partition_0", "int", "year", "int"),
-    MappingSpec("partition_1", "int", "month", "int")
+    MappingSpec("at", "string", "at", "timestamp"),
+    MappingSpec("partition_0", "string", "year", "int"),
+    MappingSpec("partition_1", "string", "month", "int")
   )
 
   def main(sysArgs: Array[String]) {
@@ -37,7 +37,6 @@ object GlueApp {
 
     val adClicks = glueContext.getCatalogSource("warehouse", "raw_ad_clicks").
       getDynamicFrame().
-      resolveChoice(Seq(("at", "cast:timestamp"), ("partition_0", "cast:int"), ("partition_1", "cast:int"))).
       applyMapping(mappings, false).
       resolveChoice(Seq.empty[ResolveSpec], Some(ChoiceOption("MATCH_CATALOG")), Some("warehouse"), Some("ad_clicks"))
 
