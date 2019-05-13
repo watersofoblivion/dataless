@@ -30,11 +30,9 @@ ad_impressions = (
                                ("ad", "string", "ad", "string"),
                                ("partition_0", "string", "year", "string"),
                                ("partition_1", "string", "month", "string")])
-    .select_fields(paths = ["ad", "user", "at", "year", "month"])
     .resolveChoice(choice = "MATCH_CATALOG",
                    database = database_name,
                    table_name = table_name)
-    .resolveChoice(choice = "make_struct")
 )
 
 glueContext.write_dynamic_frame.from_catalog(frame = ad_impressions,

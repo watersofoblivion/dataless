@@ -21,21 +21,17 @@ object GlueApp {
     val tableName = args("table-name")
 
     val mappings = Seq(
-      ("user", "string", "user", "string"),
-      ("ad", "string", "ad", "string"),
-      ("at", "timestamp", "at", "timestamp"),
-      ("partition_0", "int", "year", "int"),
-      ("partition_1", "int", "month", "int")
+      MappingSpec("user", "string", "user", "string"),
+      MappingSpec("ad", "string", "ad", "string"),
+      MappingSpec("at", "timestamp", "at", "timestamp"),
+      MappingSpec("partition_0", "int", "year", "int"),
+      MappingSpec("partition_1", "int", "month", "int")
     )
-
-    val projection = Seq("user", "ad", "at", "year", "month")
 
     val adImpressions = glueContext.getCatalogSource(databaseName, rawTableName).
       getDynamicFrame().
-      applyMapping(mappings).
-      selectFields(projection).
-      resolveChoice(Seq.empty[ResolveSpec], Some(ChoiceOption("MATCH_CATALOG")), Some(databaseName), Some(tableName)).
-      resolveChoice(Seq.empty[ResolveSpec], Some(ChoiceOption("make_struct")))
+      applyMapping(mappings, false).
+      resolveChoice(Seq.empty[ResolveSpec], Some(ChoiceOption("MATCH_CATALOG")), Some(databaseName), Some(tableName))
 
     glueContext.getCatalogSink(databaseName, tableName).writeDynamicFrame(adImpressions)
 
