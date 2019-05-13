@@ -11,20 +11,20 @@ import (
 
 func main() {
 	var (
-		partition                                              = os.Getenv("PARTITION")
-		region                                                 = os.Getenv("AWS_REGION")
-		accountID                                              = os.Getenv("ACCOUNT_ID")
-		projectID                                              = os.Getenv("PROJECT_ID")
-		stageName                                              string
-		codeBucket, codePrefix                                 string
-		dnsDomainName, dnsName, validationDomain, hostedZoneID string
-		enableEC2Instance, enableEMRCluster, enableRedshift    string
-		ec2InstanceSize                                        string
-		emrMasterInstanceType, emrCoreInstanceType             string
-		emrMasterInstanceCount, emrCoreInstanceCount           int
-		redshiftNodeType                                       string
-		redshiftNumberOfNodes                                  int
-		output                                                 string
+		partition                                                      = os.Getenv("PARTITION")
+		region                                                         = os.Getenv("AWS_REGION")
+		accountID                                                      = os.Getenv("ACCOUNT_ID")
+		projectID                                                      = os.Getenv("PROJECT_ID")
+		stageName                                                      string
+		codeBucket, codePrefix                                         string
+		dnsDomainName, dnsName, validationDomain, hostedZoneID         string
+		enableVPC, enableEC2Instance, enableEMRCluster, enableRedshift string
+		ec2InstanceSize                                                string
+		emrMasterInstanceType, emrCoreInstanceType                     string
+		emrMasterInstanceCount, emrCoreInstanceCount                   int
+		redshiftNodeType                                               string
+		redshiftNumberOfNodes                                          int
+		output                                                         string
 	)
 
 	flag.StringVar(&partition, "partition", partition, "The AWS partition containing the CodeStar project")
@@ -38,6 +38,7 @@ func main() {
 	flag.StringVar(&dnsName, "dns-name", dnsName, "")
 	flag.StringVar(&validationDomain, "validation-domain", validationDomain, "")
 	flag.StringVar(&hostedZoneID, "hosted-zone-id", hostedZoneID, "")
+	flag.StringVar(&enableVPC, "vpc", enableVPC, "")
 	flag.StringVar(&enableEC2Instance, "ec2", enableEC2Instance, "")
 	flag.StringVar(&ec2InstanceSize, "ec2-type", ec2InstanceSize, "")
 	flag.StringVar(&enableEMRCluster, "emr", enableEMRCluster, "")
@@ -98,6 +99,10 @@ func main() {
 	}
 	if hostedZoneID != "" {
 		parameters["HostedZoneID"] = hostedZoneID
+	}
+
+	if enableVPC != "" {
+		parameters["EnableVPC"] = "true"
 	}
 
 	if enableEC2Instance != "" {

@@ -36,6 +36,10 @@ Parameters:
     Type: String
     Description: The existing Hosted Zone to use.  Creates a Hosted Zone if not provided.
     Default: ''
+  EnableVPC:
+    Type: String
+    Description: If non-empty, create a VPC.  EnableEC2Instance, EnableEMRCluster, and EnableRedshift imply this option.
+    Default: ''
   EnableEC2Instance:
     Type: String
     Description: If non-empty, create an EC2 instance for use by Data Pipeline.
@@ -91,13 +95,24 @@ Parameters:
     Default: 1
 
 Conditions:
-  DNSEnabled: !Not [!Or [!Equals [!Ref DNSDomainName, ""], !Equals [!Ref DNSName, ""], !Equals [!Ref ValidationDomain, ""]]]
-  InternalHostedZone: !Not [!Or [!Equals [!Ref DNSDomainName, ""], !Equals [!Ref DNSName, ""], !Equals [!Ref ValidationDomain, ""], !Equals [!Ref HostedZoneID, ""]]]
+  DNSEnabled: !And
+      - !Not [!Equals [!Ref DNSDomainName, ""]]
+      - !Not [!Equals [!Ref DNSName, ""]]
+      - !Not [!Equals [!Ref ValidationDomain, ""]]
+  InternalHostedZone: !And
+      - !Not [!Equals [!Ref DNSDomainName, ""]]
+      - !Not [!Equals [!Ref DNSName, ""]]
+      - !Not [!Equals [!Ref ValidationDomain, ""]]
+      - !Not [!Equals [!Ref HostedZoneID, ""]]
   EC2InstanceEnabled: !Not [!Equals [!Ref EnableEC2Instance, ""]]
   EMREnabled: !Not [!Equals [!Ref EnableEMRCluster, ""]]
   RedshiftEnabled: !Not [!Equals [!Ref EnableRedshift, ""]]
   RedshiftSingleNode: !Equals [!Ref RedshiftNumberOfNodes, 1]
-  VPCEnabled: !Not [!And [!Equals [!Ref EnableEC2Instance, ""], !Equals [!Ref EnableEMRCluster, ""], !Equals [!Ref EnableRedshift, ""]]]
+  VPCEnabled: !Or
+    - !Not [!Equals [!Ref EnableVPC, ""]]
+    - !Not [!Equals [!Ref EnableEC2Instance, ""]]
+    - !Not [!Equals [!Ref EnableEMRCluster, ""]]
+    - !Not [!Equals [!Ref EnableRedshift, ""]]
 
 Outputs:
   BaseURL:
