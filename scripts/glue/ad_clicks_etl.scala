@@ -35,8 +35,13 @@ object GlueApp {
     // val rawTableName = args("raw-table-name")
     // val tableName = args("table-name")
 
-    val adClicksPreResolve = glueContext.getCatalogSource("warehouse", "raw_ad_clicks").
-      getDynamicFrame().
+    val adClicksPreMapping = glueContext.getCatalogSource("warehouse", "raw_ad_clicks").
+      getDynamicFrame()
+
+    adClicksPreMapping.printSchema()
+    adClicksPreMapping.toDF().show()
+
+    val adClicksPreResolve = adClicksPreMapping.
       applyMapping(mappings, false)
 
     adClicksPreResolve.printSchema()
