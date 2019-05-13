@@ -1080,7 +1080,7 @@ Resources:
               - Name: at
                 Type: timestamp
 
-  GlueETLJobRole:
+  ETLJobRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -1101,10 +1101,10 @@ Resources:
                 Effect: Allow
                 Resource: "*"
 
-  GlueAdImpressionsPythonJob:
+  AdImpressionsPythonJob:
     Type: AWS::Glue::Job
     Properties:
-      Name: ad-impressions-python-job
+      # Name: ad-impressions-python-job
       Role: !GetAtt GlueETLJobRole.Arn
       Command:
         Name: glueetl
@@ -1119,10 +1119,10 @@ Resources:
         MaxConcurrentRuns: 1
       MaxRetries: 0
 
-  GlueAdImpressionsScalaJob:
+  AdImpressionsScalaJob:
     Type: AWS::Glue::Job
     Properties:
-      Name: ad-impressions-scala-job
+      # Name: ad-impressions-scala-job
       Role: !GetAtt GlueETLJobRole.Arn
       Command:
         Name: glueetl
@@ -1139,10 +1139,10 @@ Resources:
         MaxConcurrentRuns: 1
       MaxRetries: 0
 
-  GlueAdClicksPythonJob:
+  AdClicksPythonJob:
     Type: AWS::Glue::Job
     Properties:
-      Name: ad-clicks-python-job
+      # Name: ad-clicks-python-job
       Role: !GetAtt GlueETLJobRole.Arn
       Command:
         Name: glueetl
@@ -1157,10 +1157,10 @@ Resources:
         MaxConcurrentRuns: 1
       MaxRetries: 0
 
-  GlueAdClicksScalaJob:
+  AdClicksScalaJob:
     Type: AWS::Glue::Job
     Properties:
-      Name: ad-clicks-scala-job
+      # Name: ad-clicks-scala-job
       Role: !GetAtt GlueETLJobRole.Arn
       Command:
         Name: glueetl
