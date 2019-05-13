@@ -10,23 +10,30 @@ import org.apache.spark.SparkContext
 import scala.collection.JavaConverters._
 
 object GlueApp {
+  val argNames = Seq(
+    "JOB_NAME",
+    "database-name",
+    "raw-table-name",
+    "table-name"
+  )
+
+  val mappings = Seq(
+    MappingSpec("user", "string", "user", "string"),
+    MappingSpec("ad", "string", "ad", "string"),
+    MappingSpec("at", "timestamp", "at", "timestamp"),
+    MappingSpec("partition_0", "int", "year", "int"),
+    MappingSpec("partition_1", "int", "month", "int")
+  )
+
   def main(sysArgs: Array[String]) {
     val spark: SparkContext = new SparkContext()
     val glueContext: GlueContext = new GlueContext(spark)
-    val args = GlueArgParser.getResolvedOptions(sysArgs, Seq("JOB_NAME" /*, "database-name", "raw-table-name", "table-name" */).toArray)
+    val args = GlueArgParser.getResolvedOptions(sysArgs, argNames.toArray)
     Job.init(args("JOB_NAME"), glueContext, args.asJava)
 
     // val databaseName = args("database-name")
     // val rawTableName = args("raw-table-name")
     // val tableName = args("table-name")
-
-    val mappings = Seq(
-      MappingSpec("user", "string", "user", "string"),
-      MappingSpec("ad", "string", "ad", "string"),
-      MappingSpec("at", "timestamp", "at", "timestamp"),
-      MappingSpec("partition_0", "int", "year", "int"),
-      MappingSpec("partition_1", "int", "month", "int")
-    )
 
     val adClicks = glueContext.getCatalogSource("warehouse", "raw_ad_clicks").
       getDynamicFrame().

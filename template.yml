@@ -1046,6 +1046,10 @@ Resources:
                 Type: string
               - Name: at
                 Type: timestamp
+              - Name: year
+                Type: int
+              - Name: month
+                Type: int
 
   AdClicksTable:
     Type: AWS::Glue::Table
@@ -1079,6 +1083,10 @@ Resources:
                 Type: string
               - Name: at
                 Type: timestamp
+              - Name: year
+                Type: int
+              - Name: month
+                Type: int
 
   ETLJobRole:
     Type: AWS::IAM::Role
@@ -1104,7 +1112,6 @@ Resources:
   AdImpressionsPythonJob:
     Type: AWS::Glue::Job
     Properties:
-      # Name: ad-impressions-python-job
       Role: !GetAtt ETLJobRole.Arn
       Command:
         Name: glueetl
@@ -1113,7 +1120,7 @@ Resources:
         "--enable-glue-datacatalog": ""
         "--job-bookmark-option": "job-bookmark-enable"
         "--database-name": !Ref Database
-        "--raw-table-name": raw_ad_impressions # Hard-coded because CloudFormation Crawlers can't crawl an existing table
+        "--raw-table-name": raw_ad_impressions # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
         "--table-name": !Ref AdImpressionsTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
@@ -1122,7 +1129,6 @@ Resources:
   AdImpressionsScalaJob:
     Type: AWS::Glue::Job
     Properties:
-      # Name: ad-impressions-scala-job
       Role: !GetAtt ETLJobRole.Arn
       Command:
         Name: glueetl
@@ -1133,7 +1139,7 @@ Resources:
         "--enable-glue-datacatalog": ""
         "--job-bookmark-option": "job-bookmark-enable"
         "--database-name": !Ref Database
-        "--raw-table-name": raw_ad_impressions # Hard-coded because CloudFormation Crawlers can't crawl an existing table
+        "--raw-table-name": raw_ad_impressions # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
         "--table-name": !Ref AdImpressionsTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
@@ -1142,7 +1148,6 @@ Resources:
   AdClicksPythonJob:
     Type: AWS::Glue::Job
     Properties:
-      # Name: ad-clicks-python-job
       Role: !GetAtt ETLJobRole.Arn
       Command:
         Name: glueetl
@@ -1151,7 +1156,7 @@ Resources:
         "--enable-glue-datacatalog": ""
         "--job-bookmark-option": "job-bookmark-enable"
         "--database-name": !Ref Database
-        "--raw-table-name": raw_ad_clicks # Hard-coded because CloudFormation Crawlers can't crawl an existing table
+        "--raw-table-name": raw_ad_clicks # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
         "--table-name": !Ref AdClicksTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
@@ -1160,7 +1165,6 @@ Resources:
   AdClicksScalaJob:
     Type: AWS::Glue::Job
     Properties:
-      # Name: ad-clicks-scala-job
       Role: !GetAtt ETLJobRole.Arn
       Command:
         Name: glueetl
@@ -1171,7 +1175,7 @@ Resources:
         "--enable-glue-datacatalog": ""
         "--job-bookmark-option": "job-bookmark-enable"
         "--database-name": !Ref Database
-        "--raw-table-name": raw_ad_clicks # Hard-coded because CloudFormation Crawlers can't crawl an existing table
+        "--raw-table-name": raw_ad_clicks # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
         "--table-name": !Ref AdClicksTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
