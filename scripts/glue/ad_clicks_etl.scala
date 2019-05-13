@@ -24,10 +24,8 @@ object GlueApp {
       ("user", "string", "user", "string"),
       ("ad", "string", "ad", "string"),
       ("at", "timestamp", "at", "timestamp"),
-      ("year", "int", "year", "int"),
-      ("month", "int", "month", "int"),
-      ("day", "int", "day", "int"),
-      ("hour", "int", "hour", "int")
+      ("partition_0", "int", "year", "int"),
+      ("partition_1", "int", "month", "int")
     )
 
     val projection = Seq("user", "ad", "at", "year", "month")

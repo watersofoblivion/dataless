@@ -28,10 +28,8 @@ ad_clicks = (
     .apply_mapping(mappings = [("at", "string", "at", "string"),
                                ("user", "string", "user", "string"),
                                ("ad", "string", "ad", "string"),
-                               ("year", "string", "year", "string"),
-                               ("month", "string", "month", "string"),
-                               ("day", "string", "at", "timestamp"),
-                               ("hour", "string", "hour", "string")])
+                               ("partition_0", "string", "year", "string"),
+                               ("partition_1", "string", "month", "string")])
     .select_fields(paths = ["ad", "user", "at", "year", "month"])
     .resolveChoice(choice = "MATCH_CATALOG",
                    database = database_name,
