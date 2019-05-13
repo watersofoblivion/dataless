@@ -37,6 +37,7 @@ object GlueApp {
 
     val adImpressions = glueContext.getCatalogSource(databaseName, rawTableName).
       getDynamicFrame().
+      resolveChoice(Seq(("at", "cast:timestamp"), ("partition_0", "cast:int"), ("partition_1", "cast:int"))).
       applyMapping(mappings, false).
       resolveChoice(Seq.empty[ResolveSpec], Some(ChoiceOption("MATCH_CATALOG")), Some(databaseName), Some(tableName))
 

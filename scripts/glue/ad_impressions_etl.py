@@ -25,6 +25,9 @@ ad_impressions = (
     glueContext
     .create_dynamic_frame.from_catalog(database = database_name,
                                        table_name = raw_table_name)
+    .resolve_choice(specs = [("at", "cast:timestamp"),
+                             ("partition_0", "cast:int"),
+                             ("partition_1", "cast:int")])
     .apply_mapping(mappings = [("at", "string", "at", "string"),
                                ("user", "string", "user", "string"),
                                ("ad", "string", "ad", "string"),
