@@ -947,310 +947,310 @@ Resources:
       DatabaseInput:
         Name: warehouse
 
-  RawAdImpressionsTable:
-    Type: AWS::Glue::Table
-    DependsOn:
-      - Database
-    Properties:
-      CatalogId: !Ref AWS::AccountId
-      DatabaseName: !Ref Database
-      TableInput:
-        Name: raw_ad_impressions
-        Description: Raw Ad Impressions
-        TableType: EXTERNAL_TABLE
-        Parameters:
-          classification: json
-        PartitionKeys:
-          - Name: year
-            Type: int
-          - Name: month
-            Type: int
-          - Name: day
-            Type: int
-          - Name: hour
-            Type: int
-        StorageDescriptor:
-          Location: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
-          StoredAsSubDirectories: true
-          Compressed: true
-          InputFormat: org.apache.hadoop.mapred.TextInputFormat
-          SerdeInfo:
-            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
-            Parameters:
-              paths: "ad,at,user"
-          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
-          Columns:
-            - Name: user
-              Type: string
-            - Name: ad
-              Type: string
-            - Name: at
-              Type: timestamp
-
-  RawAdClicksTable:
-    Type: AWS::Glue::Table
-    DependsOn:
-      - Database
-    Properties:
-      CatalogId: !Ref AWS::AccountId
-      DatabaseName: !Ref Database
-      TableInput:
-        Name: raw_ad_clicks
-        Description: Raw Ad Clicks
-        TableType: EXTERNAL_TABLE
-        Parameters:
-          classification: json
-        PartitionKeys:
-          - Name: year
-            Type: int
-          - Name: month
-            Type: int
-          - Name: day
-            Type: int
-          - Name: hour
-            Type: int
-        StorageDescriptor:
-          Location: !Sub "s3://${Bucket}/data/raw/ad/clicks/"
-          StoredAsSubDirectories: true
-          Compressed: true
-          InputFormat: org.apache.hadoop.mapred.TextInputFormat
-          SerdeInfo:
-            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
-            Parameters:
-              paths: "ad,at,user"
-          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
-          Columns:
-            - Name: user
-              Type: string
-            - Name: ad
-              Type: string
-            - Name: at
-              Type: timestamp
-
-  CrawlerRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Action:
-              - sts:AssumeRole
-            Effect: Allow
-            Principal:
-              Service:
-                - !Sub "glue.${AWS::URLSuffix}"
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
-      Policies:
-        - PolicyName: Execution
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Action:
-                  - s3:GetObject*
-                  - s3:PutObject*
-                Effect: Allow
-                Resource:
-                  - !Sub "${Bucket.Arn}/data/raw/ad/impressions/*"
-                  - !Sub "${Bucket.Arn}/data/raw/ad/clicks/*"
-              - Action:
-                  - s3:ListBucket*
-                Effect: Allow
-                Resource:
-                  - !GetAtt Bucket.Arn
-
-  RawCrawler:
-    Type: AWS::Glue::Crawler
-    Properties:
-      Name: raw_crawler
-      Description: Crawls the raw data
-      Role: !GetAtt CrawlerRole.Arn
-      DatabaseName: !Ref Database
-      Targets:
-        S3Targets:
-          - Path: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
-          - Path: !Sub "s3://${Bucket}/data/raw/ad/clicks/"
-      TablePrefix: crawled_
-      SchemaChangePolicy:
-        UpdateBehavior: UPDATE_IN_DATABASE
-        DeleteBehavior: LOG
-      Configuration: |
-        {
-          "Version": 1.0,
-          "Grouping": {
-            "TableGroupingPolicy": "CombineCompatibleSchemas"
-          },
-          "CrawlerOutput": {
-            "Partitions": {
-              "AddOrUpdateBehavior": "InheritFromTable"
-            },
-            "Tables": {
-              "AddOrUpdateBehavior": "MergeNewColumns"
-            }
-          }
-        }
-
-  AdImpressionsTable:
-    Type: AWS::Glue::Table
-    DependsOn:
-      - Database
-    Properties:
-      CatalogId: !Ref AWS::AccountId
-      DatabaseName: !Ref Database
-      TableInput:
-          Name: ad_impressions
-          Description: Ad Impressions
-          TableType: EXTERNAL_TABLE
-          Parameters:
-            classification: orc
-          PartitionKeys:
-            - Name: year
-              Type: int
-            - Name: month
-              Type: int
-          StorageDescriptor:
-            Location: !Sub "s3://${Bucket}/data/lake/ad/impressions/"
-            StoredAsSubDirectories: true
-            InputFormat: org.apache.orc.mapreduce.OrcInputFormat
-            SerdeInfo:
-              SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
-            OutputFormat: org.apache.orc.mapreduce.OrcOutputFormat
-            Columns:
-              - Name: user
-                Type: string
-              - Name: ad
-                Type: string
-              - Name: at
-                Type: timestamp
-
-  AdClicksTable:
-    Type: AWS::Glue::Table
-    DependsOn:
-      - Database
-    Properties:
-      CatalogId: !Ref AWS::AccountId
-      DatabaseName: !Ref Database
-      TableInput:
-          Name: ad_clicks
-          Description: Ad Clicks
-          TableType: EXTERNAL_TABLE
-          Parameters:
-            classification: orc
-          PartitionKeys:
-            - Name: year
-              Type: int
-            - Name: month
-              Type: int
-          StorageDescriptor:
-            Location: !Sub "s3://${Bucket}/data/lake/ad/clicks/"
-            StoredAsSubDirectories: true
-            InputFormat: org.apache.orc.mapreduce.OrcInputFormat
-            SerdeInfo:
-              SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
-            OutputFormat: org.apache.orc.mapreduce.OrcOutputFormat
-            Columns:
-              - Name: user
-                Type: string
-              - Name: ad
-                Type: string
-              - Name: at
-                Type: timestamp
-
-  GlueETLJobRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Action:
-            - sts:AssumeRole
-            Effect: Allow
-            Principal:
-              Service:
-                - !Sub "glue.${AWS::URLSuffix}"
-      Policies:
-        - PolicyName: "root"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Action: "*"
-                Effect: Allow
-                Resource: "*"
-
-  GlueAdImpressionsPythonJob:
-    Type: AWS::Glue::Job
-    Properties:
-      Name: ad-impressions-python-job
-      Role: !GetAtt GlueETLJobRole.Arn
-      Command:
-        Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_impressions_etl.py"
-      DefaultArguments:
-        "--enable-glue-datacatalog": ""
-        "--database-name": !Ref Database
-        "--raw-table-name": raw_ad_impressions
-        "--table-name": !Ref AdImpressionsTable
-      ExecutionProperty:
-        MaxConcurrentRuns: 1
-      MaxRetries: 0
-
-  GlueAdImpressionsScalaJob:
-    Type: AWS::Glue::Job
-    Properties:
-      Name: ad-impressions-scala-job
-      Role: !GetAtt GlueETLJobRole.Arn
-      Command:
-        Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_impressions_etl.scala"
-      DefaultArguments:
-        "--job-language": scala
-        "--class": GlueApp
-        "--enable-glue-datacatalog": ""
-        "--enable-glue-datacatalog": ""
-        "--database-name": !Ref Database
-        "--raw-table-name": raw_ad_impressions
-        "--table-name": !Ref AdImpressionsTable
-      ExecutionProperty:
-        MaxConcurrentRuns: 1
-      MaxRetries: 0
-
-  GlueAdClicksPythonJob:
-    Type: AWS::Glue::Job
-    Properties:
-      Name: ad-clicks-python-job
-      Role: !GetAtt GlueETLJobRole.Arn
-      Command:
-        Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_clicks_etl.py"
-      DefaultArguments:
-        "--enable-glue-datacatalog": ""
-        "--enable-glue-datacatalog": ""
-        "--database-name": !Ref Database
-        "--raw-table-name": raw_ad_clicks
-        "--table-name": !Ref AdClicksTable
-      ExecutionProperty:
-        MaxConcurrentRuns: 1
-      MaxRetries: 0
-
-  GlueAdClicksScalaJob:
-    Type: AWS::Glue::Job
-    Properties:
-      Name: ad-clicks-scala-job
-      Role: !GetAtt GlueETLJobRole.Arn
-      Command:
-        Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_clicks_etl.scala"
-      DefaultArguments:
-        "--job-language": scala
-        "--class": GlueApp
-        "--enable-glue-datacatalog": ""
-        "--enable-glue-datacatalog": ""
-        "--database-name": !Ref Database
-        "--raw-table-name": raw_ad_clicks
-        "--table-name": !Ref AdClicksTable
-      ExecutionProperty:
-        MaxConcurrentRuns: 1
-      MaxRetries: 0
+  # RawAdImpressionsTable:
+  #   Type: AWS::Glue::Table
+  #   DependsOn:
+  #     - Database
+  #   Properties:
+  #     CatalogId: !Ref AWS::AccountId
+  #     DatabaseName: !Ref Database
+  #     TableInput:
+  #       Name: raw_ad_impressions
+  #       Description: Raw Ad Impressions
+  #       TableType: EXTERNAL_TABLE
+  #       Parameters:
+  #         classification: json
+  #       PartitionKeys:
+  #         - Name: year
+  #           Type: int
+  #         - Name: month
+  #           Type: int
+  #         - Name: day
+  #           Type: int
+  #         - Name: hour
+  #           Type: int
+  #       StorageDescriptor:
+  #         Location: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
+  #         StoredAsSubDirectories: true
+  #         Compressed: true
+  #         InputFormat: org.apache.hadoop.mapred.TextInputFormat
+  #         SerdeInfo:
+  #           SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+  #           Parameters:
+  #             paths: "ad,at,user"
+  #         OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+  #         Columns:
+  #           - Name: user
+  #             Type: string
+  #           - Name: ad
+  #             Type: string
+  #           - Name: at
+  #             Type: timestamp
+  #
+  # RawAdClicksTable:
+  #   Type: AWS::Glue::Table
+  #   DependsOn:
+  #     - Database
+  #   Properties:
+  #     CatalogId: !Ref AWS::AccountId
+  #     DatabaseName: !Ref Database
+  #     TableInput:
+  #       Name: raw_ad_clicks
+  #       Description: Raw Ad Clicks
+  #       TableType: EXTERNAL_TABLE
+  #       Parameters:
+  #         classification: json
+  #       PartitionKeys:
+  #         - Name: year
+  #           Type: int
+  #         - Name: month
+  #           Type: int
+  #         - Name: day
+  #           Type: int
+  #         - Name: hour
+  #           Type: int
+  #       StorageDescriptor:
+  #         Location: !Sub "s3://${Bucket}/data/raw/ad/clicks/"
+  #         StoredAsSubDirectories: true
+  #         Compressed: true
+  #         InputFormat: org.apache.hadoop.mapred.TextInputFormat
+  #         SerdeInfo:
+  #           SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+  #           Parameters:
+  #             paths: "ad,at,user"
+  #         OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+  #         Columns:
+  #           - Name: user
+  #             Type: string
+  #           - Name: ad
+  #             Type: string
+  #           - Name: at
+  #             Type: timestamp
+  #
+  # CrawlerRole:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Action:
+  #             - sts:AssumeRole
+  #           Effect: Allow
+  #           Principal:
+  #             Service:
+  #               - !Sub "glue.${AWS::URLSuffix}"
+  #     ManagedPolicyArns:
+  #       - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
+  #     Policies:
+  #       - PolicyName: Execution
+  #         PolicyDocument:
+  #           Version: "2012-10-17"
+  #           Statement:
+  #             - Action:
+  #                 - s3:GetObject*
+  #                 - s3:PutObject*
+  #               Effect: Allow
+  #               Resource:
+  #                 - !Sub "${Bucket.Arn}/data/raw/ad/impressions/*"
+  #                 - !Sub "${Bucket.Arn}/data/raw/ad/clicks/*"
+  #             - Action:
+  #                 - s3:ListBucket*
+  #               Effect: Allow
+  #               Resource:
+  #                 - !GetAtt Bucket.Arn
+  #
+  # RawCrawler:
+  #   Type: AWS::Glue::Crawler
+  #   Properties:
+  #     Name: raw_crawler
+  #     Description: Crawls the raw data
+  #     Role: !GetAtt CrawlerRole.Arn
+  #     DatabaseName: !Ref Database
+  #     Targets:
+  #       S3Targets:
+  #         - Path: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
+  #         - Path: !Sub "s3://${Bucket}/data/raw/ad/clicks/"
+  #     TablePrefix: crawled_
+  #     SchemaChangePolicy:
+  #       UpdateBehavior: UPDATE_IN_DATABASE
+  #       DeleteBehavior: LOG
+  #     Configuration: |
+  #       {
+  #         "Version": 1.0,
+  #         "Grouping": {
+  #           "TableGroupingPolicy": "CombineCompatibleSchemas"
+  #         },
+  #         "CrawlerOutput": {
+  #           "Partitions": {
+  #             "AddOrUpdateBehavior": "InheritFromTable"
+  #           },
+  #           "Tables": {
+  #             "AddOrUpdateBehavior": "MergeNewColumns"
+  #           }
+  #         }
+  #       }
+  #
+  # AdImpressionsTable:
+  #   Type: AWS::Glue::Table
+  #   DependsOn:
+  #     - Database
+  #   Properties:
+  #     CatalogId: !Ref AWS::AccountId
+  #     DatabaseName: !Ref Database
+  #     TableInput:
+  #         Name: ad_impressions
+  #         Description: Ad Impressions
+  #         TableType: EXTERNAL_TABLE
+  #         Parameters:
+  #           classification: orc
+  #         PartitionKeys:
+  #           - Name: year
+  #             Type: int
+  #           - Name: month
+  #             Type: int
+  #         StorageDescriptor:
+  #           Location: !Sub "s3://${Bucket}/data/lake/ad/impressions/"
+  #           StoredAsSubDirectories: true
+  #           InputFormat: org.apache.orc.mapreduce.OrcInputFormat
+  #           SerdeInfo:
+  #             SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
+  #           OutputFormat: org.apache.orc.mapreduce.OrcOutputFormat
+  #           Columns:
+  #             - Name: user
+  #               Type: string
+  #             - Name: ad
+  #               Type: string
+  #             - Name: at
+  #               Type: timestamp
+  #
+  # AdClicksTable:
+  #   Type: AWS::Glue::Table
+  #   DependsOn:
+  #     - Database
+  #   Properties:
+  #     CatalogId: !Ref AWS::AccountId
+  #     DatabaseName: !Ref Database
+  #     TableInput:
+  #         Name: ad_clicks
+  #         Description: Ad Clicks
+  #         TableType: EXTERNAL_TABLE
+  #         Parameters:
+  #           classification: orc
+  #         PartitionKeys:
+  #           - Name: year
+  #             Type: int
+  #           - Name: month
+  #             Type: int
+  #         StorageDescriptor:
+  #           Location: !Sub "s3://${Bucket}/data/lake/ad/clicks/"
+  #           StoredAsSubDirectories: true
+  #           InputFormat: org.apache.orc.mapreduce.OrcInputFormat
+  #           SerdeInfo:
+  #             SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
+  #           OutputFormat: org.apache.orc.mapreduce.OrcOutputFormat
+  #           Columns:
+  #             - Name: user
+  #               Type: string
+  #             - Name: ad
+  #               Type: string
+  #             - Name: at
+  #               Type: timestamp
+  #
+  # GlueETLJobRole:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Action:
+  #           - sts:AssumeRole
+  #           Effect: Allow
+  #           Principal:
+  #             Service:
+  #               - !Sub "glue.${AWS::URLSuffix}"
+  #     Policies:
+  #       - PolicyName: "root"
+  #         PolicyDocument:
+  #           Version: "2012-10-17"
+  #           Statement:
+  #             - Action: "*"
+  #               Effect: Allow
+  #               Resource: "*"
+  #
+  # GlueAdImpressionsPythonJob:
+  #   Type: AWS::Glue::Job
+  #   Properties:
+  #     Name: ad-impressions-python-job
+  #     Role: !GetAtt GlueETLJobRole.Arn
+  #     Command:
+  #       Name: glueetl
+  #       ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_impressions_etl.py"
+  #     DefaultArguments:
+  #       "--enable-glue-datacatalog": ""
+  #       "--database-name": !Ref Database
+  #       "--raw-table-name": raw_ad_impressions
+  #       "--table-name": !Ref AdImpressionsTable
+  #     ExecutionProperty:
+  #       MaxConcurrentRuns: 1
+  #     MaxRetries: 0
+  #
+  # GlueAdImpressionsScalaJob:
+  #   Type: AWS::Glue::Job
+  #   Properties:
+  #     Name: ad-impressions-scala-job
+  #     Role: !GetAtt GlueETLJobRole.Arn
+  #     Command:
+  #       Name: glueetl
+  #       ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_impressions_etl.scala"
+  #     DefaultArguments:
+  #       "--job-language": scala
+  #       "--class": GlueApp
+  #       "--enable-glue-datacatalog": ""
+  #       "--enable-glue-datacatalog": ""
+  #       "--database-name": !Ref Database
+  #       "--raw-table-name": raw_ad_impressions
+  #       "--table-name": !Ref AdImpressionsTable
+  #     ExecutionProperty:
+  #       MaxConcurrentRuns: 1
+  #     MaxRetries: 0
+  #
+  # GlueAdClicksPythonJob:
+  #   Type: AWS::Glue::Job
+  #   Properties:
+  #     Name: ad-clicks-python-job
+  #     Role: !GetAtt GlueETLJobRole.Arn
+  #     Command:
+  #       Name: glueetl
+  #       ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_clicks_etl.py"
+  #     DefaultArguments:
+  #       "--enable-glue-datacatalog": ""
+  #       "--enable-glue-datacatalog": ""
+  #       "--database-name": !Ref Database
+  #       "--raw-table-name": raw_ad_clicks
+  #       "--table-name": !Ref AdClicksTable
+  #     ExecutionProperty:
+  #       MaxConcurrentRuns: 1
+  #     MaxRetries: 0
+  #
+  # GlueAdClicksScalaJob:
+  #   Type: AWS::Glue::Job
+  #   Properties:
+  #     Name: ad-clicks-scala-job
+  #     Role: !GetAtt GlueETLJobRole.Arn
+  #     Command:
+  #       Name: glueetl
+  #       ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_clicks_etl.scala"
+  #     DefaultArguments:
+  #       "--job-language": scala
+  #       "--class": GlueApp
+  #       "--enable-glue-datacatalog": ""
+  #       "--enable-glue-datacatalog": ""
+  #       "--database-name": !Ref Database
+  #       "--raw-table-name": raw_ad_clicks
+  #       "--table-name": !Ref AdClicksTable
+  #     ExecutionProperty:
+  #       MaxConcurrentRuns: 1
+  #     MaxRetries: 0
 
   #################
   ### Generated ###
