@@ -642,7 +642,7 @@ Resources:
                 CaseInsensitive: true
           OutputFormatConfiguration:
             Serializer:
-              OrcSerDe:
+              OrcSerDe: {}
           SchemaConfiguration:
             DatabaseName: !Ref Database
             RoleARN: !GetAtt DeliveryStreamRole.Arn
@@ -677,7 +677,7 @@ Resources:
                 CaseInsensitive: true
           OutputFormatConfiguration:
             Serializer:
-              OrcSerDe:
+              OrcSerDe: {}
           SchemaConfiguration:
             DatabaseName: !Ref Database
             RoleARN: !GetAtt DeliveryStreamRole.Arn
