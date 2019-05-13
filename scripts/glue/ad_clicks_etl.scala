@@ -35,7 +35,7 @@ object GlueApp {
     // val rawTableName = args("raw-table-name")
     // val tableName = args("table-name")
 
-    val adClicksPreCast = glueContext.getCatalogSource("warehouse", "raw_ad_clicks").
+    val adClicks = glueContext.getCatalogSource("warehouse", "raw_ad_clicks").
       getDynamicFrame().
       resolveChoice(Seq(("at", "cast:timestamp"), ("partition_0", "cast:int"), ("partition_1", "cast:int"))).
       applyMapping(mappings, false).
