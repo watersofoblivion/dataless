@@ -1113,7 +1113,7 @@ Resources:
         "--job-bookmark-option": "job-bookmark-enable"
         "--database-name": !Ref Database
         "--raw-table-name": raw_ad_impressions # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
-        "--table-name": !Ref AdImpressionsTable
+        # "--table-name": !Ref AdImpressionsTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
       MaxRetries: 0
@@ -1132,7 +1132,7 @@ Resources:
         "--job-bookmark-option": "job-bookmark-enable"
         "--database-name": !Ref Database
         "--raw-table-name": raw_ad_impressions # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
-        "--table-name": !Ref AdImpressionsTable
+        # "--table-name": !Ref AdImpressionsTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
       MaxRetries: 0
