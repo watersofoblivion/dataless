@@ -5,7 +5,7 @@ from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from awsglue.job import Job
 
-args = getResolvedOptions(sys.argv, ['JOB_NAME', "database-name", "raw-table-name", "table-name"])
+args = getResolvedOptions(sys.argv, ['JOB_NAME', "database_name", "raw_table_name", "table_name"])
 
 sc = SparkContext()
 glueContext = GlueContext(sc)
@@ -13,9 +13,12 @@ spark = glueContext.spark_session
 job = Job(glueContext)
 job.init(args['JOB_NAME'], args)
 
-database_name = args["database-name"]
-raw_table_name = args["raw-table-name"]
-table_name = args["table-name"]
+for k, v in args.items():
+    print "(%s, %s)" % (k, v)
+
+database_name = args["database_name"]
+raw_table_name = args["raw_table_name"]
+table_name = args["table_name"]
 
 mappings = [("at",          "string", "at",    "timestamp"),
             ("user",        "string", "user",  "string"),

@@ -1126,9 +1126,9 @@ Resources:
       DefaultArguments:
         "--enable-glue-datacatalog": ""
         "--job-bookmark-option": "job-bookmark-enable"
-        "--database-name": !Ref Database
-        "--raw-table-name": raw_ad_impressions # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
-        "--table-name": !Ref AdImpressionsTable
+        "--database_name": !Ref Database
+        "--raw_table_name": raw_ad_impressions # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
+        "--table_name": !Ref AdImpressionsTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
       MaxRetries: 0
@@ -1145,9 +1145,9 @@ Resources:
         "--class": GlueApp
         "--enable-glue-datacatalog": ""
         "--job-bookmark-option": "job-bookmark-enable"
-        "--database-name": !Ref Database
-        "--raw-table-name": raw_ad_impressions # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
-        "--table-name": !Ref AdImpressionsTable
+        "--database_name": !Ref Database
+        "--raw_table_name": raw_ad_impressions # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
+        "--table_name": !Ref AdImpressionsTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
       MaxRetries: 0
@@ -1162,9 +1162,9 @@ Resources:
       DefaultArguments:
         "--enable-glue-datacatalog": ""
         "--job-bookmark-option": "job-bookmark-enable"
-        "--database-name": !Ref Database
-        "--raw-table-name": raw_ad_clicks # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
-        "--table-name": !Ref AdClicksTable
+        "--database_name": !Ref Database
+        "--raw_table_name": raw_ad_clicks # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
+        "--table_name": !Ref AdClicksTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
       MaxRetries: 0
@@ -1181,9 +1181,9 @@ Resources:
         "--class": GlueApp
         "--enable-glue-datacatalog": ""
         "--job-bookmark-option": "job-bookmark-enable"
-        "--database-name": !Ref Database
-        "--raw-table-name": raw_ad_clicks # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
-        "--table-name": !Ref AdClicksTable
+        "--database_name": !Ref Database
+        "--raw_table_name": raw_ad_clicks # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
+        "--table_name": !Ref AdClicksTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
       MaxRetries: 0
