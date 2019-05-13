@@ -42,7 +42,8 @@ object GlueApp {
       resolveChoice(Seq.empty[ResolveSpec], Some(ChoiceOption("MATCH_CATALOG")), Some(databaseName), Some(tableName))
 
     val partitioning = JsonOptions("""{"partitionKeys":["year","month"]}""")
-    glueContext.getCatalogSink(databaseName, tableName, additionalOptions = partitioning).writeDynamicFrame(adImpressions)
+    glueContext.getCatalogSink(databaseName, tableName, additionalOptions = partitioning).
+      writeDynamicFrame(adImpressions)
 
     Job.commit()
   }

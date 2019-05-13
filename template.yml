@@ -1035,10 +1035,10 @@ Resources:
           StorageDescriptor:
             Location: !Sub "s3://${Bucket}/data/lake/ad/impressions/"
             StoredAsSubDirectories: true
-            InputFormat: org.apache.orc.mapreduce.OrcInputFormat
+            InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
             SerdeInfo:
               SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
-            OutputFormat: org.apache.orc.mapreduce.OrcOutputFormat
+            OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
             Columns:
               - Name: user
                 Type: string
@@ -1068,10 +1068,10 @@ Resources:
           StorageDescriptor:
             Location: !Sub "s3://${Bucket}/data/lake/ad/clicks/"
             StoredAsSubDirectories: true
-            InputFormat: org.apache.orc.mapreduce.OrcInputFormat
+            InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
             SerdeInfo:
               SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
-            OutputFormat: org.apache.orc.mapreduce.OrcOutputFormat
+            OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
             Columns:
               - Name: user
                 Type: string
