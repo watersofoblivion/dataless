@@ -34,8 +34,8 @@ object GlueApp {
       getDynamicFrame().
       applyMapping(mappings).
       selectFields(projection).
-      resolveChoice(None, Some(ChoiceOption("MATCH_CATALOG")), Some(databaseName), Some(tableName)).
-      resolveChoice(None, Some(ChoiceOption("make_struct")))
+      resolveChoice(Seq.empty[ResolveSpec], Some(ChoiceOption("MATCH_CATALOG")), Some(databaseName), Some(tableName)).
+      resolveChoice(Seq.empty[ResolveSpec], Some(ChoiceOption("make_struct")))
 
     glueContext.getCatalogSink(databaseName, tableName).writeDynamicFrame(adImpressions)
 

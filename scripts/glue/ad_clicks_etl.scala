@@ -34,8 +34,8 @@ object GlueApp {
       getDynamicFrame().
       applyMapping(mappings).
       selectFields(projection).
-      resolveChoice(None, Some(ChoiceOption("MATCH_CATALOG")), Some("warehouse"), Some("ad_clicks")).
-      resolveChoice(None, Some(ChoiceOption("make_struct")))
+      resolveChoice(Seq.empty[ResolveSpec], Some(ChoiceOption("MATCH_CATALOG")), Some("warehouse"), Some("ad_clicks")).
+      resolveChoice(Seq.empty[ResolveSpec], Some(ChoiceOption("make_struct")))
 
     glueContext.getCatalogSink("warehouse", "ad_clicks").writeDynamicFrame(adClicks)
 
