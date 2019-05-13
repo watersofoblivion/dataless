@@ -606,7 +606,7 @@ Resources:
             Principal:
               Service:
                 - !Sub "firehose.${AWS::URLSuffix}"
-      ManagedPolicyARNs:
+      ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
       Policies:
         - PolicyName: Execution
