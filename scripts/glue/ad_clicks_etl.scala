@@ -30,12 +30,12 @@ object GlueApp {
 
     val projection = Seq("user", "ad", "at", "year", "month")
 
-    adClicks = glueContext.getCatalogSource(database = databaseName, tableName = rawTableName).
+    val adClicks = glueContext.getCatalogSource(database = databaseName, tableName = rawTableName).
       getDynamicFrame().
       applyMapping(mappings = mappings).
       selectFields(paths = projection).
       resolveChoice(choiceOption = Some(ChoiceOption("MATCH_CATALOG")), database = Some(databaseName), tableName = Some(tableName)).
-      resolveChoice(choiceOption = Some(ChoiceOption("make_struct"))).
+      resolveChoice(choiceOption = Some(ChoiceOption("make_struct")))
 
     glueContext.getCatalogSink(database = databaseName, tableName = tableName).
       writeDynamicFrame(adClicks)
