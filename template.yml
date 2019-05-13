@@ -1046,10 +1046,6 @@ Resources:
                 Type: string
               - Name: at
                 Type: timestamp
-              - Name: year
-                Type: int
-              - Name: month
-                Type: int
 
   AdClicksTable:
     Type: AWS::Glue::Table
@@ -1083,10 +1079,6 @@ Resources:
                 Type: string
               - Name: at
                 Type: timestamp
-              - Name: year
-                Type: int
-              - Name: month
-                Type: int
 
   ETLJobRole:
     Type: AWS::IAM::Role
