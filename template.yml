@@ -1014,71 +1014,71 @@ Resources:
           }
         }
 
-  # AdImpressionsTable:
-  #   Type: AWS::Glue::Table
-  #   DependsOn:
-  #     - Database
-  #   Properties:
-  #     CatalogId: !Ref AWS::AccountId
-  #     DatabaseName: !Ref Database
-  #     TableInput:
-  #         Name: ad_impressions
-  #         Description: Ad Impressions
-  #         TableType: EXTERNAL_TABLE
-  #         Parameters:
-  #           classification: orc
-  #         PartitionKeys:
-  #           - Name: year
-  #             Type: int
-  #           - Name: month
-  #             Type: int
-  #         StorageDescriptor:
-  #           Location: !Sub "s3://${Bucket}/data/lake/ad/impressions/"
-  #           StoredAsSubDirectories: true
-  #           InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
-  #           SerdeInfo:
-  #             SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
-  #           OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
-  #           Columns:
-  #             - Name: user
-  #               Type: string
-  #             - Name: ad
-  #               Type: string
-  #             - Name: at
-  #               Type: timestamp
-  #
-  # AdClicksTable:
-  #   Type: AWS::Glue::Table
-  #   DependsOn:
-  #     - Database
-  #   Properties:
-  #     CatalogId: !Ref AWS::AccountId
-  #     DatabaseName: !Ref Database
-  #     TableInput:
-  #         Name: ad_clicks
-  #         Description: Ad Clicks
-  #         TableType: EXTERNAL_TABLE
-  #         Parameters:
-  #           classification: orc
-  #         PartitionKeys:
-  #           - Name: year
-  #             Type: int
-  #           - Name: month
-  #             Type: int
-  #         StorageDescriptor:
-  #           Location: !Sub "s3://${Bucket}/data/lake/ad/clicks/"
-  #           StoredAsSubDirectories: true
-  #           InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
-  #           SerdeInfo:
-  #             SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
-  #           OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
-  #           Columns:
-  #             - Name: user
-  #               Type: string
-  #             - Name: ad
-  #               Type: string
-  #             - Name: at
-  #               Type: timestamp
+  AdImpressionsTable:
+    Type: AWS::Glue::Table
+    DependsOn:
+      - Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref Database
+      TableInput:
+          Name: ad_impressions
+          Description: Ad Impressions
+          TableType: EXTERNAL_TABLE
+          Parameters:
+            classification: orc
+          PartitionKeys:
+            - Name: year
+              Type: int
+            - Name: month
+              Type: int
+          StorageDescriptor:
+            Location: !Sub "s3://${Bucket}/data/lake/ad/impressions/"
+            StoredAsSubDirectories: true
+            InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+            SerdeInfo:
+              SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
+            OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
+            Columns:
+              - Name: user
+                Type: string
+              - Name: ad
+                Type: string
+              - Name: at
+                Type: timestamp
+
+  AdClicksTable:
+    Type: AWS::Glue::Table
+    DependsOn:
+      - Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref Database
+      TableInput:
+          Name: ad_clicks
+          Description: Ad Clicks
+          TableType: EXTERNAL_TABLE
+          Parameters:
+            classification: orc
+          PartitionKeys:
+            - Name: year
+              Type: int
+            - Name: month
+              Type: int
+          StorageDescriptor:
+            Location: !Sub "s3://${Bucket}/data/lake/ad/clicks/"
+            StoredAsSubDirectories: true
+            InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+            SerdeInfo:
+              SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
+            OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
+            Columns:
+              - Name: user
+                Type: string
+              - Name: ad
+                Type: string
+              - Name: at
+                Type: timestamp
 
   ETLJobRole:
     Type: AWS::IAM::Role
