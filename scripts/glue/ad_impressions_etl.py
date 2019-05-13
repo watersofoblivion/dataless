@@ -5,11 +5,7 @@ from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from awsglue.job import Job
 
-args = getResolvedOptions(sys.argv,
-                          ['JOB_NAME',
-                           "database-name",
-                           "raw-table-name",
-                           "table-name"])
+args = getResolvedOptions(sys.argv, ['JOB_NAME', "database-name", "raw-table-name", "table-name"])
 
 sc = SparkContext()
 glueContext = GlueContext(sc)
@@ -21,22 +17,16 @@ database_name = args["database-name"]
 raw_table_name = args["raw-table-name"]
 table_name = args["table-name"]
 
-ad_impressions = (
-    glueContext
-    .create_dynamic_frame.from_catalog(database = database_name,
-                                       table_name = raw_table_name)
-    .apply_mapping(mappings = [("at", "string", "at", "timestamp"),
-                               ("user", "string", "user", "string"),
-                               ("ad", "string", "ad", "string"),
-                               ("partition_0", "string", "year", "int"),
-                               ("partition_1", "string", "month", "string")])
-    .resolveChoice(choice = "MATCH_CATALOG",
-                   database = database_name,
-                   table_name = table_name)
-)
+mappings = [("at",          "string", "at",    "timestamp"),
+            ("user",        "string", "user",  "string"),
+            ("ad",          "string", "ad",    "string"),
+            ("partition_0", "string", "year",  "int"),
+            ("partition_1", "string", "month", "int")]
 
-glueContext.write_dynamic_frame.from_catalog(frame = ad_impressions,
-                                             database = database_name,
-                                             table_name = table_name)
+ad_impressions = glueContext.create_dynamic_frame_from_catalog(database_name, raw_table_name) \
+                 .apply_mapping(mappings) \
+                 .resolveChoice(choice = "MATCH_CATALOG", database = database_name, table_name = table_name)
+
+glueContext.write_dynamic_frame_from_catalog(ad_impressions, database_name, table_name, additional_options = {"partitionKeys": ["year", "month"]})
 
 job.commit()
