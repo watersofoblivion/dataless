@@ -988,7 +988,7 @@ Resources:
       Description: Crawls the raw data
       Role: !GetAtt CrawlerRole.Arn
       DatabaseName: !Ref Database
-      Targets:
+      Targets: # CloudFormation does not seem to support targeting an existing table.  Console does, at least.
         S3Targets:
           - Path: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
           - Path: !Sub "s3://${Bucket}/data/raw/ad/clicks/"
@@ -996,6 +996,7 @@ Resources:
       SchemaChangePolicy:
         UpdateBehavior: UPDATE_IN_DATABASE
         DeleteBehavior: LOG
+      Schedule: cron(20 * * * ? *)
       Configuration: |
         {
           "Version": 1.0,
@@ -1110,7 +1111,7 @@ Resources:
       DefaultArguments:
         "--enable-glue-datacatalog": ""
         "--database-name": !Ref Database
-        "--raw-table-name": raw_ad_impressions
+        "--raw-table-name": raw_ad_impressions # Hard-coded because CloudFormation Crawlers can't crawl an existing table
         "--table-name": !Ref AdImpressionsTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
@@ -1129,7 +1130,7 @@ Resources:
         "--class": GlueApp
         "--enable-glue-datacatalog": ""
         "--database-name": !Ref Database
-        "--raw-table-name": raw_ad_impressions
+        "--raw-table-name": raw_ad_impressions # Hard-coded because CloudFormation Crawlers can't crawl an existing table
         "--table-name": !Ref AdImpressionsTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
@@ -1146,7 +1147,7 @@ Resources:
       DefaultArguments:
         "--enable-glue-datacatalog": ""
         "--database-name": !Ref Database
-        "--raw-table-name": raw_ad_clicks
+        "--raw-table-name": raw_ad_clicks # Hard-coded because CloudFormation Crawlers can't crawl an existing table
         "--table-name": !Ref AdClicksTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
@@ -1165,7 +1166,7 @@ Resources:
         "--class": GlueApp
         "--enable-glue-datacatalog": ""
         "--database-name": !Ref Database
-        "--raw-table-name": raw_ad_clicks
+        "--raw-table-name": raw_ad_clicks # Hard-coded because CloudFormation Crawlers can't crawl an existing table
         "--table-name": !Ref AdClicksTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
