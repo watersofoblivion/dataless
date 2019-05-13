@@ -1074,9 +1074,6 @@ Resources:
             },
             "Tables": {
               "AddOrUpdateBehavior": "MergeNewColumns"
-            },
-            "Grouping": {
-              "TableGroupingPolicy": "CombineCompatibleSchemas"
             }
           }
         }
