@@ -1172,7 +1172,7 @@ Resources:
     Type: AWS::Glue::Job
     Properties:
       Name: ad-impressions-etl-job
-      Role: !GetAtt GlueLakeETLJobRole.Arn
+      Role: !GetAtt GlueETLJobRole.Arn
       Command:
         Name: glueetl
         ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_impressions_etl.py"
@@ -1185,8 +1185,8 @@ Resources:
   GlueAdClicksETLJob:
     Type: AWS::Glue::Job
     Properties:
-      Name: ad-impressions-etl-job
-      Role: !GetAtt GlueLakeETLJobRole.Arn
+      Name: ad-clicks-etl-job
+      Role: !GetAtt GlueETLJobRole.Arn
       Command:
         Name: glueetl
         ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_clicks_etl.py"
