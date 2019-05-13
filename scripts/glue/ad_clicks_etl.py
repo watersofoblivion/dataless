@@ -13,9 +13,6 @@ spark = glueContext.spark_session
 job = Job(glueContext)
 job.init(args['JOB_NAME'], args)
 
-for k, v in args.items():
-    print "(%s, %s)" % (k, v)
-
 database_name = args["database_name"]
 raw_table_name = args["raw_table_name"]
 table_name = args["table_name"]

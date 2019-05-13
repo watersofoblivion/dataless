@@ -10,12 +10,7 @@ import org.apache.spark.SparkContext
 import scala.collection.JavaConverters._
 
 object GlueApp {
-  val argNames = Seq(
-    "JOB_NAME",
-    "database-name",
-    "raw-table-name",
-    "table-name"
-  )
+  val argNames = Seq("JOB_NAME", "database_name", "raw_table_name", "table_name")
 
   val mappings = Seq(
     MappingSpec("user", "string", "user", "string"),
@@ -31,9 +26,9 @@ object GlueApp {
     val args = GlueArgParser.getResolvedOptions(sysArgs, argNames.toArray)
     Job.init(args("JOB_NAME"), glueContext, args.asJava)
 
-    val databaseName = args("database-name")
-    val rawTableName = args("raw-table-name")
-    val tableName = args("table-name")
+    val databaseName = args("database_name")
+    val rawTableName = args("raw_table_name")
+    val tableName = args("table_name")
 
     val adImpressions = glueContext.getCatalogSource(databaseName, rawTableName).
       getDynamicFrame().
