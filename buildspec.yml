@@ -58,7 +58,7 @@ phases:
           -account-id        "${ACCOUNT_ID}" \
           -project-id        "${PROJECT_ID}" \
           -code-bucket       "${S3_BUCKET}" \
-          -code-prefix       "code/${CODEBUILD_BUILD_ID}" \
+          -code-prefix       "build/${CODEBUILD_BUILD_ID}" \
           -stage             "${STAGE_NAME}" \
           -dns-domain-name   "${DNS_DOMAIN_NAME}" \
           -dns-name          "${DNS_NAME}" \
