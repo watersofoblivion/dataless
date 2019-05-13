@@ -626,7 +626,7 @@ Resources:
       DeliveryStreamType: DirectPut
       S3DestinationConfiguration:
         BucketARN: !GetAtt Bucket.Arn
-        Prefix: data/raw/ad/impressions/year=!{timestamp:yyyy}/month=!{timestamp:MM}/
+        Prefix: data/raw/ad/impressions/
         BufferingHints:
           IntervalInSeconds: 900
           SizeInMBs: 128
@@ -639,7 +639,7 @@ Resources:
       DeliveryStreamType: DirectPut
       S3DestinationConfiguration:
         BucketARN: !GetAtt Bucket.Arn
-        Prefix: data/raw/ad/clicks/year=!{timestamp:yyyy}/month=!{timestamp:MM}/
+        Prefix: data/raw/ad/clicks/
         BufferingHints:
           IntervalInSeconds: 900
           SizeInMBs: 128
@@ -1174,7 +1174,7 @@ Resources:
       ExecutionProperty:
         MaxConcurrentRuns: 1
       MaxRetries: 0
-  
+
   AdClicksScalaJob:
     Type: AWS::Glue::Job
     Properties:
