@@ -836,6 +836,10 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref Stage
+      MethodSettings:
+        LoggingLevel: ERROR
+        MetricsEnabled: true
+      TracingEnabled: true
       DefinitionBody:
         openapi: 3.0.0
         info:
