@@ -655,25 +655,19 @@ Resources:
     Properties:
       DashboardBody: !Sub |
         {
-          "start": "",
+          "start": "-PT1H",
           "periodOverride": "inherit",
           "widgets": [
             {
               "type": "metric",
-              "x": 0,
-              "y": 0,
               "width": 8,
               "height": 6,
               "properties": {
-                "metrics": [
-                  [],
-                  [],
-                  []
-                ],
+                "metrics": [],
                 "period": 300,
                 "stat": "Average",
                 "region": "${AWS::Region}",
-                "title": "",
+                "title": "Empty"
               }
             }
           ]
@@ -1387,7 +1381,7 @@ Resources:
                 "period": 60,
                 "stat": "Average",
                 "region": "${AWS::Region}",
-                "title": "Ad Impressions Request Rate",
+                "title": "Ad Impressions Request Rate"
               }
             },
             {
@@ -1404,7 +1398,7 @@ Resources:
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
-                "title": "Ad Impressions Latency",
+                "title": "Ad Impressions Latency"
               }
             },
             {
@@ -1423,7 +1417,7 @@ Resources:
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
-                "title": "Ad Impressions Integration Latency",
+                "title": "Ad Impressions Integration Latency"
               }
             },
             {
@@ -1439,7 +1433,7 @@ Resources:
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
-                "title": "Ad Impressions Errors",
+                "title": "Ad Impressions Errors"
               }
             },
             {
@@ -1453,7 +1447,7 @@ Resources:
                 "period": 60,
                 "stat": "Average",
                 "region": "${AWS::Region}",
-                "title": "Ad Clicks Request Rate",
+                "title": "Ad Clicks Request Rate"
               }
             },
             {
@@ -1470,7 +1464,7 @@ Resources:
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
-                "title": "Ad Clicks Latency",
+                "title": "Ad Clicks Latency"
               }
             },
             {
@@ -1489,7 +1483,7 @@ Resources:
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
-                "title": "Ad Clicks Integration Latency",
+                "title": "Ad Clicks Integration Latency"
               }
             },
             {
@@ -1505,7 +1499,7 @@ Resources:
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
-                "title": "Ad Clicks Errors",
+                "title": "Ad Clicks Errors"
               }
             },
             {
