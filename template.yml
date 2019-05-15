@@ -774,10 +774,10 @@ Resources:
                 JSONMappingParameters:
                   RecordRowPath: "$"
             RecordColumns:
-              - Name: ad
+              - Name: ad_id
                 SqlType: VARCHAR(255)
                 Mapping: "$.ad"
-              - Name: user
+              - Name: user_id
                 SqlType: VARCHAR(255)
                 Mapping: "$.user"
               - Name: at
@@ -812,10 +812,10 @@ Resources:
   #               JSONMappingParameters:
   #                 RecordRowPath: "$"
   #           RecordColumns:
-  #             - Name: ad
+  #             - Name: ad_id
   #               SqlType: VARCHAR(255)
   #               Mapping: "$.ad"
-  #             - Name: user
+  #             - Name: user_id
   #               SqlType: VARCHAR(255)
   #               Mapping: "$.user"
   #             - Name: at
