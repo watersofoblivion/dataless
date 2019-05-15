@@ -646,6 +646,170 @@ Resources:
         CompressionFormat: GZIP
         RoleARN: !GetAtt DeliveryStreamRole.Arn
 
+  #############
+  # Real Time #
+  #############
+
+  RealTimeDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardBody: !Sub |
+        {
+          "start": "",
+          "periodOverride": "inherit",
+          "widgets": [
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 0,
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [],
+                  [],
+                  []
+                ],
+                "period": 300,
+                "stat": "Average",
+                "region": "${AWS::Region}",
+                "title": "",
+              }
+            }
+          ]
+        }
+
+  AdImpressionsAndClicksLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "lambda.${AWS::URLSuffix}"
+      ManagedPolicyArns:
+        -  arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  AdImpressionsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: main
+      Runtime: go1.x
+      Role: !GetAtt AdImpressionsAndClicksLambdaRole.Arn
+
+  # AdClicksLambda:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Handler: main
+  #     Runtime: go1.x
+  #     Role: !GetAtt AdImpressionsAndClicksLambdaRole.Arn
+
+  ApplicationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "kinesisanalytics.${AWS::URLSuffix}"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonKinesisAnalyticsFullAccess
+      Policies:
+        - PolicyName: Execution
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - lambda:InvokeFunction
+                  - lambda:GetFunctionConfiguration
+                Effect: Allow
+                Resource:
+                  - !GetAtt AdImpressionsLambda.Alias
+                  # - !GetAtt AdClicksLambda.Alias
+
+  AdImpressionsApplication:
+    Type: AWS::KinesisAnalytics::Application
+    Properties:
+      ApplicationCode: |
+
+      Inputs:
+        - NamePrefix: AD_IMPRESSIONS
+          KinesisFirehoseInput:
+            ResourceARN: !GetAtt AdImpressionsDeliveryStream.Arn
+            RoleARN: !GetAtt ApplicationRole.Arn
+          InputSchema:
+            RecordFormat:
+              RecordFormatType: JSON
+              MappingParameters:
+                JSONMappingParameters:
+                  RecordRowPath: "$"
+            RecordColumns:
+              - Name: ad
+                SqlType: VARCHAR(255)
+                Mapping: "$.ad"
+              - Name: user
+                SqlType: VARCHAR(255)
+                Mapping: "$.user"
+              - Name: at
+                SqlType: TIMESTAMP
+                Mapping: "$.at"
+
+  AdImpressionsOutputs:
+    Type: AWS::KinesisAnalytics::ApplicationOutput
+    Properties:
+      ApplicationName: !Ref AdImpressionsApplication
+      Output:
+        Name: IMPRESSIONS_OUTPUT
+        DestinationSchema:
+          RecordFormatType: JSON
+        LambdaOutput:
+          ResourceARN: !GetAtt AdImpressionsLambda.Alias
+          RoleARN: !GetAtt ApplicationRole.Arn
+
+  # AdImpressionsApplication:
+  #   Type: AWS::KinesisAnalytics::Application
+  #   Properties:
+  #     ApplicationCode: |
+  #     Inputs:
+  #       - NamePrefix: adImpressions
+  #         KinesisFirehoseInput:
+  #           ResourceARN: !GetAtt AdImpressionsDeliveryStream.Arn
+  #           RoleARN: !GetAtt ApplicationRole.Arn
+  #         InputSchema:
+  #           RecordFormat:
+  #             RecordFormatType: JSON
+  #             MappingParameters:
+  #               JSONMappingParameters:
+  #                 RecordRowPath: "$"
+  #           RecordColumns:
+  #             - Name: ad
+  #               SqlType: VARCHAR(255)
+  #               Mapping: "$.ad"
+  #             - Name: user
+  #               SqlType: VARCHAR(255)
+  #               Mapping: "$.user"
+  #             - Name: at
+  #               SqlType: TIMESTAMP
+  #               Mapping: "$.at"
+  #
+  # AdImpressionsOutputs:
+  #   Type: AWS::KinesisAnalytics::ApplicationOutput
+  #   Properties:
+  #     ApplicationName: !Ref AdClicksApplication
+  #     Output:
+  #       Name: adsOutput
+  #       DestinationSchema:
+  #         RecordFormatType: JSON
+  #       LambdaOutput:
+  #         ResourceARN: !GetAtt AdClicksLambda.Alias
+  #         RoleARN: !GetAtt ApplicationRole.Arn
+
   #######
   # API #
   #######
@@ -1195,36 +1359,166 @@ Resources:
       MaxRetries: 0
 
   #################
-  ### Generated ###
+  # Ops Dashboard #
   #################
 
-  # GetHelloWorld:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     Handler: main
-  #     Runtime: go1.x
-  #     Role:
-  #       Fn::GetAtt:
-  #       - LambdaExecutionRole
-  #       - Arn
-  #     Events:
-  #       GetEvent:
-  #         Type: Api
-  #         Properties:
-  #           Path: /
-  #           Method: get
-  # LambdaExecutionRole:
-  #   Description: Creating service role in IAM for AWS Lambda
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     RoleName: !Sub 'CodeStar-${ProjectId}-Execution${Stage}'
-  #     AssumeRolePolicyDocument:
-  #       Statement:
-  #       - Effect: Allow
-  #         Principal:
-  #           Service: [lambda.amazonaws.com]
-  #         Action: sts:AssumeRole
-  #     Path: /
-  #     ManagedPolicyArns:
-  #       -  arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-  #     PermissionsBoundary: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/CodeStar_${ProjectId}_PermissionsBoundary'
+  OpsDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardBody: !Sub |
+        {
+          "start": "-PT1H",
+          "periodOverride": "inherit",
+          "widgets": [
+            {
+              "type": "text",
+              "width": 24,
+              "height": 2,
+              "properties": { "markdown": "# Endpoints" }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/ApiGateway", "Count", "ApiName", ${API}, "Method", "POST", "Resource", "/data/ad/impressions", "Stage", "${Stage}"]
+                ],
+                "period": 60,
+                "stat": "Average",
+                "region": "${AWS::Region}",
+                "title": "Ad Impressions Request Rate",
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/ApiGateway", "Latency", "ApiName", ${API}, "Method", "POST", "Resource", "/data/ad/impressions", "Stage", "${Stage}", { "stat": "p50" }],
+                  [".", ".", ".", ${API}, ".", "POST", ".", "/data/ad/impressions", ".", "${Stage}", { "stat": "p75" }],
+                  [".", ".", ".", ${API}, ".", "POST", ".", "/data/ad/impressions", ".", "${Stage}", { "stat": "p95" }],
+                  [".", ".", ".", ${API}, ".", "POST", ".", "/data/ad/impressions", ".", "${Stage}", { "stat": "p98" }],
+                  [".", ".", ".", ${API}, ".", "POST", ".", "/data/ad/impressions", ".", "${Stage}", { "stat": "p99" }]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Ad Impressions Latency",
+              }
+            },
+            {
+              "type": "metric",
+              "x": 16,
+              "y": 0,
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", ${API}, "Method", "POST", "Resource", "/data/ad/impressions", "Stage", "${Stage}", { "stat": "p50" }],
+                  [".", ".", ".", ${API}, ".", "POST", ".", "/data/ad/impressions", ".", "${Stage}", { "stat": "p75" }],
+                  [".", ".", ".", ${API}, ".", "POST", ".", "/data/ad/impressions", ".", "${Stage}", { "stat": "p95" }],
+                  [".", ".", ".", ${API}, ".", "POST", ".", "/data/ad/impressions", ".", "${Stage}", { "stat": "p98" }],
+                  [".", ".", ".", ${API}, ".", "POST", ".", "/data/ad/impressions", ".", "${Stage}", { "stat": "p99" }]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Ad Impressions Integration Latency",
+              }
+            },
+            {
+              "type": "metric",
+              "x": 16,
+              "y": 0,
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/ApiGateway", "4XXError", "ApiName", ${API}, "Method", "POST", "Resource", "/data/ad/impressions", "Stage", "${Stage}"],
+                  [".", "5XXError", ".", ${API}, ".", "POST", ".", "/data/ad/impressions", "."]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Ad Impressions Errors",
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/ApiGateway", "Count", "ApiName", ${API}, "Method", "POST", "Resource", "/data/ad/clicks", "Stage", "${Stage}"]
+                ],
+                "period": 60,
+                "stat": "Average",
+                "region": "${AWS::Region}",
+                "title": "Ad Clicks Request Rate",
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/ApiGateway", "Latency", "ApiName", ${API}, "Method", "POST", "Resource", "/data/ad/clicks", "Stage", "${Stage}", { "stat": "p50" }],
+                  [".", ".", ".", ${API}, ".", "POST", ".", "/data/ad/clicks", ".", "${Stage}", { "stat": "p75" }],
+                  [".", ".", ".", ${API}, ".", "POST", ".", "/data/ad/clicks", ".", "${Stage}", { "stat": "p95" }],
+                  [".", ".", ".", ${API}, ".", "POST", ".", "/data/ad/clicks", ".", "${Stage}", { "stat": "p98" }],
+                  [".", ".", ".", ${API}, ".", "POST", ".", "/data/ad/clicks", ".", "${Stage}", { "stat": "p99" }]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Ad Clicks Latency",
+              }
+            },
+            {
+              "type": "metric",
+              "x": 16,
+              "y": 0,
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", ${API}, "Method", "POST", "Resource", "/data/ad/clicks", "Stage", "${Stage}", { "stat": "p50" }],
+                  [".", ".", ".", ${API}, ".", "POST", ".", "/data/ad/clicks", ".", "${Stage}", { "stat": "p75" }],
+                  [".", ".", ".", ${API}, ".", "POST", ".", "/data/ad/clicks", ".", "${Stage}", { "stat": "p95" }],
+                  [".", ".", ".", ${API}, ".", "POST", ".", "/data/ad/clicks", ".", "${Stage}", { "stat": "p98" }],
+                  [".", ".", ".", ${API}, ".", "POST", ".", "/data/ad/clicks", ".", "${Stage}", { "stat": "p99" }]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Ad Clicks Integration Latency",
+              }
+            },
+            {
+              "type": "metric",
+              "x": 16,
+              "y": 0,
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/ApiGateway", "4XXError", "ApiName", ${API}, "Method", "POST", "Resource", "/data/ad/clicks", "Stage", "${Stage}"],
+                  [".", "5XXError", ".", ${API}, ".", "POST", ".", "/data/ad/clicks", "."]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Ad Clicks Errors",
+              }
+            },
+            {
+              "type": "text",
+              "width": 24,
+              "height": 2,
+              "properties": { "markdown": "# Firehoses" }
+            },
+            {
+              "type": "text",
+              "width": 24,
+              "height": 2,
+              "properties": { "markdown": "# Data Lake" }
+            }
+          ]
+        }

@@ -23,6 +23,7 @@ object GlueApp {
   def main(sysArgs: Array[String]) {
     val spark: SparkContext = new SparkContext()
     val glueContext: GlueContext = new GlueContext(spark)
+
     val args = GlueArgParser.getResolvedOptions(sysArgs, argNames.toArray)
     Job.init(args("JOB_NAME"), glueContext, args.asJava)
 

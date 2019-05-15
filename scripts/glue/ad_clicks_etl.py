@@ -5,12 +5,11 @@ from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from awsglue.job import Job
 
-args = getResolvedOptions(sys.argv, ['JOB_NAME', "database_name", "raw_table_name", "table_name"])
-
 sc = SparkContext()
 glueContext = GlueContext(sc)
-spark = glueContext.spark_session
+
 job = Job(glueContext)
+args = getResolvedOptions(sys.argv, ['JOB_NAME', "database_name", "raw_table_name", "table_name"])
 job.init(args['JOB_NAME'], args)
 
 database_name = args["database_name"]
@@ -25,8 +24,11 @@ mappings = [("at",          "string", "at",    "timestamp"),
 
 ad_clicks = glueContext.create_dynamic_frame_from_catalog(database_name, raw_table_name) \
             .apply_mapping(mappings) \
-            .resolveChoice(option = "MATCH_CATALOG", database = database_name, table_name = table_name)
+            .resolveChoice(choice = "MATCH_CATALOG", database = database_name, table_name = table_name)
 
-glueContext.write_dynamic_frame.from_catalog(ad_clicks, database_name, table_name, additional_options = {"partitionKeys": ["year", "month"]})
+glueContext.write_dynamic_frame.from_catalog(ad_clicks,
+                                             database_name,
+                                             table_name,
+                                             additional_options = {"partitionKeys": ["year", "month"]})
 
 job.commit()
