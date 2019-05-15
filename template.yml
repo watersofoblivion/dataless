@@ -683,7 +683,7 @@ Resources:
               "type": "text",
               "width": 24,
               "height": 1,
-              "parameters": {
+              "properties": {
                 "markdown": "# Clickthrough Rate"
               }
             },
