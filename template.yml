@@ -1416,10 +1416,10 @@ Resources:
               "properties": {
                 "metrics": [
                   ["AWS/ApiGateway", "Latency", "ApiName", "${API}", "Resource", "/data/ad/impressions", { "stat": "p50" }],
-                  [".", ".", ".", "${API}", ".", "/data/ad/impressions", { "stat": "p75" }],
-                  [".", ".", ".", "${API}", ".", "/data/ad/impressions", { "stat": "p95" }],
-                  [".", ".", ".", "${API}", ".", "/data/ad/impressions", { "stat": "p98" }],
-                  [".", ".", ".", "${API}", ".", "/data/ad/impressions", { "stat": "p99" }]
+                  [".",              ".",       ".",       "${API}", ".",        "/data/ad/impressions", { "stat": "p75" }],
+                  [".",              ".",       ".",       "${API}", ".",        "/data/ad/impressions", { "stat": "p95" }],
+                  [".",              ".",       ".",       "${API}", ".",        "/data/ad/impressions", { "stat": "p98" }],
+                  [".",              ".",       ".",       "${API}", ".",        "/data/ad/impressions", { "stat": "p99" }]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1433,10 +1433,10 @@ Resources:
               "properties": {
                 "metrics": [
                   ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "${API}", "Resource", "/data/ad/impressions", { "stat": "p50" }],
-                  [".", ".", ".", "${API}", ".", "/data/ad/impressions", { "stat": "p75" }],
-                  [".", ".", ".", "${API}", ".", "/data/ad/impressions", { "stat": "p95" }],
-                  [".", ".", ".", "${API}", ".", "/data/ad/impressions", { "stat": "p98" }],
-                  [".", ".", ".", "${API}", ".", "/data/ad/impressions", { "stat": "p99" }]
+                  [".",              ".",                  ".",       "${API}", ".",        "/data/ad/impressions", { "stat": "p75" }],
+                  [".",              ".",                  ".",       "${API}", ".",        "/data/ad/impressions", { "stat": "p95" }],
+                  [".",              ".",                  ".",       "${API}", ".",        "/data/ad/impressions", { "stat": "p98" }],
+                  [".",              ".",                  ".",       "${API}", ".",        "/data/ad/impressions", { "stat": "p99" }]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1450,7 +1450,7 @@ Resources:
               "properties": {
                 "metrics": [
                   ["AWS/ApiGateway", "4XXError", "ApiName", "${API}", "Resource", "/data/ad/impressions"],
-                  [".", "5XXError", ".", "${API}", ".", "/data/ad/impressions", "."]
+                  [".",              "5XXError", ".",       "${API}", ".",        "/data/ad/impressions"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1478,10 +1478,10 @@ Resources:
               "properties": {
                 "metrics": [
                   ["AWS/ApiGateway", "Latency", "ApiName", "${API}", "Resource", "/data/ad/clicks", { "stat": "p50" }],
-                  [".", ".", ".", "${API}", ".", "/data/ad/clicks", { "stat": "p75" }],
-                  [".", ".", ".", "${API}", ".", "/data/ad/clicks", { "stat": "p95" }],
-                  [".", ".", ".", "${API}", ".", "/data/ad/clicks", { "stat": "p98" }],
-                  [".", ".", ".", "${API}", ".", "/data/ad/clicks", { "stat": "p99" }]
+                  [".",              ".",       ".",       "${API}", ".",        "/data/ad/clicks", { "stat": "p75" }],
+                  [".",              ".",       ".",       "${API}", ".",        "/data/ad/clicks", { "stat": "p95" }],
+                  [".",              ".",       ".",       "${API}", ".",        "/data/ad/clicks", { "stat": "p98" }],
+                  [".",              ".",       ".",       "${API}", ".",        "/data/ad/clicks", { "stat": "p99" }]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1495,10 +1495,10 @@ Resources:
               "properties": {
                 "metrics": [
                   ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "${API}", "Resource", "/data/ad/clicks", { "stat": "p50" }],
-                  [".", ".", ".", "${API}", ".", "/data/ad/clicks", { "stat": "p75" }],
-                  [".", ".", ".", "${API}", ".", "/data/ad/clicks", { "stat": "p95" }],
-                  [".", ".", ".", "${API}", ".", "/data/ad/clicks", { "stat": "p98" }],
-                  [".", ".", ".", "${API}", ".", "/data/ad/clicks", { "stat": "p99" }]
+                  [".",              ".",                  ".",       "${API}", ".",        "/data/ad/clicks", { "stat": "p75" }],
+                  [".",              ".",                  ".",       "${API}", ".",        "/data/ad/clicks", { "stat": "p95" }],
+                  [".",              ".",                  ".",       "${API}", ".",        "/data/ad/clicks", { "stat": "p98" }],
+                  [".",              ".",                  ".",       "${API}", ".",        "/data/ad/clicks", { "stat": "p99" }]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1512,7 +1512,7 @@ Resources:
               "properties": {
                 "metrics": [
                   ["AWS/ApiGateway", "4XXError", "ApiName", "${API}", "Resource", "/data/ad/clicks"],
-                  [".", "5XXError", ".", "${API}", ".", "/data/ad/clicks", "."]
+                  [".",              "5XXError", ".",       "${API}", ".",        "/data/ad/clicks"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
