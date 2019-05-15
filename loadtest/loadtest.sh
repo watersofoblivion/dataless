@@ -17,3 +17,5 @@ BASE_URL="https://${API_ID}.execute-api.${REGION}.amazonaws.com/${STAGE}"
 
 ab -k -n ${IMPRESSIONS_REQUESTS} -c ${IMPRESSIONS_CONCURRENCY} -H 'Content-Type: application/json' -p ./example-impressions.json "${BASE_URL}/data/ad/impressions" &
 ab -k -n ${CLICKS_REQUESTS} -c ${CLICKS_CONCURRENCY} -H 'Content-Type: application/json' -p ./example-clicks.json "${BASE_URL}/data/ad/impressions" &
+
+wait
