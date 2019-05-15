@@ -730,8 +730,8 @@ Resources:
                   - lambda:GetFunctionConfiguration
                 Effect: Allow
                 Resource:
-                  - !GetAtt AdImpressionsLambda.Alias
-                  # - !GetAtt AdClicksLambda.Alias
+                  - !Ref AdImpressionsLambda.Alias
+                  # - !Ref AdClicksLambda.Alias
 
   AdImpressionsApplication:
     Type: AWS::KinesisAnalytics::Application
@@ -769,7 +769,7 @@ Resources:
         DestinationSchema:
           RecordFormatType: JSON
         LambdaOutput:
-          ResourceARN: !GetAtt AdImpressionsLambda.Alias
+          ResourceARN: !Ref AdImpressionsLambda.Alias
           RoleARN: !GetAtt ApplicationRole.Arn
 
   # AdImpressionsApplication:
@@ -807,7 +807,7 @@ Resources:
   #       DestinationSchema:
   #         RecordFormatType: JSON
   #       LambdaOutput:
-  #         ResourceARN: !GetAtt AdClicksLambda.Alias
+  #         ResourceARN: !Ref AdClicksLambda.Alias
   #         RoleARN: !GetAtt ApplicationRole.Arn
 
   #######
