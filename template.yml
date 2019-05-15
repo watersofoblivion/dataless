@@ -858,7 +858,9 @@ Resources:
     Properties:
       StageName: !Ref Stage
       MethodSettings:
-        - LoggingLevel: "ERROR"
+        - HttpMethod: "*"
+          ResourcePath: "*"
+          LoggingLevel: "ERROR"
           MetricsEnabled: true
       TracingEnabled: true
       DefinitionBody:
