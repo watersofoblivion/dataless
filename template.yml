@@ -780,7 +780,7 @@ Resources:
               - Name: user_id
                 SqlType: VARCHAR(255)
                 Mapping: "$.user"
-              - Name: at
+              - Name: viewed_at
                 SqlType: TIMESTAMP
                 Mapping: "$.at"
 
@@ -818,7 +818,7 @@ Resources:
   #             - Name: user_id
   #               SqlType: VARCHAR(255)
   #               Mapping: "$.user"
-  #             - Name: at
+  #             - Name: clicked_at
   #               SqlType: TIMESTAMP
   #               Mapping: "$.at"
   #
