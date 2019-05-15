@@ -860,7 +860,7 @@ Resources:
       MethodSettings:
         - HttpMethod: "*"
           ResourcePath: "/*"
-          LoggingLevel: "ERROR"
+          # LoggingLevel: "ERROR"
           MetricsEnabled: true
       TracingEnabled: true
       DefinitionBody:
