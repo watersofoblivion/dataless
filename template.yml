@@ -680,6 +680,14 @@ Resources:
           "periodOverride": "inherit",
           "widgets": [
             {
+              "type": "text",
+              "width": 24,
+              "height": 1,
+              "parameters": {
+                "markdown": "# Clickthrough Rate"
+              }
+            },
+            {
               "type": "metric",
               "width": 8,
               "height": 6,
@@ -688,7 +696,7 @@ Resources:
                 "period": 300,
                 "stat": "Average",
                 "region": "${AWS::Region}",
-                "title": "Empty"
+                "title": "Clickthrough Rate"
               }
             }
           ]
