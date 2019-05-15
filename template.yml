@@ -1533,6 +1533,18 @@ Resources:
               "width": 24,
               "height": 1,
               "properties": { "markdown": "# Data Lake" }
+            },
+            {
+              "type": "text",
+              "width": 24,
+              "height": 1,
+              "properties": { "markdown": "# Glue ETL Jobs" }
+            },
+            {
+              "type": "text",
+              "width": 24,
+              "height": 1,
+              "properties": { "markdown": "# Athena" }
             }
           ]
         }
