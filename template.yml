@@ -1774,7 +1774,7 @@ Resources:
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
-                "title": "All Requests"
+                "title": "Get Requests"
               }
             },
             {
@@ -1787,7 +1787,7 @@ Resources:
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
-                "title": "All Requests"
+                "title": "Put Requests"
               }
             },
             {
@@ -1800,7 +1800,7 @@ Resources:
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
-                "title": "All Requests"
+                "title": "Select Requests"
               }
             },
             {
