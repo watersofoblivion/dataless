@@ -1527,7 +1527,7 @@ Resources:
                   ["AWS/ApiGateway", "Count", "ApiName", "Warehouse Service", "Stage", "${Stage}"]
                 ],
                 "period": 60,
-                "stat": "Average",
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Ad Impressions Request Rate"
               }
@@ -1576,6 +1576,7 @@ Resources:
                   [".",              "5XXError", ".",       "Warehouse Service", ".",     "${Stage}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Ad Impressions Errors"
               }
@@ -1589,7 +1590,7 @@ Resources:
                   ["AWS/ApiGateway", "Count", "ApiName", "Warehouse Service", "Stage", "${Stage}"]
                 ],
                 "period": 60,
-                "stat": "Average",
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Ad Clicks Request Rate"
               }
@@ -1638,6 +1639,7 @@ Resources:
                   [".",              "5XXError", ".",       "Warehouse Service", ".",     "${Stage}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Ad Clicks Errors"
               }
@@ -1855,7 +1857,6 @@ Resources:
               "properties": {
                 "metrics": [
                   ["AWS/KinesisAnalytics", "InputProcessing.Duration", "Application", "${AdImpressionsApplication}"],
-                  ["AWS/KinesisAnalytics", "InputProcessing.Duration", "Application", "${AdImpressionsApplication}"],
                   ["AWS/KinesisAnalytics", "InputProcessing.Duration", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
@@ -1904,7 +1905,7 @@ Resources:
                   ["AWS/KinesisAnalytics", "InputProcessing.ProcessingFailedRecords", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
-                "stat": "sum",
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Input Processing Failed Records"
               }
@@ -2116,7 +2117,7 @@ Resources:
                   ["AWS/S3", "NumberOfObject", "BucketName", "${Bucket}"]
                 ],
                 "period": 86400,
-                "stat": "Maximum"
+                "stat": "Maximum",
                 "region": "${AWS::Region}",
                 "title": "Bucket Size (objects)"
               }
