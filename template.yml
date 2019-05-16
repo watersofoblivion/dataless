@@ -1572,7 +1572,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "IncomingRecords", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"]
+                  ["AWS/Firehose", "IncomingRecords", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"],
                   ["AWS/Firehose", "IncomingRecords", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
                 ],
                 "period": 60,
@@ -1586,7 +1586,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "IncomingBytes", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"]
+                  ["AWS/Firehose", "IncomingBytes", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"],
                   ["AWS/Firehose", "IncomingBytes", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
                 ],
                 "period": 60,
@@ -1600,7 +1600,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "DeliveryToS3.Success", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"]
+                  ["AWS/Firehose", "DeliveryToS3.Success", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"],
                   ["AWS/Firehose", "DeliveryToS3.Success", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
                 ],
                 "period": 60,
@@ -1614,7 +1614,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "DeliveryToS3.Records", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"]
+                  ["AWS/Firehose", "DeliveryToS3.Records", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"],
                   ["AWS/Firehose", "DeliveryToS3.Records", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
                 ],
                 "period": 60,
@@ -1628,7 +1628,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "DeliveryToS3.Bytes", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"]
+                  ["AWS/Firehose", "DeliveryToS3.Bytes", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"],
                   ["AWS/Firehose", "DeliveryToS3.Bytes", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
                 ],
                 "period": 60,
@@ -1642,7 +1642,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "DeliveryToS3.DataFreshness", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"]
+                  ["AWS/Firehose", "DeliveryToS3.DataFreshness", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"],
                   ["AWS/Firehose", "DeliveryToS3.DataFreshness", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
                 ],
                 "period": 60,
