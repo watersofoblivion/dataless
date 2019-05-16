@@ -1807,6 +1807,194 @@ Resources:
               "type": "text",
               "width": 24,
               "height": 1,
+              "properties": { "markdown": "# Real-Time App" }
+            },
+            {
+              "type": "metric",
+              "width": 24,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "Success"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Success"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "KPUs"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "KPUs"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "MillisBehindLatest"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Lag (ms)"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "Records"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Records Processed"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "Bytes"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Bytes Processed"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "InputProcessing.Success"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Input Processing Success"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "InputProcessing.OkBytes"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Input Processing Bytes"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "InputProcessing.Duration"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Input Processing Duration"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "InputProcessing.OkRecords"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Input Processing Successful Records"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "InputProcessing.DroppedRecords"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Input Processing Dropped Records"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "InputProcessing.ProcessingFailedRecords"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Input Processing Failed Records"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.OkRecords"],
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Lambda Delivery Success"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.DeliveryFailedRecords"],
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Lambda Delivery Failures"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.Duration"],
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Lambda Delivery Duration"
+              }
+            },
+            {
+              "type": "text",
+              "width": 24,
+              "height": 1,
               "properties": { "markdown": "# Glue ETL Jobs" }
             },
             {
