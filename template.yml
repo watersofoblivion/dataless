@@ -756,6 +756,13 @@ Resources:
                 Resource:
                   - !Ref AdImpressionsLambda.Alias
                   # - !Ref AdClicksLambda.Alias
+              - Action:
+                  - firehose:DescribeDeliveryStream
+                  - firehose:Get*
+                Effect: Allow
+                Resource:
+                  - !GetAtt AdImpressionsDeliveryStream.Arn
+                  - !GetAtt AdClicksDeliveryStream.Arn
 
   AdImpressionsApplication:
     Type: AWS::KinesisAnalytics::Application
