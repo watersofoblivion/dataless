@@ -1958,7 +1958,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.OkRecords", "Application", "${AdImpressionsApplication}"],
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.OkRecords", "Application", "${AdImpressionsApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1971,7 +1971,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.DeliveryFailedRecords", "Application", "${AdImpressionsApplication}"],
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.DeliveryFailedRecords", "Application", "${AdImpressionsApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1984,7 +1984,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.Duration", "Application", "${AdImpressionsApplication}"],
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.Duration", "Application", "${AdImpressionsApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
