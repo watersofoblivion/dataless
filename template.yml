@@ -1503,7 +1503,7 @@ Resources:
               "type": "text",
               "width": 24,
               "height": 1,
-              "properties": { "markdown": "# Endpoints" }
+              "properties": { "markdown": "# Beacon Endpoints" }
             },
             {
               "type": "metric",
