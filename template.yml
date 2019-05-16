@@ -647,7 +647,7 @@ Resources:
   AdImpressionsDeliveryStreamRecordsPerSecondAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      Statistic: Maximum
+      Statistic: Average
       Namespace: "AWS/Firehose"
       MetricName: IncomingRecords
       Dimensions:
@@ -659,11 +659,35 @@ Resources:
       EvaluationPeriods: 5
       Period: 60
 
-  # AdImpressionsDeliveryStreamTransactionsPerSecondAlarm:
-  #   Type: AWS::CloudWatch::Alarm
-  #
-  # AdImpressionsDeliveryStreamDataThroughputAlarm:
-  #   Type: AWS::CloudWatch::Alarm
+  AdImpressionsDeliveryStreamTransactionsPerSecondAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      Statistic: Average
+      Namespace: "AWS/Firehose"
+      MetricName: PutRecordBatch.Requests
+      Dimensions:
+        - Name: DeliveryStreamName
+          Value: !Ref AdImpressionsDeliveryStream
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 1600
+      DatapointsToAlarm: 3
+      EvaluationPeriods: 5
+      Period: 60
+
+  AdImpressionsDeliveryStreamDataThroughputAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      Statistic: Average
+      Namespace: "AWS/Firehose"
+      MetricName: IncomingBytes
+      Dimensions:
+        - Name: DeliveryStreamName
+          Value: !Ref AdImpressionsDeliveryStream
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 4194304
+      DatapointsToAlarm: 3
+      EvaluationPeriods: 5
+      Period: 60
 
   AdClicksDeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
@@ -677,6 +701,51 @@ Resources:
           SizeInMBs: 128
         CompressionFormat: GZIP
         RoleARN: !GetAtt DeliveryStreamRole.Arn
+
+  AdClicksDeliveryStreamRecordsPerSecondAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      Statistic: Average
+      Namespace: "AWS/Firehose"
+      MetricName: IncomingRecords
+      Dimensions:
+        - Name: DeliveryStreamName
+          Value: !Ref AdClicksDeliveryStream
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 4000
+      DatapointsToAlarm: 3
+      EvaluationPeriods: 5
+      Period: 60
+
+  AdClicksDeliveryStreamTransactionsPerSecondAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      Statistic: Average
+      Namespace: "AWS/Firehose"
+      MetricName: PutRecordBatch.Requests
+      Dimensions:
+        - Name: DeliveryStreamName
+          Value: !Ref AdClicksDeliveryStream
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 1600
+      DatapointsToAlarm: 3
+      EvaluationPeriods: 5
+      Period: 60
+
+  AdClicksDeliveryStreamDataThroughputAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      Statistic: Average
+      Namespace: "AWS/Firehose"
+      MetricName: IncomingBytes
+      Dimensions:
+        - Name: DeliveryStreamName
+          Value: !Ref AdClicksDeliveryStream
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 4194304
+      DatapointsToAlarm: 3
+      EvaluationPeriods: 5
+      Period: 60
 
   #############
   # Real Time #
