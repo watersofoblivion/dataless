@@ -1658,6 +1658,7 @@ Resources:
                   ["AWS/Firehose", "IncomingRecords", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Incoming Records"
               }
@@ -1672,6 +1673,7 @@ Resources:
                   ["AWS/Firehose", "IncomingBytes", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Incoming Bytes"
               }
@@ -1686,6 +1688,7 @@ Resources:
                   ["AWS/Firehose", "DeliveryToS3.Success", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
                 ],
                 "period": 60,
+                "stat": "Average",
                 "region": "${AWS::Region}",
                 "title": "Delivery To S3 Success"
               }
@@ -1700,6 +1703,7 @@ Resources:
                   ["AWS/Firehose", "DeliveryToS3.Records", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Delivery To S3 Records"
               }
@@ -1714,6 +1718,7 @@ Resources:
                   ["AWS/Firehose", "DeliveryToS3.Bytes", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Delivery To S3 Bytes"
               }
@@ -1728,6 +1733,7 @@ Resources:
                   ["AWS/Firehose", "DeliveryToS3.DataFreshness", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
                 ],
                 "period": 60,
+                "stat": "Maximum",
                 "region": "${AWS::Region}",
                 "title": "Delivery To S3 Data Freshness"
               }
@@ -1762,6 +1768,7 @@ Resources:
                   ["AWS/KinesisAnalytics", "KPUs", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
+                "stat": "Average",
                 "region": "${AWS::Region}",
                 "title": "KPUs"
               }
@@ -1776,6 +1783,7 @@ Resources:
                   ["AWS/KinesisAnalytics", "MillisBehindLatest", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
+                "stat": "Maximum",
                 "region": "${AWS::Region}",
                 "title": "Lag (ms)"
               }
@@ -1790,6 +1798,7 @@ Resources:
                   ["AWS/KinesisAnalytics", "Records", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Records Processed"
               }
@@ -1804,6 +1813,7 @@ Resources:
                   ["AWS/KinesisAnalytics", "Bytes", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Bytes Processed"
               }
@@ -1818,6 +1828,7 @@ Resources:
                   ["AWS/KinesisAnalytics", "InputProcessing.Success", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Input Processing Success"
               }
@@ -1832,6 +1843,7 @@ Resources:
                   ["AWS/KinesisAnalytics", "InputProcessing.OkBytes", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Input Processing Bytes"
               }
@@ -1843,9 +1855,11 @@ Resources:
               "properties": {
                 "metrics": [
                   ["AWS/KinesisAnalytics", "InputProcessing.Duration", "Application", "${AdImpressionsApplication}"],
+                  ["AWS/KinesisAnalytics", "InputProcessing.Duration", "Application", "${AdImpressionsApplication}"],
                   ["AWS/KinesisAnalytics", "InputProcessing.Duration", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
+                "stat": "Average",
                 "region": "${AWS::Region}",
                 "title": "Input Processing Duration"
               }
@@ -1860,6 +1874,7 @@ Resources:
                   ["AWS/KinesisAnalytics", "InputProcessing.OkRecords", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Input Processing Successful Records"
               }
@@ -1874,6 +1889,7 @@ Resources:
                   ["AWS/KinesisAnalytics", "InputProcessing.DroppedRecords", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Input Processing Dropped Records"
               }
@@ -1888,6 +1904,7 @@ Resources:
                   ["AWS/KinesisAnalytics", "InputProcessing.ProcessingFailedRecords", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
+                "stat": "sum",
                 "region": "${AWS::Region}",
                 "title": "Input Processing Failed Records"
               }
@@ -1902,6 +1919,7 @@ Resources:
                   ["AWS/KinesisAnalytics", "LambdaDelivery.OkRecords", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Lambda Delivery Success"
               }
@@ -1916,6 +1934,7 @@ Resources:
                   ["AWS/KinesisAnalytics", "LambdaDelivery.DeliveryFailedRecords", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Lambda Delivery Failures"
               }
@@ -1930,6 +1949,7 @@ Resources:
                   ["AWS/KinesisAnalytics", "LambdaDelivery.Duration", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
+                "stat": "Average",
                 "region": "${AWS::Region}",
                 "title": "Lambda Delivery Duration"
               }
@@ -1950,6 +1970,7 @@ Resources:
                   ["AWS/Lambda", "Invocations", "FunctionName", "${AdClicksLambda}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Lambda Invocations"
               }
@@ -1986,6 +2007,7 @@ Resources:
                   ["AWS/Lambda", "Errors", "FunctionName", "${AdClicksLambda}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Lambda Errors"
               }
@@ -2000,6 +2022,7 @@ Resources:
                   ["AWS/Lambda", "DeadLetterErrors", "FunctionName", "${AdClicksLambda}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Lambda Dead Letter Errors"
               }
@@ -2014,6 +2037,7 @@ Resources:
                   ["AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${AdClicksLambda}"]
                 ],
                 "period": 60,
+                "stat": "Maximum",
                 "region": "${AWS::Region}",
                 "title": "Lambda Concurrent Executions"
               }
@@ -2028,6 +2052,7 @@ Resources:
                   ["AWS/Lambda", "UnreservedConcurrentExecutions", "FunctionName", "${AdClicksLambda}"]
                 ],
                 "period": 60,
+                "stat": "Average",
                 "region": "${AWS::Region}",
                 "title": "Lambda Unreserved Concurrent Executions"
               }
@@ -2042,6 +2067,7 @@ Resources:
                   ["AWS/Lambda", "Throttles", "FunctionName", "${AdClicksLambda}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Lambda Throttles"
               }
@@ -2056,6 +2082,7 @@ Resources:
                   ["AWS/Lambda", "IteratorAge", "FunctionName", "${AdClicksLambda}"]
                 ],
                 "period": 60,
+                "stat": "Maximum",
                 "region": "${AWS::Region}",
                 "title": "Lambda Iterator Age"
               }
@@ -2075,6 +2102,7 @@ Resources:
                   ["AWS/S3", "BucketSizeBytes", "BucketName", "${Bucket}"]
                 ],
                 "period": 86400,
+                "stat": "Maximum",
                 "region": "${AWS::Region}",
                 "title": "Bucket Size (bytes)"
               }
@@ -2088,6 +2116,7 @@ Resources:
                   ["AWS/S3", "NumberOfObject", "BucketName", "${Bucket}"]
                 ],
                 "period": 86400,
+                "stat": "Maximum"
                 "region": "${AWS::Region}",
                 "title": "Bucket Size (objects)"
               }
@@ -2101,6 +2130,7 @@ Resources:
                   ["AWS/S3", "AllRequests", "BucketName", "${Bucket}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "All Requests"
               }
@@ -2114,6 +2144,7 @@ Resources:
                   ["AWS/S3", "GetRequests", "BucketName", "${Bucket}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Get Requests"
               }
@@ -2127,6 +2158,7 @@ Resources:
                   ["AWS/S3", "PutRequests", "BucketName", "${Bucket}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Put Requests"
               }
@@ -2140,6 +2172,7 @@ Resources:
                   ["AWS/S3", "SelectRequests", "BucketName", "${Bucket}"]
                 ],
                 "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Select Requests"
               }
