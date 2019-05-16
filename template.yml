@@ -751,56 +751,56 @@ Resources:
   # Real Time #
   #############
 
-  # RealTimeDashboard:
-  #   Type: AWS::CloudWatch::Dashboard
-  #   Properties:
-  #     DashboardBody: !Sub |
-  #       {
-  #         "start": "-PT1H",
-  #         "periodOverride": "inherit",
-  #         "widgets": [
-  #           {
-  #             "type": "text",
-  #             "width": 24,
-  #             "height": 1,
-  #             "properties": {
-  #               "markdown": "# Clickthrough Rate"
-  #             }
-  #           },
-  #           {
-  #             "type": "metric",
-  #             "width": 8,
-  #             "height": 6,
-  #             "properties": {
-  #               "metrics": [],
-  #               "period": 300,
-  #               "stat": "Average",
-  #               "region": "${AWS::Region}",
-  #               "title": "Clickthrough Rate"
-  #             }
-  #           }
-  #         ]
-  #       }
-  #
-  # ApplicationLambdaRole:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Statement:
-  #         - Action: sts:AssumeRole
-  #           Effect: Allow
-  #           Principal:
-  #             Service:
-  #               - !Sub "lambda.${AWS::URLSuffix}"
-  #     ManagedPolicyArns:
-  #       - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-  #       - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
-  #
-  # AdImpressionsLambda:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     Handler: bin/ad-impressions
-  #     Role: !GetAtt ApplicationLambdaRole.Arn
+  RealTimeDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardBody: !Sub |
+        {
+          "start": "-PT1H",
+          "periodOverride": "inherit",
+          "widgets": [
+            {
+              "type": "text",
+              "width": 24,
+              "height": 1,
+              "properties": {
+                "markdown": "# Clickthrough Rate"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [],
+                "period": 300,
+                "stat": "Average",
+                "region": "${AWS::Region}",
+                "title": "Clickthrough Rate"
+              }
+            }
+          ]
+        }
+
+  ApplicationLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "lambda.${AWS::URLSuffix}"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
+
+  AdImpressionsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: bin/ad-impressions
+      Role: !GetAtt ApplicationLambdaRole.Arn
 
   # AdClicksLambda:
   #   Type: AWS::Serverless::Function
@@ -809,100 +809,100 @@ Resources:
   #     Runtime: go1.x
   #     Role: !GetAtt ApplicationLambdaRole.Arn
 
-  # ApplicationRole:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Action:
-  #             - sts:AssumeRole
-  #           Effect: Allow
-  #           Principal:
-  #             Service:
-  #               - !Sub "kinesisanalytics.${AWS::URLSuffix}"
-  #     ManagedPolicyArns:
-  #       - arn:aws:iam::aws:policy/AmazonKinesisAnalyticsFullAccess
-  #     Policies:
-  #       - PolicyName: Execution
-  #         PolicyDocument:
-  #           Version: "2012-10-17"
-  #           Statement:
-  #             - Action:
-  #                 - lambda:InvokeFunction
-  #                 - lambda:GetFunctionConfiguration
-  #               Effect: Allow
-  #               Resource:
-  #                 - !Ref AdImpressionsLambda.Alias
-  #                 # - !Ref AdClicksLambda.Alias
-  #             - Action:
-  #                 - firehose:DescribeDeliveryStream
-  #                 - firehose:Get*
-  #               Effect: Allow
-  #               Resource:
-  #                 - !GetAtt AdImpressionsDeliveryStream.Arn
-  #                 - !GetAtt AdClicksDeliveryStream.Arn
-  #
-  # AdImpressionsApplication:
-  #   Type: AWS::KinesisAnalytics::Application
-  #   Properties:
-  #     ApplicationCode: |
-  #       CREATE OR REPLACE STREAM "IMPRESSIONS_OUTPUT" (
-  #         ad_id VARCHAR(255),
-  #         user_id VARCHAR(255),
-  #         viewed_at TIMESTAMP
-  #       );
-  #
-  #       CREATE OR REPLACE PUMP "IMPRESSIONS_OUTPUT_PUMP" AS
-  #       INSERT INTO "IMPRESSIONS_OUTPUT"
-  #       SELECT ad_id, user_id, viewed_at
-  #       FROM "AD_IMPRESSIONS_001"
-  #       WINDOWED BY STAGGER (
-  #         PARTITION BY ad_id, user_id
-  #         RANGE INTERVAL '1' MINUTE
-  #       );
-  #     Inputs:
-  #       - NamePrefix: AD_IMPRESSIONS
-  #         KinesisFirehoseInput:
-  #           ResourceARN: !GetAtt AdImpressionsDeliveryStream.Arn
-  #           RoleARN: !GetAtt ApplicationRole.Arn
-  #         InputSchema:
-  #           RecordFormat:
-  #             RecordFormatType: JSON
-  #             MappingParameters:
-  #               JSONMappingParameters:
-  #                 RecordRowPath: "$"
-  #           RecordColumns:
-  #             - Name: ad_id
-  #               SqlType: VARCHAR(255)
-  #               Mapping: "$.ad"
-  #             - Name: user_id
-  #               SqlType: VARCHAR(255)
-  #               Mapping: "$.user"
-  #             - Name: viewed_at
-  #               SqlType: TIMESTAMP
-  #               Mapping: "$.at"
-  #
-  # AdImpressionsOutputs:
-  #   Type: AWS::KinesisAnalytics::ApplicationOutput
-  #   Properties:
-  #     ApplicationName: !Ref AdImpressionsApplication
-  #     Output:
-  #       Name: IMPRESSIONS_OUTPUT
-  #       DestinationSchema:
-  #         RecordFormatType: JSON
-  #       LambdaOutput:
-  #         ResourceARN: !Ref AdImpressionsLambda.Alias
-  #         RoleARN: !GetAtt ApplicationRole.Arn
+  ApplicationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "kinesisanalytics.${AWS::URLSuffix}"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonKinesisAnalyticsFullAccess
+      Policies:
+        - PolicyName: Execution
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - lambda:InvokeFunction
+                  - lambda:GetFunctionConfiguration
+                Effect: Allow
+                Resource:
+                  - !Ref AdImpressionsLambda.Alias
+                  # - !Ref AdClicksLambda.Alias
+              - Action:
+                  - firehose:DescribeDeliveryStream
+                  - firehose:Get*
+                Effect: Allow
+                Resource:
+                  - !GetAtt AdImpressionsDeliveryStream.Arn
+                  - !GetAtt AdClicksDeliveryStream.Arn
 
-  # AdImpressionsApplication:
+  AdImpressionsApplication:
+    Type: AWS::KinesisAnalytics::Application
+    Properties:
+      ApplicationCode: |
+        CREATE OR REPLACE STREAM "IMPRESSIONS_OUTPUT" (
+          ad_id VARCHAR(255),
+          user_id VARCHAR(255),
+          viewed_at TIMESTAMP
+        );
+
+        CREATE OR REPLACE PUMP "IMPRESSIONS_OUTPUT_PUMP" AS
+        INSERT INTO "IMPRESSIONS_OUTPUT"
+        SELECT ad_id, user_id, viewed_at
+        FROM "AD_IMPRESSIONS_001"
+        WINDOWED BY STAGGER (
+          PARTITION BY ad_id, user_id
+          RANGE INTERVAL '1' MINUTE
+        );
+      Inputs:
+        - NamePrefix: AD_IMPRESSIONS
+          KinesisFirehoseInput:
+            ResourceARN: !GetAtt AdImpressionsDeliveryStream.Arn
+            RoleARN: !GetAtt ApplicationRole.Arn
+          InputSchema:
+            RecordFormat:
+              RecordFormatType: JSON
+              MappingParameters:
+                JSONMappingParameters:
+                  RecordRowPath: "$"
+            RecordColumns:
+              - Name: ad_id
+                SqlType: VARCHAR(255)
+                Mapping: "$.ad"
+              - Name: user_id
+                SqlType: VARCHAR(255)
+                Mapping: "$.user"
+              - Name: viewed_at
+                SqlType: TIMESTAMP
+                Mapping: "$.at"
+
+  AdImpressionsOutputs:
+    Type: AWS::KinesisAnalytics::ApplicationOutput
+    Properties:
+      ApplicationName: !Ref AdImpressionsApplication
+      Output:
+        Name: IMPRESSIONS_OUTPUT
+        DestinationSchema:
+          RecordFormatType: JSON
+        LambdaOutput:
+          ResourceARN: !Ref AdImpressionsLambda.Alias
+          RoleARN: !GetAtt ApplicationRole.Arn
+
+  # AdClicksApplication:
   #   Type: AWS::KinesisAnalytics::Application
   #   Properties:
   #     ApplicationCode: |
   #     Inputs:
   #       - NamePrefix: adImpressions
   #         KinesisFirehoseInput:
-  #           ResourceARN: !GetAtt AdImpressionsDeliveryStream.Arn
+  #           ResourceARN: !GetAtt AdClicksDeliveryStream.Arn
   #           RoleARN: !GetAtt ApplicationRole.Arn
   #         InputSchema:
   #           RecordFormat:
@@ -921,7 +921,7 @@ Resources:
   #               SqlType: TIMESTAMP
   #               Mapping: "$.at"
   #
-  # AdImpressionsOutputs:
+  # AdClicksOutputs:
   #   Type: AWS::KinesisAnalytics::ApplicationOutput
   #   Properties:
   #     ApplicationName: !Ref AdClicksApplication
