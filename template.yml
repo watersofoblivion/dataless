@@ -833,7 +833,7 @@ Resources:
                 Effect: Allow
                 Resource:
                   - !Ref AdImpressionsLambda.Alias
-                  # - !Ref AdClicksLambda.Alias
+                  - !Ref AdClicksLambda.Alias
               - Action:
                   - firehose:DescribeDeliveryStream
                   - firehose:Get*
@@ -1744,7 +1744,8 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "Success", "Application", "${AdImpressionsApplication}"]
+                  ["AWS/KinesisAnalytics", "Success", "Application", "${AdImpressionsApplication}"],
+                  ["AWS/KinesisAnalytics", "Success", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1757,7 +1758,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "KPUs", "Application", "${AdImpressionsApplication}"]
+                  ["AWS/KinesisAnalytics", "KPUs", "Application", "${AdImpressionsApplication}"],
+                  ["AWS/KinesisAnalytics", "KPUs", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1770,7 +1772,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "MillisBehindLatest", "Application", "${AdImpressionsApplication}"]
+                  ["AWS/KinesisAnalytics", "MillisBehindLatest", "Application", "${AdImpressionsApplication}"],
+                  ["AWS/KinesisAnalytics", "MillisBehindLatest", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1783,7 +1786,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "Records", "Application", "${AdImpressionsApplication}"]
+                  ["AWS/KinesisAnalytics", "Records", "Application", "${AdImpressionsApplication}"],
+                  ["AWS/KinesisAnalytics", "Records", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1796,7 +1800,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "Bytes", "Application", "${AdImpressionsApplication}"]
+                  ["AWS/KinesisAnalytics", "Bytes", "Application", "${AdImpressionsApplication}"],
+                  ["AWS/KinesisAnalytics", "Bytes", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1809,7 +1814,8 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.Success", "Application", "${AdImpressionsApplication}"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.Success", "Application", "${AdImpressionsApplication}"],
+                  ["AWS/KinesisAnalytics", "InputProcessing.Success", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1822,7 +1828,8 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.OkBytes", "Application", "${AdImpressionsApplication}"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.OkBytes", "Application", "${AdImpressionsApplication}"],
+                  ["AWS/KinesisAnalytics", "InputProcessing.OkBytes", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1835,7 +1842,8 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.Duration", "Application", "${AdImpressionsApplication}"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.Duration", "Application", "${AdImpressionsApplication}"],
+                  ["AWS/KinesisAnalytics", "InputProcessing.Duration", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1848,7 +1856,8 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.OkRecords", "Application", "${AdImpressionsApplication}"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.OkRecords", "Application", "${AdImpressionsApplication}"],
+                  ["AWS/KinesisAnalytics", "InputProcessing.OkRecords", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1861,7 +1870,8 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.DroppedRecords", "Application", "${AdImpressionsApplication}"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.DroppedRecords", "Application", "${AdImpressionsApplication}"],
+                  ["AWS/KinesisAnalytics", "InputProcessing.DroppedRecords", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1874,7 +1884,8 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.ProcessingFailedRecords", "Application", "${AdImpressionsApplication}"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.ProcessingFailedRecords", "Application", "${AdImpressionsApplication}"],
+                  ["AWS/KinesisAnalytics", "InputProcessing.ProcessingFailedRecords", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1887,7 +1898,8 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.OkRecords", "Application", "${AdImpressionsApplication}"]
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.OkRecords", "Application", "${AdImpressionsApplication}"],
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.OkRecords", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1900,7 +1912,8 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.DeliveryFailedRecords", "Application", "${AdImpressionsApplication}"]
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.DeliveryFailedRecords", "Application", "${AdImpressionsApplication}"],
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.DeliveryFailedRecords", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1913,7 +1926,8 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.Duration", "Application", "${AdImpressionsApplication}"]
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.Duration", "Application", "${AdImpressionsApplication}"],
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.Duration", "Application", "${AdClicksApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1932,7 +1946,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Invocations", "FunctionName", "${AdImpressionsLambda}"]
+                  ["AWS/Lambda", "Invocations", "FunctionName", "${AdImpressionsLambda}"],
+                  ["AWS/Lambda", "Invocations", "FunctionName", "${AdClicksLambda}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1949,7 +1964,12 @@ Resources:
                   ["AWS/Lambda", "Duration", "FunctionName", "${AdImpressionsLambda}", { "stat": "p75" }],
                   ["AWS/Lambda", "Duration", "FunctionName", "${AdImpressionsLambda}", { "stat": "p95" }],
                   ["AWS/Lambda", "Duration", "FunctionName", "${AdImpressionsLambda}", { "stat": "p98" }],
-                  ["AWS/Lambda", "Duration", "FunctionName", "${AdImpressionsLambda}", { "stat": "p99" }]
+                  ["AWS/Lambda", "Duration", "FunctionName", "${AdImpressionsLambda}", { "stat": "p99" }],
+                  ["AWS/Lambda", "Duration", "FunctionName", "${AdClicksLambda}", { "stat": "p50" }],
+                  ["AWS/Lambda", "Duration", "FunctionName", "${AdClicksLambda}", { "stat": "p75" }],
+                  ["AWS/Lambda", "Duration", "FunctionName", "${AdClicksLambda}", { "stat": "p95" }],
+                  ["AWS/Lambda", "Duration", "FunctionName", "${AdClicksLambda}", { "stat": "p98" }],
+                  ["AWS/Lambda", "Duration", "FunctionName", "${AdClicksLambda}", { "stat": "p99" }]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1962,7 +1982,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Errors", "FunctionName", "${AdImpressionsLambda}"]
+                  ["AWS/Lambda", "Errors", "FunctionName", "${AdImpressionsLambda}"],
+                  ["AWS/Lambda", "Errors", "FunctionName", "${AdClicksLambda}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1975,7 +1996,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "DeadLetterErrors", "FunctionName", "${AdImpressionsLambda}"]
+                  ["AWS/Lambda", "DeadLetterErrors", "FunctionName", "${AdImpressionsLambda}"],
+                  ["AWS/Lambda", "DeadLetterErrors", "FunctionName", "${AdClicksLambda}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1988,7 +2010,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${AdImpressionsLambda}"]
+                  ["AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${AdImpressionsLambda}"],
+                  ["AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${AdClicksLambda}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -2001,7 +2024,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "UnreservedConcurrentExecutions", "FunctionName", "${AdImpressionsLambda}"]
+                  ["AWS/Lambda", "UnreservedConcurrentExecutions", "FunctionName", "${AdImpressionsLambda}"],
+                  ["AWS/Lambda", "UnreservedConcurrentExecutions", "FunctionName", "${AdClicksLambda}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -2014,7 +2038,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Throttles", "FunctionName", "${AdImpressionsLambda}"]
+                  ["AWS/Lambda", "Throttles", "FunctionName", "${AdImpressionsLambda}"],
+                  ["AWS/Lambda", "Throttles", "FunctionName", "${AdClicksLambda}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -2027,7 +2052,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "IteratorAge", "FunctionName", "${AdImpressionsLambda}"]
+                  ["AWS/Lambda", "IteratorAge", "FunctionName", "${AdImpressionsLambda}"],
+                  ["AWS/Lambda", "IteratorAge", "FunctionName", "${AdClicksLambda}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
