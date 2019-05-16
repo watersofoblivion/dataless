@@ -1664,7 +1664,7 @@ Resources:
                 "metrics": [
                   ["AWS/S3", "BucketSizeBytes", "BucketName", "${Bucket}"]
                 ],
-                "period": "86400",
+                "period": 86400,
                 "region": "${AWS::Region}",
                 "title": "Bucket Size (bytes)"
               }
