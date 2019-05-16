@@ -41,7 +41,7 @@ phases:
       - mkdir -p bin/
       - go build -o bin/ad-impressions ./lambdas/ad-impressions
       - zip -r lambdas.zip bin/
-      - aws s3 cp --recursive lambdas.zip s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/lambdas.zip
+      - aws s3 cp lambdas.zip s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/lambdas.zip
 
       # Copy user code to S3
       - aws s3 cp --recursive scripts/ s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/scripts/
