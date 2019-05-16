@@ -802,12 +802,11 @@ Resources:
       Handler: bin/ad-impressions
       Role: !GetAtt ApplicationLambdaRole.Arn
 
-  # AdClicksLambda:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     Handler: main
-  #     Runtime: go1.x
-  #     Role: !GetAtt ApplicationLambdaRole.Arn
+  AdClicksLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: bin/ad-clicks
+      Role: !GetAtt ApplicationLambdaRole.Arn
 
   ApplicationRole:
     Type: AWS::IAM::Role
@@ -895,43 +894,57 @@ Resources:
           ResourceARN: !Ref AdImpressionsLambda.Alias
           RoleARN: !GetAtt ApplicationRole.Arn
 
-  # AdClicksApplication:
-  #   Type: AWS::KinesisAnalytics::Application
-  #   Properties:
-  #     ApplicationCode: |
-  #     Inputs:
-  #       - NamePrefix: adImpressions
-  #         KinesisFirehoseInput:
-  #           ResourceARN: !GetAtt AdClicksDeliveryStream.Arn
-  #           RoleARN: !GetAtt ApplicationRole.Arn
-  #         InputSchema:
-  #           RecordFormat:
-  #             RecordFormatType: JSON
-  #             MappingParameters:
-  #               JSONMappingParameters:
-  #                 RecordRowPath: "$"
-  #           RecordColumns:
-  #             - Name: ad_id
-  #               SqlType: VARCHAR(255)
-  #               Mapping: "$.ad"
-  #             - Name: user_id
-  #               SqlType: VARCHAR(255)
-  #               Mapping: "$.user"
-  #             - Name: clicked_at
-  #               SqlType: TIMESTAMP
-  #               Mapping: "$.at"
-  #
-  # AdClicksOutputs:
-  #   Type: AWS::KinesisAnalytics::ApplicationOutput
-  #   Properties:
-  #     ApplicationName: !Ref AdClicksApplication
-  #     Output:
-  #       Name: adsOutput
-  #       DestinationSchema:
-  #         RecordFormatType: JSON
-  #       LambdaOutput:
-  #         ResourceARN: !Ref AdClicksLambda.Alias
-  #         RoleARN: !GetAtt ApplicationRole.Arn
+  AdClicksApplication:
+    Type: AWS::KinesisAnalytics::Application
+    Properties:
+      ApplicationCode: |
+        CREATE OR REPLACE STREAM "CLICKS_OUTPUT" (
+          ad_id VARCHAR(255),
+          user_id VARCHAR(255),
+          clicked_at TIMESTAMP
+        );
+
+        CREATE OR REPLACE PUMP "CLICKS_OUTPUT_PUMP" AS
+        INSERT INTO "CLICKS_OUTPUT"
+        SELECT ad_id, user_id, clicked_at
+        FROM "AD_CLICKS_001"
+        WINDOWED BY STAGGER (
+          PARTITION BY ad_id, user_id
+          RANGE INTERVAL '1' MINUTE
+        );
+      Inputs:
+        - NamePrefix: AD_CLICKS
+          KinesisFirehoseInput:
+            ResourceARN: !GetAtt AdClicksDeliveryStream.Arn
+            RoleARN: !GetAtt ApplicationRole.Arn
+          InputSchema:
+            RecordFormat:
+              RecordFormatType: JSON
+              MappingParameters:
+                JSONMappingParameters:
+                  RecordRowPath: "$"
+            RecordColumns:
+              - Name: ad_id
+                SqlType: VARCHAR(255)
+                Mapping: "$.ad"
+              - Name: user_id
+                SqlType: VARCHAR(255)
+                Mapping: "$.user"
+              - Name: clicked_at
+                SqlType: TIMESTAMP
+                Mapping: "$.at"
+
+  AdClicksOutputs:
+    Type: AWS::KinesisAnalytics::ApplicationOutput
+    Properties:
+      ApplicationName: !Ref AdClicksApplication
+      Output:
+        Name: CLICKS_OUTPUT
+        DestinationSchema:
+          RecordFormatType: JSON
+        LambdaOutput:
+          ResourceARN: !Ref AdClicksLambda.Alias
+          RoleARN: !GetAtt ApplicationRole.Arn
 
   #######
   # API #
@@ -1723,90 +1736,6 @@ Resources:
               "type": "text",
               "width": 24,
               "height": 1,
-              "properties": { "markdown": "# Data Lake" }
-            },
-            {
-              "type": "metric",
-              "width": 12,
-              "height": 4,
-              "properties": {
-                "metrics": [
-                  ["AWS/S3", "BucketSizeBytes", "BucketName", "${Bucket}"]
-                ],
-                "period": 86400,
-                "region": "${AWS::Region}",
-                "title": "Bucket Size (bytes)"
-              }
-            },
-            {
-              "type": "metric",
-              "width": 12,
-              "height": 4,
-              "properties": {
-                "metrics": [
-                  ["AWS/S3", "NumberOfObject", "BucketName", "${Bucket}"]
-                ],
-                "period": 86400,
-                "region": "${AWS::Region}",
-                "title": "Bucket Size (objects)"
-              }
-            },
-            {
-              "type": "metric",
-              "width": 6,
-              "height": 4,
-              "properties": {
-                "metrics": [
-                  ["AWS/S3", "AllRequests", "BucketName", "${Bucket}"]
-                ],
-                "period": 60,
-                "region": "${AWS::Region}",
-                "title": "All Requests"
-              }
-            },
-            {
-              "type": "metric",
-              "width": 6,
-              "height": 4,
-              "properties": {
-                "metrics": [
-                  ["AWS/S3", "GetRequests", "BucketName", "${Bucket}"]
-                ],
-                "period": 60,
-                "region": "${AWS::Region}",
-                "title": "Get Requests"
-              }
-            },
-            {
-              "type": "metric",
-              "width": 6,
-              "height": 4,
-              "properties": {
-                "metrics": [
-                  ["AWS/S3", "PutRequests", "BucketName", "${Bucket}"]
-                ],
-                "period": 60,
-                "region": "${AWS::Region}",
-                "title": "Put Requests"
-              }
-            },
-            {
-              "type": "metric",
-              "width": 6,
-              "height": 4,
-              "properties": {
-                "metrics": [
-                  ["AWS/S3", "SelectRequests", "BucketName", "${Bucket}"]
-                ],
-                "period": 60,
-                "region": "${AWS::Region}",
-                "title": "Select Requests"
-              }
-            },
-            {
-              "type": "text",
-              "width": 24,
-              "height": 1,
               "properties": { "markdown": "# Real-Time App" }
             },
             {
@@ -1995,13 +1924,211 @@ Resources:
               "type": "text",
               "width": 24,
               "height": 1,
-              "properties": { "markdown": "# Glue ETL Jobs" }
+              "properties": { "markdown": "# Lambas" }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "Invocations", "FunctionName", "${AdImpressionsLambda}"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Lambda Invocations"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "Duration", "FunctionName", "${AdImpressionsLambda}", { "stat": "p50" }],
+                  ["AWS/Lambda", "Duration", "FunctionName", "${AdImpressionsLambda}", { "stat": "p75" }],
+                  ["AWS/Lambda", "Duration", "FunctionName", "${AdImpressionsLambda}", { "stat": "p95" }],
+                  ["AWS/Lambda", "Duration", "FunctionName", "${AdImpressionsLambda}", { "stat": "p98" }],
+                  ["AWS/Lambda", "Duration", "FunctionName", "${AdImpressionsLambda}", { "stat": "p99" }]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Lambda Duration"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "Errors", "FunctionName", "${AdImpressionsLambda}"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Lambda Errors"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "DeadLetterErrors", "FunctionName", "${AdImpressionsLambda}"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Lambda Dead Letter Errors"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${AdImpressionsLambda}"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Lambda Concurrent Executions"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "UnreservedConcurrentExecutions", "FunctionName", "${AdImpressionsLambda}"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Lambda Unreserved Concurrent Executions"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "Throttles", "FunctionName", "${AdImpressionsLambda}"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Lambda Throttles"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "IteratorAge", "FunctionName", "${AdImpressionsLambda}"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Lambda Iterator Age"
+              }
+            },
+            {
+              "type": "text",
+              "width": 24,
+              "height": 1,
+              "properties": { "markdown": "# Data Lake" }
+            },
+            {
+              "type": "metric",
+              "width": 12,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/S3", "BucketSizeBytes", "BucketName", "${Bucket}"]
+                ],
+                "period": 86400,
+                "region": "${AWS::Region}",
+                "title": "Bucket Size (bytes)"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 12,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/S3", "NumberOfObject", "BucketName", "${Bucket}"]
+                ],
+                "period": 86400,
+                "region": "${AWS::Region}",
+                "title": "Bucket Size (objects)"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/S3", "AllRequests", "BucketName", "${Bucket}"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "All Requests"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/S3", "GetRequests", "BucketName", "${Bucket}"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Get Requests"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/S3", "PutRequests", "BucketName", "${Bucket}"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Put Requests"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/S3", "SelectRequests", "BucketName", "${Bucket}"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Select Requests"
+              }
             },
             {
               "type": "text",
               "width": 24,
               "height": 1,
               "properties": { "markdown": "# Athena" }
+            },
+            {
+              "type": "text",
+              "width": 24,
+              "height": 1,
+              "properties": { "markdown": "# Glue ETL Jobs" }
             }
           ]
         }

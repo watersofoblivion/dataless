@@ -40,6 +40,7 @@ phases:
       # Build the Go lambdas
       - mkdir -p bin/
       - go build -o bin/ad-impressions ./lambdas/ad-impressions
+      - go build -o bin/ad-clicks ./lambdas/ad-clicks
       - zip -r lambdas.zip bin/
       - aws s3 cp lambdas.zip s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/lambdas.zip
 
