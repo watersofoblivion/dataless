@@ -137,7 +137,9 @@ Mappings:
 Globals:
   Function:
     Runtime: go1.x
-    CodeUri: ../lambdas.zip
+    CodeUri:
+      Bucket: !Ref CodeBucket
+      Key: !Sub "${CodePrefix}/lambdas.zip"
     Tracing: Active
     AutoPublishAlias: live
     DeploymentPreference:
@@ -702,7 +704,7 @@ Resources:
           ]
         }
 
-  AdImpressionsAndClicksLambdaRole:
+  ApplicationLambdaRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -719,16 +721,15 @@ Resources:
   AdImpressionsLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: main
-      Runtime: go1.x
-      Role: !GetAtt AdImpressionsAndClicksLambdaRole.Arn
+      Handler: bin/ad-impressions
+      Role: !GetAtt ApplicationLambdaRole.Arn
 
   # AdClicksLambda:
   #   Type: AWS::Serverless::Function
   #   Properties:
   #     Handler: main
   #     Runtime: go1.x
-  #     Role: !GetAtt AdImpressionsAndClicksLambdaRole.Arn
+  #     Role: !GetAtt ApplicationLambdaRole.Arn
 
   ApplicationRole:
     Type: AWS::IAM::Role
@@ -768,7 +769,20 @@ Resources:
     Type: AWS::KinesisAnalytics::Application
     Properties:
       ApplicationCode: |
+        CREATE OR REPLACE STREAM "IMPRESSIONS_OUTPUT" (
+          ad_id VARCHAR(255),
+          user_id VARCHAR(255),
+          viewed_at TIMESTAMP
+        );
 
+        CREATE OR REPLACE PUMP "IMPRESSIONS_OUTPUT_PUMP" AS
+        INSERT INTO "IMPRESSIONS_OUTPUT"
+        SELECT ad_id, user_id, viewed_at
+        FROM "AD_IMPRESSIONS_001"
+        WINDOWED BY STAGGER (
+          PARTITION BY ad_id, user_id
+          RANGE INTERVAL '1' MINUTE
+        );
       Inputs:
         - NamePrefix: AD_IMPRESSIONS
           KinesisFirehoseInput:

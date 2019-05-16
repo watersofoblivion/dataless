@@ -1,13 +1,12 @@
 version: 0.2
 
 phases:
-
   install:
     commands:
 
       # AWS Codebuild Go images use /go for the $GOPATH so let's symlink our
       # application source code into that directory structure.
-      - ln -s "${CODEBUILD_SRC_DIR}" "/go/src/handler"
+      - ln -s "${CODEBUILD_SRC_DIR}" "/go/src/lambdas"
 
       # Install golint
       - go get golang.org/x/lint/golint
@@ -19,7 +18,7 @@ phases:
     commands:
 
       # Make sure we're in the project directory within our GOPATH
-      - cd "/go/src/handler"
+      - cd "/go/src/lambdas"
 
       # Fetch all dependencies
       - go get ./...
@@ -38,10 +37,13 @@ phases:
       # Build the tool to configure the application
       - go build -o "${GOPATH}/bin/generate-config" ./util/generate-config
 
-      # Build the go application
-      # - go build -o main
+      # Build the Go lambdas
+      - mkdir -p bin/
+      - go build -o bin/ad-impressions ./lambdas/ad-impressions
+      - zip -r lambdas.zip bin/
+      - aws s3 cp --recursive lambdas.zip s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/lambdas.zip
 
-      # Collect user code into a directory and copy to S3
+      # Copy user code to S3
       - aws s3 cp --recursive scripts/ s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/scripts/
 
       # Copy static assets to S3, and package application with AWS CloudFormation/SAM
