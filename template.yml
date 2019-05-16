@@ -1662,7 +1662,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/S3", "BucketSizeBytes", "BucketName", "${Bucket}"],
+                  ["AWS/S3", "BucketSizeBytes", "BucketName", "${Bucket}"]
                 ],
                 "period": "86400",
                 "region": "${AWS::Region}",
@@ -1688,7 +1688,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/S3", "AllRequests", "BucketName", "${Bucket}"],
+                  ["AWS/S3", "AllRequests", "BucketName", "${Bucket}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1701,7 +1701,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/S3", "GetRequests", "BucketName", "${Bucket}"],
+                  ["AWS/S3", "GetRequests", "BucketName", "${Bucket}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1714,7 +1714,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/S3", "PutRequests", "BucketName", "${Bucket}"],
+                  ["AWS/S3", "PutRequests", "BucketName", "${Bucket}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1727,7 +1727,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/S3", "SelectRequests", "BucketName", "${Bucket}"],
+                  ["AWS/S3", "SelectRequests", "BucketName", "${Bucket}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
