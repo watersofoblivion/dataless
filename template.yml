@@ -168,6 +168,15 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: aws:kms
+      MetricsConfigurations:
+        - Id: raw-ad-impressions
+          Prefix: data/raw/ad/impressions/
+        - Id: raw-ad-clicks
+          Prefix: data/raw/ad/clicks/
+        - Id: ad-impressions
+          Prefix: data/lake/ad/impressions/
+        - Id: ad-clicks
+          Prefix: data/lake/ad/clicks/
 
   #######
   # VPC #
@@ -1558,10 +1567,172 @@ Resources:
               "properties": { "markdown": "# Firehoses" }
             },
             {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/Firehose", "IncomingRecords", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"]
+                  ["AWS/Firehose", "IncomingRecords", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Incoming Records"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/Firehose", "IncomingBytes", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"]
+                  ["AWS/Firehose", "IncomingBytes", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Incoming Bytes"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/Firehose", "DeliveryToS3.Success", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"]
+                  ["AWS/Firehose", "DeliveryToS3.Success", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Delivery To S3 Success"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/Firehose", "DeliveryToS3.Records", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"]
+                  ["AWS/Firehose", "DeliveryToS3.Records", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Delivery To S3 Records"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/Firehose", "DeliveryToS3.Bytes", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"]
+                  ["AWS/Firehose", "DeliveryToS3.Bytes", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Delivery To S3 Bytes"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/Firehose", "DeliveryToS3.DataFreshness", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"]
+                  ["AWS/Firehose", "DeliveryToS3.DataFreshness", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Delivery To S3 Data Freshness"
+              }
+            },
+            {
               "type": "text",
               "width": 24,
               "height": 1,
               "properties": { "markdown": "# Data Lake" }
+            },
+            {
+              "type": "metric",
+              "width": 12,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/S3", "BucketSizeBytes", "BucketName", "${Bucket}"],
+                ],
+                "period": "86400",
+                "region": "${AWS::Region}",
+                "title": "Bucket Size (bytes)"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 12,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/S3", "NumberOfObject", "BucketName", "${Bucket}"]
+                ],
+                "period": 86400,
+                "region": "${AWS::Region}",
+                "title": "Bucket Size (objects)"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/S3", "AllRequests", "BucketName", "${Bucket}"],
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "All Requests"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/S3", "GetRequests", "BucketName", "${Bucket}"],
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "All Requests"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/S3", "PutRequests", "BucketName", "${Bucket}"],
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "All Requests"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/S3", "SelectRequests", "BucketName", "${Bucket}"],
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "All Requests"
+              }
             },
             {
               "type": "text",
