@@ -1815,7 +1815,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "Success"]
+                  ["AWS/KinesisAnalytics", "Success", "Application", "${AdImpressionsApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1828,7 +1828,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "KPUs"]
+                  ["AWS/KinesisAnalytics", "KPUs", "Application", "${AdImpressionsApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1841,7 +1841,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "MillisBehindLatest"]
+                  ["AWS/KinesisAnalytics", "MillisBehindLatest", "Application", "${AdImpressionsApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1854,7 +1854,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "Records"]
+                  ["AWS/KinesisAnalytics", "Records", "Application", "${AdImpressionsApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1867,7 +1867,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "Bytes"]
+                  ["AWS/KinesisAnalytics", "Bytes", "Application", "${AdImpressionsApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1880,7 +1880,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.Success"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.Success", "Application", "${AdImpressionsApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1893,7 +1893,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.OkBytes"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.OkBytes", "Application", "${AdImpressionsApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1906,7 +1906,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.Duration"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.Duration", "Application", "${AdImpressionsApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1919,7 +1919,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.OkRecords"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.OkRecords", "Application", "${AdImpressionsApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1932,7 +1932,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.DroppedRecords"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.DroppedRecords", "Application", "${AdImpressionsApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1945,7 +1945,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.ProcessingFailedRecords"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.ProcessingFailedRecords", "Application", "${AdImpressionsApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1958,7 +1958,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.OkRecords"],
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.OkRecords", "Application", "${AdImpressionsApplication}"],
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1971,7 +1971,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.DeliveryFailedRecords"],
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.DeliveryFailedRecords", "Application", "${AdImpressionsApplication}"],
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1984,7 +1984,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.Duration"],
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.Duration", "Application", "${AdImpressionsApplication}"],
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
