@@ -171,37 +171,29 @@ func main() {
 	impressionBatches := make(chan *AdImpressions)
 	wg.Add(1)
 	go func() {
+		defer log.Printf("Impressions publisher exiting")
 		defer wg.Done()
+
 		buf := new(bytes.Buffer)
 		encoder := json.NewEncoder(buf)
 		earl := baseURL.ResolveReference(&url.URL{
 			Path: filepath.Join(baseURL.Path, "/data/ad/impressions"),
 		}).String()
 
-		for {
-			select {
-			case <-ctx.Done():
-				return
+		for batch := range impressionBatches {
+			buf.Reset()
+			if err := encoder.Encode(batch); err != nil {
+				log.Printf("could not encode impressions batch: %s", err)
+			}
 
-			case batch, more := <-impressionBatches:
-				if !more {
-					return
-				}
+			log.Printf("Publishing impressions batch")
+			resp, err := http.Post(earl, "application/json", buf)
+			if err != nil {
+				log.Printf("error publishing impressions batch: %s", err)
+			}
 
-				buf.Reset()
-				if err := encoder.Encode(batch); err != nil {
-					log.Printf("could not encode impressions batch: %s", err)
-				}
-
-				log.Printf("Publishing impressions batch")
-				resp, err := http.Post(earl, "application/json", buf)
-				if err != nil {
-					log.Printf("error publishing impressions batch: %s", err)
-				}
-
-				if resp.StatusCode != http.StatusOK {
-					log.Printf("non-%d status code publishing impressions batch", resp.StatusCode)
-				}
+			if resp.StatusCode != http.StatusOK {
+				log.Printf("non-%d status code publishing impressions batch: %d", http.StatusOK, resp.StatusCode)
 			}
 		}
 	}()
@@ -209,37 +201,29 @@ func main() {
 	clickBatches := make(chan *AdClicks)
 	wg.Add(1)
 	go func() {
+		defer log.Printf("Clicks publisher exiting")
 		defer wg.Done()
+
 		buf := new(bytes.Buffer)
 		encoder := json.NewEncoder(buf)
 		earl := baseURL.ResolveReference(&url.URL{
 			Path: filepath.Join(baseURL.Path, "/data/ad/clicks"),
 		}).String()
 
-		for {
-			select {
-			case <-ctx.Done():
-				return
+		for batch := range clickBatches {
+			buf.Reset()
+			if err := encoder.Encode(batch); err != nil {
+				log.Printf("could not encode impressions batch: %s", err)
+			}
 
-			case batch, more := <-clickBatches:
-				if !more {
-					return
-				}
+			log.Printf("Publishing clicks batch")
+			resp, err := http.Post(earl, "application/json", buf)
+			if err != nil {
+				log.Printf("error publishing impressions batch: %s", err)
+			}
 
-				buf.Reset()
-				if err := encoder.Encode(batch); err != nil {
-					log.Printf("could not encode impressions batch: %s", err)
-				}
-
-				log.Printf("Publishing clicks batch")
-				resp, err := http.Post(earl, "application/json", buf)
-				if err != nil {
-					log.Printf("error publishing impressions batch: %s", err)
-				}
-
-				if resp.StatusCode != http.StatusOK {
-					log.Printf("non-%d status code publishing impressions batch", resp.StatusCode)
-				}
+			if resp.StatusCode != http.StatusOK {
+				log.Printf("non-%d status code publishing impressions batch: %d", http.StatusOK, resp.StatusCode)
 			}
 		}
 	}()
@@ -247,29 +231,25 @@ func main() {
 	impressions := make(chan *AdImpression)
 	wg.Add(1)
 	go func() {
+		defer log.Printf("Impressions batcher exiting")
 		defer wg.Done()
 		batch := new(AdImpressions)
 
 		defer func() {
-			impressionBatches <- batch
+			log.Printf("Impressions batcher performing final flush")
+
+			if len(batch.Impressions) > 0 {
+				impressionBatches <- batch
+			}
+
 			close(impressionBatches)
 		}()
 
-		for {
-			select {
-			case <-ctx.Done():
-				return
-
-			case impression, more := <-impressions:
-				if !more {
-					return
-				}
-
-				batch.Impressions = append(batch.Impressions, impression)
-				if len(batch.Impressions) == 500 {
-					impressionBatches <- batch
-					batch = new(AdImpressions)
-				}
+		for impression := range impressions {
+			batch.Impressions = append(batch.Impressions, impression)
+			if len(batch.Impressions) == 500 {
+				impressionBatches <- batch
+				batch = new(AdImpressions)
 			}
 		}
 	}()
@@ -277,38 +257,34 @@ func main() {
 	clicks := make(chan *AdClick)
 	wg.Add(1)
 	go func() {
+		defer log.Printf("Clicks batcher exiting")
 		defer wg.Done()
 		batch := new(AdClicks)
 
 		defer func() {
-			clickBatches <- batch
+			log.Printf("Clicks batcher performing final flush")
+
+			if len(batch.Clicks) > 0 {
+				clickBatches <- batch
+			}
+
 			close(clickBatches)
 		}()
 
-		for {
-			select {
-			case <-ctx.Done():
-				return
-
-			case click, more := <-clicks:
-				if !more {
-					return
-				}
-
-				batch.Clicks = append(batch.Clicks, click)
-				if len(batch.Clicks) == 500 {
-					clickBatches <- batch
-					batch = new(AdClicks)
-				}
+		for click := range clicks {
+			batch.Clicks = append(batch.Clicks, click)
+			if len(batch.Clicks) == 500 {
+				clickBatches <- batch
+				batch = new(AdClicks)
 			}
 		}
 	}()
 
 	usersWg := new(sync.WaitGroup)
 	go func() {
-		log.Printf("Waiting on users")
 		usersWg.Wait()
-		log.Printf("Users complete")
+		log.Printf("All users complete")
+
 		close(impressions)
 		close(clicks)
 	}()
@@ -319,64 +295,64 @@ func main() {
 	for i := 0; i < config.Users.Number; i++ {
 		i := i
 		go func() {
+			defer log.Printf("User %d exiting", i)
 			defer wg.Done()
 			defer usersWg.Done()
 
-			for {
+			for ad := range events {
+				impressions <- &AdImpression{Ad: ad.ID, User: users.Users[i].ID, At: time.Now()}
+
+				considerTime := users.Users[i].ConsiderDuration + (rand.Int63n(users.Users[i].ConsiderVariance) - (users.Users[i].ConsiderVariance / 2))
 				select {
 				case <-ctx.Done():
 					return
+				case <-time.After(time.Duration(considerTime)):
+				}
 
-				case ad, more := <-events:
-					if !more {
-						return
+				m := make(map[int]struct{})
+				common := 0
+				for tag := range users.Users[i].Tags {
+					m[tag] = struct{}{}
+				}
+				for tag := range ad.Tags {
+					if _, found := m[tag]; found {
+						common++
 					}
+					m[tag] = struct{}{}
+				}
+				clickthroughProbability := float64(common) / float64(len(m)) * config.Users.MaximumClickThroughRate
+				if rand.Float64() < clickthroughProbability {
+					clicks <- &AdClick{Ad: ad.ID, User: users.Users[i].ID, At: time.Now()}
+				}
 
-					impressions <- &AdImpression{Ad: ad.ID, User: users.Users[i].ID, At: time.Now()}
-
-					considerTime := users.Users[i].ConsiderDuration + (rand.Int63n(users.Users[i].ConsiderVariance) - (users.Users[i].ConsiderVariance / 2))
-					time.Sleep(time.Duration(considerTime))
-
-					m := make(map[int]struct{})
-					common := 0
-					for tag := range users.Users[i].Tags {
-						m[tag] = struct{}{}
-					}
-					for tag := range ad.Tags {
-						if _, found := m[tag]; found {
-							common++
-						}
-						m[tag] = struct{}{}
-					}
-					clickthroughProbability := float64(common) / float64(len(m)) * config.Users.MaximumClickThroughRate
-					if rand.Float64() < clickthroughProbability {
-						clicks <- &AdClick{Ad: ad.ID, User: users.Users[i].ID, At: time.Now()}
-					}
-
-					sleepTime := users.Users[i].ViewFrequency + (rand.Int63n(users.Users[i].ViewVariance) - (users.Users[i].ViewVariance / 2))
-					time.Sleep(time.Duration(sleepTime))
+				sleepTime := users.Users[i].ViewFrequency + (rand.Int63n(users.Users[i].ViewVariance) - (users.Users[i].ViewVariance / 2))
+				select {
+				case <-ctx.Done():
+					return
+				case <-time.After(time.Duration(sleepTime)):
 				}
 			}
 		}()
 	}
 
+	signals := make(chan os.Signal)
+	go func() {
+		<-signals
+		log.Printf("Interrupt received")
+		cancel()
+	}()
+	signal.Notify(signals, os.Interrupt)
+
 outer:
 	for i := int64(0); i < config.Events; i++ {
 		select {
 		case <-ctx.Done():
+			log.Printf("Event publisher canceled")
+			close(events)
 			break outer
 		case events <- ads.Random():
 		}
-
 	}
-	close(events)
-
-	signals := make(chan os.Signal)
-	go func() {
-		<-signals
-		cancel()
-	}()
-	signal.Notify(signals, os.Interrupt)
 
 	wg.Wait()
 }
