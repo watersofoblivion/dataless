@@ -847,17 +847,17 @@ Resources:
     Properties:
       ApplicationCode: |
         CREATE OR REPLACE STREAM "IMPRESSIONS_OUTPUT" (
-          ad_id VARCHAR(255),
-          user_id VARCHAR(255),
-          viewed_at TIMESTAMP
+          AD_ID VARCHAR(255),
+          USER_ID VARCHAR(255),
+          VIEWED_AT TIMESTAMP
         );
 
         CREATE OR REPLACE PUMP "IMPRESSIONS_OUTPUT_PUMP" AS
         INSERT INTO "IMPRESSIONS_OUTPUT"
-        SELECT ad_id, user_id, viewed_at
+        SELECT AD_ID, USER_ID, VIEWED_AT
         FROM "AD_IMPRESSIONS_001"
         WINDOWED BY STAGGER (
-          PARTITION BY ad_id, user_id
+          PARTITION BY AD_ID, USER_ID
           RANGE INTERVAL '1' MINUTE
         );
       Inputs:
@@ -872,13 +872,13 @@ Resources:
               #   JSONMappingParameters:
               #     RecordRowPath: "$"
             RecordColumns:
-              - Name: ad_id
+              - Name: AD_ID
                 SqlType: VARCHAR(255)
                 Mapping: "$.ad"
-              - Name: user_id
+              - Name: USER_ID
                 SqlType: VARCHAR(255)
                 Mapping: "$.user"
-              - Name: viewed_at
+              - Name: VIEWED_AT
                 SqlType: TIMESTAMP
                 Mapping: "$.at"
 
@@ -899,14 +899,14 @@ Resources:
     Properties:
       ApplicationCode: |
         CREATE OR REPLACE STREAM "CLICKS_OUTPUT" (
-          ad_id VARCHAR(255),
-          user_id VARCHAR(255),
-          clicked_at TIMESTAMP
+          AD_ID VARCHAR(255),
+          USER_ID VARCHAR(255),
+          CLICKED_AT TIMESTAMP
         );
 
         CREATE OR REPLACE PUMP "CLICKS_OUTPUT_PUMP" AS
         INSERT INTO "CLICKS_OUTPUT"
-        SELECT ad_id, user_id, clicked_at
+        SELECT AD_ID, USER_ID, CLICKED_AT
         FROM "AD_CLICKS_001"
         WINDOWED BY STAGGER (
           PARTITION BY ad_id, user_id
@@ -924,13 +924,13 @@ Resources:
               #   JSONMappingParameters:
               #     RecordRowPath: "$"
             RecordColumns:
-              - Name: ad_id
+              - Name: AD_ID
                 SqlType: VARCHAR(255)
                 Mapping: "$.ad"
-              - Name: user_id
+              - Name: USER_ID
                 SqlType: VARCHAR(255)
                 Mapping: "$.user"
-              - Name: clicked_at
+              - Name: CLICKED_AT
                 SqlType: TIMESTAMP
                 Mapping: "$.at"
 
