@@ -217,7 +217,7 @@ Globals:
     DeploymentPreference:
       Enabled: true
       Type: Canary10Percent5Minutes
-      Role: !Ref CodeDeployRole
+      # Role: !Ref CodeDeployRole
   Api:
     TracingEnabled: true
     EndpointConfiguration: EDGE
