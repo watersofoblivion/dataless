@@ -1598,7 +1598,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "Count", "ApiName", "${APIName}", "Stage", "${Stage}"]
+                  ["AWS/ApiGateway", "Count", "ApiName", "${APIName}", "Resource", "/data/ad/impressions", "Method", "POST", "Stage", "${Stage}"],
+                  [".",              ".",     ".",       "${APIName}", ".",        "/data/ad/clicks",      ".",      "POST", ".",     "${Stage}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
