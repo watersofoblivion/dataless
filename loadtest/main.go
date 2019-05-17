@@ -171,7 +171,6 @@ func main() {
 	impressionBatches := make(chan *AdImpressions)
 	wg.Add(1)
 	go func() {
-		defer log.Printf("Impressions publisher exiting")
 		defer wg.Done()
 
 		buf := new(bytes.Buffer)
@@ -186,7 +185,6 @@ func main() {
 				log.Printf("could not encode impressions batch: %s", err)
 			}
 
-			log.Printf("Publishing impressions batch")
 			resp, err := http.Post(earl, "application/json", buf)
 			if err != nil {
 				log.Printf("error publishing impressions batch: %s", err)
@@ -201,7 +199,6 @@ func main() {
 	clickBatches := make(chan *AdClicks)
 	wg.Add(1)
 	go func() {
-		defer log.Printf("Clicks publisher exiting")
 		defer wg.Done()
 
 		buf := new(bytes.Buffer)
@@ -216,7 +213,6 @@ func main() {
 				log.Printf("could not encode impressions batch: %s", err)
 			}
 
-			log.Printf("Publishing clicks batch")
 			resp, err := http.Post(earl, "application/json", buf)
 			if err != nil {
 				log.Printf("error publishing impressions batch: %s", err)
@@ -231,13 +227,10 @@ func main() {
 	impressions := make(chan *AdImpression)
 	wg.Add(1)
 	go func() {
-		defer log.Printf("Impressions batcher exiting")
 		defer wg.Done()
 		batch := new(AdImpressions)
 
 		defer func() {
-			log.Printf("Impressions batcher performing final flush")
-
 			if len(batch.Impressions) > 0 {
 				impressionBatches <- batch
 			}
@@ -257,13 +250,10 @@ func main() {
 	clicks := make(chan *AdClick)
 	wg.Add(1)
 	go func() {
-		defer log.Printf("Clicks batcher exiting")
 		defer wg.Done()
 		batch := new(AdClicks)
 
 		defer func() {
-			log.Printf("Clicks batcher performing final flush")
-
 			if len(batch.Clicks) > 0 {
 				clickBatches <- batch
 			}
@@ -283,8 +273,6 @@ func main() {
 	usersWg := new(sync.WaitGroup)
 	go func() {
 		usersWg.Wait()
-		log.Printf("All users complete")
-
 		close(impressions)
 		close(clicks)
 	}()
@@ -295,7 +283,6 @@ func main() {
 	for i := 0; i < config.Users.Number; i++ {
 		i := i
 		go func() {
-			defer log.Printf("User %d exiting", i)
 			defer wg.Done()
 			defer usersWg.Done()
 
@@ -338,7 +325,6 @@ func main() {
 	signals := make(chan os.Signal)
 	go func() {
 		<-signals
-		log.Printf("Interrupt received")
 		cancel()
 	}()
 	signal.Notify(signals, os.Interrupt)
@@ -347,7 +333,6 @@ outer:
 	for i := int64(0); i < config.Events; i++ {
 		select {
 		case <-ctx.Done():
-			log.Printf("Event publisher canceled")
 			close(events)
 			break outer
 		case events <- ads.Random():
