@@ -1612,11 +1612,11 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "Latency", "ApiName", "${APIName}", "Stage", "${Stage}", { "stat": "p50" }],
-                  [".",              ".",       ".",       "${APIName}", ".",     "${Stage}", { "stat": "p75" }],
-                  [".",              ".",       ".",       "${APIName}", ".",     "${Stage}", { "stat": "p95" }],
-                  [".",              ".",       ".",       "${APIName}", ".",     "${Stage}", { "stat": "p98" }],
-                  [".",              ".",       ".",       "${APIName}", ".",     "${Stage}", { "stat": "p99" }]
+                  ["AWS/ApiGateway", "Latency", "ApiName", "${APIName}", "Resource", "/data/ad/impressions", "Method", "POST", "Stage", "${Stage}", { "stat": "p50" }],
+                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/impressions", ".",      "POST", ".",     "${Stage}", { "stat": "p75" }],
+                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/impressions", ".",      "POST", ".",     "${Stage}", { "stat": "p95" }],
+                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/impressions", ".",      "POST", ".",     "${Stage}", { "stat": "p98" }],
+                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/impressions", ".",      "POST", ".",     "${Stage}", { "stat": "p99" }]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1629,11 +1629,11 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "${APIName}", "Stage", "${Stage}", { "stat": "p50" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",     "${Stage}", { "stat": "p75" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",     "${Stage}", { "stat": "p95" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",     "${Stage}", { "stat": "p98" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",     "${Stage}", { "stat": "p99" }]
+                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "${APIName}", "Resource", "/data/ad/impressions", "Method", "POST", "Stage", "${Stage}", { "stat": "p50" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/ad/impressions", ".",      "POST", ".",     "${Stage}", { "stat": "p75" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/ad/impressions", ".",      "POST", ".",     "${Stage}", { "stat": "p95" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/ad/impressions", ".",      "POST", ".",     "${Stage}", { "stat": "p98" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/ad/impressions", ".",      "POST", ".",     "${Stage}", { "stat": "p99" }]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1646,8 +1646,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "4XXError", "ApiName", "${APIName}", "Stage", "${Stage}"],
-                  [".",              "5XXError", ".",       "${APIName}", ".",     "${Stage}"]
+                  ["AWS/ApiGateway", "4XXError", "ApiName", "${APIName}", "Resource", "/data/ad/impressions", "Method", "POST", "Stage", "${Stage}"],
+                  [".",              "5XXError", ".",       "${APIName}", ".",        "/data/ad/impressions", ".",      "POST", ".",     "${Stage}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1675,11 +1675,11 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "Latency", "ApiName", "${APIName}", "Stage", "${Stage}", { "stat": "p50" }],
-                  [".",              ".",       ".",       "${APIName}", ".",     "${Stage}", { "stat": "p75" }],
-                  [".",              ".",       ".",       "${APIName}", ".",     "${Stage}", { "stat": "p95" }],
-                  [".",              ".",       ".",       "${APIName}", ".",     "${Stage}", { "stat": "p98" }],
-                  [".",              ".",       ".",       "${APIName}", ".",     "${Stage}", { "stat": "p99" }]
+                  ["AWS/ApiGateway", "Latency", "ApiName", "${APIName}", "Resource", "/data/ad/clicks", "Method", "POST", "Stage", "${Stage}", { "stat": "p50" }],
+                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/clicks", ".,       "POST", ".",     "${Stage}", { "stat": "p75" }],
+                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/clicks", ".,       "POST", ".",     "${Stage}", { "stat": "p95" }],
+                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/clicks", ".,       "POST", ".",     "${Stage}", { "stat": "p98" }],
+                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/clicks", ".,       "POST", ".",     "${Stage}", { "stat": "p99" }]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1692,11 +1692,11 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "${APIName}", "Stage", "${Stage}", { "stat": "p50" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",     "${Stage}", { "stat": "p75" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",     "${Stage}", { "stat": "p95" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",     "${Stage}", { "stat": "p98" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",     "${Stage}", { "stat": "p99" }]
+                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "${APIName}", "Resource", "/data/ad/clicks", "Method", "POST", "Stage", "${Stage}", { "stat": "p50" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/ad/clicks", ".",      "POST", ".",     "${Stage}", { "stat": "p75" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/ad/clicks", ".",      "POST", ".",     "${Stage}", { "stat": "p95" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/ad/clicks", ".",      "POST", ".",     "${Stage}", { "stat": "p98" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/ad/clicks", ".",      "POST", ".",     "${Stage}", { "stat": "p99" }]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1709,8 +1709,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "4XXError", "ApiName", "${APIName}", "Stage", "${Stage}"],
-                  [".",              "5XXError", ".",       "${APIName}", ".",     "${Stage}"]
+                  ["AWS/ApiGateway", "4XXError", "ApiName", "${APIName}", "Resource", "/data/ad/clicks", "Method", "POST", "Stage", "${Stage}"],
+                  [".",              "5XXError", ".",       "${APIName}", ".",        "/data/ad/clicks", ".",      "POST", ".",     "${Stage}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
