@@ -1062,7 +1062,7 @@ Resources:
         openapi: 3.0.0
         info:
           version: 0.1.0
-          title: ${APIName}
+          title: !Ref APIName
         paths:
           /data/ad/impressions:
             post:
@@ -1598,8 +1598,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "Count", "ApiName", "${APIName}", "Resource", "/data/ad/impressions", "Method", "POST", "Stage", "${Stage}"],
-                  [".",              ".",     ".",       "${APIName}", ".",        "/data/ad/clicks",      ".",      "POST", ".",     "${Stage}"]
+                  ["AWS/ApiGateway", "Count", "ApiName", "${APIName}", "Resource", "/data/ad/impressions", "Method", "POST", "Stage", "${Stage}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1662,7 +1661,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "Count", "ApiName", "${APIName}", "Stage", "${Stage}"]
+                  ["AWS/ApiGateway", "Count", "ApiName", "${APIName}", "Resource", "/data/ad/clicks", "Method", "POST", "Stage", "${Stage}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
