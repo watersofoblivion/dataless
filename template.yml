@@ -849,23 +849,22 @@ Resources:
     Type: AWS::KinesisAnalytics::Application
     Properties:
       ApplicationCode: |
-        CREATE OR REPLACE STREAM "IMPRESSIONS_OUTPUT" (
-          AD_ID VARCHAR(255),
-          USER_ID VARCHAR(255),
+        CREATE OR REPLACE STREAM IMPRESSIONS_OUTPUT (
+          AD_ID VARCHAR(64),
+          USER_ID VARCHAR(64),
           VIEWED_AT TIMESTAMP
         );
 
-        CREATE OR REPLACE PUMP "IMPRESSIONS_OUTPUT_PUMP" AS
-        INSERT INTO "IMPRESSIONS_OUTPUT"
+        CREATE OR REPLACE PUMP IMPRESSIONS_OUTPUT_PUMP AS
+        INSERT INTO IMPRESSIONS_OUTPUT
         SELECT AD_ID, USER_ID, VIEWED_AT
-        FROM "AD_IMPRESSIONS_001"
+        FROM SOURCE_SQL_STREAM_001
         WINDOWED BY STAGGER (
-          PARTITION BY AD_ID, USER_ID
+          PARTITION BY AD_ID, USER_ID, VIEWED_AT
           RANGE INTERVAL '1' MINUTE
         );
       Inputs:
-        - NamePrefix: AD_IMPRESSIONS
-          KinesisFirehoseInput:
+        - KinesisFirehoseInput:
             ResourceARN: !GetAtt AdImpressionsDeliveryStream.Arn
             RoleARN: !GetAtt ApplicationRole.Arn
           InputSchema:
@@ -879,12 +878,12 @@ Resources:
               - Name: AD_ID
                 SqlType: VARCHAR(64)
                 Mapping: "$.ad"
-              - Name: USER_ID
-                SqlType: VARCHAR(64)
-                Mapping: "$.user"
               - Name: VIEWED_AT
                 SqlType: TIMESTAMP
                 Mapping: "$.at"
+              - Name: USER_ID
+                SqlType: VARCHAR(64)
+                Mapping: "$.user"
 
   AdImpressionsOutputs:
     Type: AWS::KinesisAnalytics::ApplicationOutput
@@ -902,23 +901,22 @@ Resources:
     Type: AWS::KinesisAnalytics::Application
     Properties:
       ApplicationCode: |
-        CREATE OR REPLACE STREAM "CLICKS_OUTPUT" (
-          AD_ID VARCHAR(255),
-          USER_ID VARCHAR(255),
+        CREATE OR REPLACE STREAM CLICKS_OUTPUT (
+          AD_ID VARCHAR(64),
+          USER_ID VARCHAR(64),
           CLICKED_AT TIMESTAMP
         );
 
-        CREATE OR REPLACE PUMP "CLICKS_OUTPUT_PUMP" AS
-        INSERT INTO "CLICKS_OUTPUT"
+        CREATE OR REPLACE PUMP CLICKS_OUTPUT_PUMP AS
+        INSERT INTO CLICKS_OUTPUT
         SELECT AD_ID, USER_ID, CLICKED_AT
-        FROM "AD_CLICKS_001"
+        FROM SOURCE_SQL_STREAM_001
         WINDOWED BY STAGGER (
-          PARTITION BY ad_id, user_id
+          PARTITION BY AD_ID, USER_ID, CLICKED_AT
           RANGE INTERVAL '1' MINUTE
         );
       Inputs:
-        - NamePrefix: AD_CLICKS
-          KinesisFirehoseInput:
+        - KinesisFirehoseInput:
             ResourceARN: !GetAtt AdClicksDeliveryStream.Arn
             RoleARN: !GetAtt ApplicationRole.Arn
           InputSchema:
@@ -932,12 +930,12 @@ Resources:
               - Name: AD_ID
                 SqlType: VARCHAR(64)
                 Mapping: "$.ad"
-              - Name: USER_ID
-                SqlType: VARCHAR(64)
-                Mapping: "$.user"
               - Name: CLICKED_AT
                 SqlType: TIMESTAMP
                 Mapping: "$.at"
+              - Name: USER_ID
+                SqlType: VARCHAR(64)
+                Mapping: "$.user"
 
   AdClicksOutputs:
     Type: AWS::KinesisAnalytics::ApplicationOutput
@@ -1063,68 +1061,6 @@ Resources:
             post:
               summary: Record a batch of ad clicks
               operationId: data-ad-clicks
-              requestBody:
-                description: A batch of ad clicks
-                required: true
-                content:
-                  application/json:
-                    schema:
-                      $ref: "#/components/schemas/DataAdClicks"
-              x-amazon-apigateway-integration:
-                type: AWS
-                httpMethod: POST
-                uri: !Sub "arn:aws:apigateway:${AWS::Region}:firehose:action/PutRecordBatch"
-                credentials: !GetAtt APIRole.Arn
-                requestTemplates:
-                  application/json: !Sub |
-                    #set($newline = "
-                    ")
-                    {
-                      "DeliveryStreamName": "${AdClicksDeliveryStream}",
-                      "Records": [
-                        #foreach($elem in $input.path('$.clicks'))
-                        #set($val = $input.json("$.clicks[$foreach.index]"))
-                        #set($rec = "${!val}${!newline}")
-                        { "Data": "$util.base64Encode($rec)" }#if($foreach.hasNext),#end
-                        #end
-                      ]
-                    }
-                requestParameters:
-                  integration.request.header.Content-Type: "'x-amz-json-1.1'"
-                responses:
-                  '200':
-                    statusCode: 200
-                    responseTemplates:
-                      application/json: |
-                        {
-                          "failed_count": $input.path("$.FailedPutCount"),
-                          "records": [
-                            #foreach($record in $input.path("$.RequestResponses"))
-                            {
-                              #if($record.keySet().contains("ErrorCode"))
-                              "failed": true,
-                              "error_code": "$record.ErrorCode",
-                              "error_message": "$record.ErrorMessage"
-                              #else
-                              "failed": false
-                              #end
-                            }#if($foreach.hasNext),#end
-                            #end
-                          ]
-                        }
-              responses:
-                '200':
-                  description: |
-                    The batch was processed.  Some clicks may not have been
-                    processed.  The response contains a list of clicks in the same
-                    order submitted, indicating which succeeded and which failed.
-                  content:
-                    application/json:
-                      schema:
-                        $ref: "#/components/schemas/BatchWriteResponse"
-            put:
-              summary: Record a batch of ad clicks
-              operationId: temporary-to-make-schema-update
               requestBody:
                 description: A batch of ad clicks
                 required: true

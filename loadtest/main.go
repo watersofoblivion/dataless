@@ -54,36 +54,36 @@ type AdImpressions struct {
 }
 
 type AdImpression struct {
-	Ad   uuid.UUID `json:"ad"`
-	User uuid.UUID `json:"user"`
-	At   time.Time `json:"at"`
+	Ad   uuid.UUID
+	User uuid.UUID
+	At   time.Time
 }
 
-// func (datum *AdImpression) MarshalJSON() ([]byte, error) {
-// 	return json.Marshal(map[string]interface{}{
-// 		"Ad":   datum.Ad.String(),
-// 		"User": datum.User.String(),
-// 		"At":   datum.At.Format("2006-01-02 15:04:05.000"),
-// 	})
-// }
+func (datum *AdImpression) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"ad":   datum.Ad.String(),
+		"user": datum.User.String(),
+		"at":   datum.At.Format("2006-01-02 15:04:05.000"),
+	})
+}
 
 type AdClicks struct {
 	Clicks []*AdClick `json:"clicks"`
 }
 
 type AdClick struct {
-	Ad   uuid.UUID `json:"ad"`
-	User uuid.UUID `json:"user"`
-	At   time.Time `json:"at"`
+	Ad   uuid.UUID
+	User uuid.UUID
+	At   time.Time
 }
 
-// func (datum *AdClick) MarshalJSON() ([]byte, error) {
-// 	return json.Marshal(map[string]interface{}{
-// 		"Ad":   datum.Ad.String(),
-// 		"User": datum.User.String(),
-// 		"At":   datum.At.Format("2006-01-02 15:04:05.000"),
-// 	})
-// }
+func (datum *AdClick) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"ad":   datum.Ad.String(),
+		"user": datum.User.String(),
+		"at":   datum.At.Format("2006-01-02 15:04:05.000"),
+	})
+}
 
 type Ads struct {
 	Ads []*Ad
