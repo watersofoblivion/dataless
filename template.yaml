@@ -1,15 +1,83 @@
 AWSTemplateFormatVersion: 2010-09-09
-Transform:
-- AWS::Serverless-2016-10-31
-- AWS::CodeStar
+Transform: AWS::Serverless-2016-10-31
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label: Code Location
+        Parameters:
+          - CodeBucket
+          - CodePrefix
+      - Label: Deployment Configuration
+        Parameters:
+          - Stage
+      - Label: DNS
+        Parameters:
+          - DNSDomainName
+          - DNSName
+          - ValidationDomain
+          - HostedZoneID
+      - Label: VPC
+        Parameters:
+          - EnableVPC
+      - Label: EC2 Instance
+        Parameters:
+          - EnableEC2Instance
+          - EC2InstanceSize
+      - Label: EMR Cluster
+        Parameters:
+          - EnableEMRCluster
+          - EMRMasterInstanceType
+          - EMRMasterInstanceCount
+          - EMRWorkerInstanceType
+          - EMRWorkerInstanceCount
+      - Label: Redshift
+        Parameters:
+          - EnableRedshift
+          - RedshiftNodeType
+          - RedshiftNumberOfNodes
+      - Label: API Gateway
+        Parameters:
+          - APIName
+    ParameterLabels:
+      CodeBucket:
+        default: Bucket containing scripts
+      CodePrefix:
+        default: Prefix for scripts
+      Stage:
+        default: Stage to deploy
+      DNSDomainName:
+        default: Domain name in Route53
+      DNSName:
+        default: Base DNS name for APIs
+      ValidationDomain:
+        default: Domain name for ACM certificate validation
+      EnableVPC:
+        default: Creates a VPC
+      EnableEC2Instance:
+        default: Creates an EC2 instance for Data Pipeline
+      EC2InstanceSize:
+        default: Type of EC2 instance
+      EnableEMRCluster:
+        default: Create an EMR cluster for Data Pipeline
+      EMRMasterInstanceType:
+        default: Type of EMR master instances
+      EMRMasterInstanceCount:
+        default: Number of EMR master instances
+      EMRCoreInstanceType:
+        default: Type of EMR core instances
+      EMRCoreInstanceCount:
+        default: Number of EMR core instances
+      EnableRedshift:
+        default: Create a Redshift instance
+      RedshiftNodeType:
+        default: Type of Redshift instance nodes
+      RedshiftNumberOfNodes:
+        default: Number of Redshift nodes
+      APIName:
+        default: Displayed name of API gateway
 
 Parameters:
-  ProjectId:
-    Type: String
-    Description: AWS CodeStar projectID used to associate new resources to team members
-  CodeDeployRole:
-    Type: String
-    Description: IAM role to allow AWS CodeDeploy to manage deployment of AWS Lambda functions
   CodeBucket:
     Type: String
     Description: The S3 bucket user code is stored in.
@@ -96,17 +164,18 @@ Parameters:
   APIName:
     Type: String
     Description: The name of the API Gateway api.
+    Default: Warehouse Service
 
 Conditions:
   DNSEnabled: !And
-      - !Not [!Equals [!Ref DNSDomainName, ""]]
-      - !Not [!Equals [!Ref DNSName, ""]]
-      - !Not [!Equals [!Ref ValidationDomain, ""]]
+    - !Not [!Equals [!Ref DNSDomainName, ""]]
+    - !Not [!Equals [!Ref DNSName, ""]]
+    - !Not [!Equals [!Ref ValidationDomain, ""]]
   InternalHostedZone: !And
-      - !Not [!Equals [!Ref DNSDomainName, ""]]
-      - !Not [!Equals [!Ref DNSName, ""]]
-      - !Not [!Equals [!Ref ValidationDomain, ""]]
-      - !Not [!Equals [!Ref HostedZoneID, ""]]
+    - !Not [!Equals [!Ref DNSDomainName, ""]]
+    - !Not [!Equals [!Ref DNSName, ""]]
+    - !Not [!Equals [!Ref ValidationDomain, ""]]
+    - !Not [!Equals [!Ref HostedZoneID, ""]]
   EC2InstanceEnabled: !Not [!Equals [!Ref EnableEC2Instance, ""]]
   EMREnabled: !Not [!Equals [!Ref EnableEMRCluster, ""]]
   RedshiftEnabled: !Not [!Equals [!Ref EnableRedshift, ""]]
@@ -142,9 +211,9 @@ Globals:
     Runtime: go1.x
     CodeUri:
       Bucket: !Ref CodeBucket
-      Key: !Sub "${CodePrefix}/lambdas.zip"
+      Key: !Sub "${CodePrefix}/lambda/lambdas.zip"
     Tracing: Active
-    AutoPublishAlias: live
+    AutoPublishAlias: Live
     DeploymentPreference:
       Enabled: true
       Type: Canary10Percent5Minutes

@@ -1,0 +1,541 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label: Source Location
+        Parameters:
+          - Owner
+          - Repo
+          - AccessToken
+          - Branch
+      - Label: Deployment Configuration
+        Parameters:
+          - Stage
+      - Label: DNS
+        Parameters:
+          - DNSDomainName
+          - DNSName
+          - ValidationDomain
+          - HostedZoneID
+      - Label: VPC
+        Parameters:
+          - EnableVPC
+      - Label: EC2 Instance
+        Parameters:
+          - EnableEC2Instance
+          - EC2InstanceSize
+      - Label: EMR Cluster
+        Parameters:
+          - EnableEMRCluster
+          - EMRMasterInstanceType
+          - EMRMasterInstanceCount
+          - EMRWorkerInstanceType
+          - EMRWorkerInstanceCount
+      - Label: Redshift
+        Parameters:
+          - EnableRedshift
+          - RedshiftNodeType
+          - RedshiftNumberOfNodes
+      - Label: API Gateway
+        Parameters:
+          - APIName
+    ParameterLabels:
+      Owner:
+        default: GitHub repository owner
+      Repo:
+        default: GitHub or CodeCommit repository name
+      AccessToken:
+        default: GitHub OAuth access token
+      Branch:
+        default: Branch to build
+      Stage:
+        default: Stage to deploy
+      DNSDomainName:
+        default: Domain name in Route53
+      DNSName:
+        default: Base DNS name for APIs
+      ValidationDomain:
+        default: Domain name for ACM certificate validation
+      EnableVPC:
+        default: Creates a VPC
+      EnableEC2Instance:
+        default: Creates an EC2 instance for Data Pipeline
+      EC2InstanceSize:
+        default: Type of EC2 instance
+      EnableEMRCluster:
+        default: Create an EMR cluster for Data Pipeline
+      EMRMasterInstanceType:
+        default: Type of EMR master instances
+      EMRMasterInstanceCount:
+        default: Number of EMR master instances
+      EMRCoreInstanceType:
+        default: Type of EMR core instances
+      EMRCoreInstanceCount:
+        default: Number of EMR core instances
+      EnableRedshift:
+        default: Create a Redshift instance
+      RedshiftNodeType:
+        default: Type of Redshift instance nodes
+      RedshiftNumberOfNodes:
+        default: Number of Redshift nodes
+      APIName:
+        default: Displayed name of API gateway
+
+Parameters:
+  Branch:
+    Type: String
+    Default: master
+    Description: The branch of the source repository to build
+  Owner:
+    Type: String
+    Description: The owner of the GitHub repository (if using GitHub.)
+    Default: ''
+  Repo:
+    Type: String
+    Description: The name of the repository.  If using CodeCommit, this is the name of the created repository.
+  AccessToken:
+    Type: String
+    Description: The GitHub token to use to fetch source code (if using GitHub.)
+    Default: ''
+    NoEcho: true
+  Stage:
+    Type: String
+    Description: The name for a project pipeline stage, such as Staging or Prod, for which resources are provisioned and deployed.
+    Default: ''
+  DNSDomainName:
+    Type: String
+    Description: The domain name in Route53, such as example.com, this warehouse is served from.
+    Default: ''
+  DNSName:
+    Type: String
+    Description: The base DNS name, such as warehouse.example.com, this warehouse is served from.  Must be a the DNSDomainName or a subdomain of it.
+    Default: ''
+  ValidationDomain:
+    Type: String
+    Description: The DNS domain to validate ACM certificates against, such as example.com.  Should be a the DNSDomainName.
+    Default: ''
+  HostedZoneID:
+    Type: String
+    Description: The existing Hosted Zone to use.  Creates a Hosted Zone if not provided.
+    Default: ''
+  EnableVPC:
+    Type: String
+    Description: If non-empty, create a VPC.  EnableEC2Instance, EnableEMRCluster, and EnableRedshift imply this option.
+    Default: ''
+  EnableEC2Instance:
+    Type: String
+    Description: If non-empty, create an EC2 instance for use by Data Pipeline.
+    Default: ''
+  EC2InstanceSize:
+    Type: String
+    Description: The instance size of the EC2 instance for use by Data Pipeline
+    Default: t2.nano
+  EnableEMRCluster:
+    Type: String
+    Description: If non-empty, create an EMR cluster.
+    Default: ''
+  EMRMasterInstanceType:
+    Type: String
+    Description: The instance type of the master instances in the EMR cluster.
+    AllowedPattern: "[\u0020-\uD7FF\uE000-\uFFFD\uD800\uDC00-\uDBFF\uDFFF\r\n\t]*"
+    Default: m1.medium
+  EMRMasterInstanceCount:
+    Type: Number
+    Description: The number of master instances in the EMR cluster.
+    MinValue: 1
+    MaxValue: 256
+    Default: 1
+  EMRCoreInstanceType:
+    Type: String
+    Description: The instance type of the core instances in the EMR cluster.
+    AllowedPattern: "[\u0020-\uD7FF\uE000-\uFFFD\uD800\uDC00-\uDBFF\uDFFF\r\n\t]*"
+    Default: m1.medium
+  EMRCoreInstanceCount:
+    Type: Number
+    Description: The number of core instances in the EMR cluster.
+    MinValue: 1
+    MaxValue: 256
+    Default: 1
+  EnableRedshift:
+    Type: String
+    Description: If non-empty, create a Redshift cluster.
+    Default: ''
+  RedshiftNodeType:
+    Type: String
+    Description: The type of instances in the Redshift cluster.
+    AllowedValues:
+      - dc2.large
+      - dc2.8xlarge
+      - ds2.xlarge
+      - ds2.8xlarge
+    Default: dc2.large
+  RedshiftNumberOfNodes:
+    Type: Number
+    Description: The number of nodes in the Redshift cluster.
+    MinValue: 1
+    MaxValue: 100
+    Default: 1
+  APIName:
+    Type: String
+    Description: The name of the API Gateway api.
+    Default: Warehouse Service
+
+Conditions:
+  UseGitHub: !And
+    - !Not [!Equals [!Ref Owner, ""]]
+    - !Not [!Equals [!Ref GitHubAccessToken, ""]]
+  UseCodeCommit: !Or
+    - !Equals [!Ref Owner, ""]
+    - !Equals [!Ref GitHubAccessToken, ""]
+  DNSEnabled: !And
+    - !Not [!Equals [!Ref DNSDomainName, ""]]
+    - !Not [!Equals [!Ref DNSName, ""]]
+    - !Not [!Equals [!Ref ValidationDomain, ""]]
+  InternalHostedZone: !And
+    - !Not [!Equals [!Ref DNSDomainName, ""]]
+    - !Not [!Equals [!Ref DNSName, ""]]
+    - !Not [!Equals [!Ref ValidationDomain, ""]]
+    - !Not [!Equals [!Ref HostedZoneID, ""]]
+  EC2InstanceEnabled: !Not [!Equals [!Ref EnableEC2Instance, ""]]
+  EMREnabled: !Not [!Equals [!Ref EnableEMRCluster, ""]]
+  RedshiftEnabled: !Not [!Equals [!Ref EnableRedshift, ""]]
+  RedshiftSingleNode: !Equals [!Ref RedshiftNumberOfNodes, 1]
+  VPCEnabled: !Or
+    - !Not [!Equals [!Ref EnableVPC, ""]]
+    - !Not [!Equals [!Ref EnableEC2Instance, ""]]
+    - !Not [!Equals [!Ref EnableEMRCluster, ""]]
+    - !Not [!Equals [!Ref EnableRedshift, ""]]
+
+Outputs:
+  RepoURL:
+    Value: !If
+      - UseGitHub
+      - !Sub "https://github.com/${Owner}/${Repo}"
+      - !GetAtt Repo.CloneUrlHttp
+    Description: The HTTP URL for the source repository.
+
+Resources:
+  # A IAM Role for deploying the pipeline.
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "cloudformation.${AWS::URLSuffix}"
+                - !Sub "logs.${AWS::Region}.${AWS::URLSuffix}"
+                - !Sub "events.${AWS::URLSuffix}"
+                - !Sub "codecommit.${AWS::URLSuffix}"
+                - !Sub "codebuild.${AWS::URLSuffix}"
+                - !Sub "codedeploy.${AWS::URLSuffix}"
+                - !Sub "codepipeline.${AWS::URLSuffix}"
+                - !Sub "cloudfront.${AWS::URLSuffix}"
+                - !Sub "s3.${AWS::URLSuffix}"
+                - !Sub "apigateway.${AWS::URLSuffix}"
+                - !Sub "lambda.${AWS::URLSuffix}"
+                - !Sub "dynamodb.${AWS::URLSuffix}"
+                - !Sub "kinesis.${AWS::URLSuffix}"
+                - !Sub "ssm.${AWS::URLSuffix}"
+                - !Sub "route53.${AWS::URLSuffix}"
+                - !Sub "acm.${AWS::URLSuffix}"
+                - !Sub "firehose.${AWS::URLSuffix}"
+                - !Sub "elasticmapreduce.${AWS::URLSuffix}"
+                - !Sub "redshift.${AWS::URLSuffix}"
+                - !Sub "ec2.${AWS::URLSuffix}"
+                - !Sub "datapipeline.${AWS::URLSuffix}"
+                - !Sub "serverlessrepo.${AWS::URLSuffix}"
+      Policies:
+        - PolicyName: Bootstrap
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - cloudformation:*
+                  - codecommit:*
+                  - codebuild:*
+                  - codedeploy:*
+                  - codepipeline:*
+                  - cloudfront:*
+                  - events:*
+                  - iam:*
+                  - logs:*
+                  - apigateway:*
+                  - lambda:*
+                  - dynamodb:*
+                  - kinesis:*
+                  - s3:*
+                  - ssm:*
+                  - route53:*
+                  - acm:*
+                  - firehose:*
+                  - elasticmapreduce:*
+                  - redshift:*
+                  - ec2:*
+                  - datapipeline:*
+                  - serverlessrepo:*
+                  - iam:PassRole
+                Effect: Allow
+                Resource: "*"
+
+  # A S3 Bucket to hold the build artifacts and deploy the pipeline from.
+  #
+  # Versioning must be enabled for CodePipeline and friends to use.  The bucket
+  # is retained on delete to make the stack easier to delete.
+  Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+      VersioningConfiguration:
+        Status: Enabled
+
+  # A CodeCommit repository to hold the source code.
+  #
+  # This could be replaced in the build (below) with a GitHub repository, but
+  # that requires a manual step of creating a access token.
+  Repo:
+    Type: AWS::CodeCommit::Repository
+    Condition: UseCodeCommit
+    DeletionPolicy: Retain
+    Properties:
+      RepositoryName: !Ref AWS::StackName
+
+  # A CodePipeline pipeline to build and deploy the data pipeline.
+  #
+  # It fetches the source, builds, tests, and packages all of the lambdas,
+  # packages and uploads the lambdas and CloudFormation template, then
+  # continuously deploys it.
+  #
+  # The target stack's name is the current stack name with the suffix "-prod" to
+  # avoid name conflicts.
+  Build:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub "${AWS::StackName}-build"
+      ServiceRole: !Ref Role
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/golang:1.11
+        EnvironmentVariables:
+          - Type: PLAINTEXT
+            Name: BUCKET
+            Value: !Ref Bucket
+          - Type: PLAINTEXT
+            Name: USER
+            Value: build
+          - Type: PLAINTEXT
+            Name: S3_BUCKET
+            Value: !Ref Bucket
+          - Type: PLAINTEXT
+            Name: STAGE_NAME
+            Value: !Ref Stage
+          - Type: PLAINTEXT
+            Name: DNS_DOMAIN_NAME
+            Value: !Ref DomainName
+          - Type: PLAINTEXT
+            Name: DNS_NAME
+            Value: !Ref DNSName
+          - Type: PLAINTEXT
+            Name: VALIDATION_DOMAIN
+            Value: !Ref ValidationDomain
+          - Type: PLAINTEXT
+            Name: HOSTED_ZONE_ID
+            Value: !Ref HostedZoneID
+          - Type: PLAINTEXT
+            Name: ENABLE_VPC
+            Value: !If [VPCEnabled, "enabled", ""]
+          - Type: PLAINTEXT
+            Name: ENABLE_EC2_INSTANCE
+            Value: !If [EC2InstanceEnabled, "enabled", ""]
+          - Type: PLAINTEXT
+            Name: EC2_INSTANCE_TYPE
+            Value: !Ref EC2InstanceSize
+          - Type: PLAINTEXT
+            Name: ENABLE_EMR_CLUSTER
+            Value: !If [EMREnabled, "enabled", ""]
+          - Type: PLAINTEXT
+            Name: EMR_MASTER_INSTANCE_TYPE
+            Value: !Ref EMRMasterInstanceType
+          - Type: PLAINTEXT
+            Name: EMR_MASTER_INSTANCE_COUNT
+            Value: !Ref EMRMasterInstanceCount
+          - Type: PLAINTEXT
+            Name: EMR_CORE_INSTANCE_TYPE
+            Value: !Ref EMRCoreInstanceType
+          - Type: PLAINTEXT
+            Name: EMR_CORE_INSTANCE_COUNT
+            Value: !Ref EMRCoreInstanceCount
+          - Type: PLAINTEXT
+            Name: ENABLE_REDSHIFT
+            Value: !If [RedshiftEnabled, "enabled", ""]
+          - Type: PLAINTEXT
+            Name: REDSHIFT_NODE_TYPE
+            Value: !Ref RedshiftNodeType
+          - Type: PLAINTEXT
+            Name: REDSHIFT_NUMBER_OF_NODES
+            Value: !Ref RedshiftNumberOfNodes
+          - Type: PLAINTEXT
+            Name: API_NAME
+            Value: !Ref APIName
+      Source:
+        Type: CODEPIPELINE
+      Artifacts:
+        Type: CODEPIPELINE
+
+  # A CI/CD pipeline for the data pipeline.  Continuously deploys the data
+  # pipeline to a stack named "<build-stack-name>-prod".
+  #
+  # This fetches the code, uses the build job to build and upload the package,
+  # then deploys the stack using CloudFormation using a change set.
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      RoleArn: !GetAtt Role.Arn
+      ArtifactStore:
+        Type: S3
+        Location: !Ref Bucket
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Fetch
+              RunOrder: 1
+              ActionTypeId:
+                Category: Source
+                Owner: !If [UseGitHub, ThirdParty, AWS]
+                Provider: !If [UseGitHub, GitHub, CodeCommit]
+                Version: "1"
+              Configuration: !If
+                - UseGitHub
+                - Owner: !Ref Owner
+                  Repo: !Ref Repo
+                  OAuthToken: !Ref GitHubAccessToken
+                  Branch: !Ref Branch
+                - RepositoryName: !GetAtt Repo.Name
+                  BranchName: !Ref Branch
+              OutputArtifacts:
+                - Name: Source
+        - Name: Build
+          Actions:
+            - Name: Build
+              RunOrder: 1
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: "1"
+              Configuration:
+                ProjectName: !Ref Build
+              InputArtifacts:
+                - Name: Source
+              OutputArtifacts:
+                - Name: Package
+        - Name: Deploy
+          Actions:
+            - Name: CreateChangeSet
+              RunOrder: 1
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: "1"
+              Configuration:
+                ActionMode: CHANGE_SET_REPLACE
+                RoleArn: !GetAtt Role.Arn
+                StackName: !Sub "${AWS::StackName}-prod"
+                ChangeSetName: !Sub "${AWS::StackName}-prod-change-set"
+                TemplatePath: Package::cloudformation.yaml
+                TemplateConfiguration: Package::prod.json
+                Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND
+              InputArtifacts:
+                - Name: Package
+            - Name: ExecuteChangeSet
+              RunOrder: 2
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: "1"
+              Configuration:
+                ActionMode: CHANGE_SET_EXECUTE
+                RoleArn: !GetAtt Role.Arn
+                StackName: !Sub "${AWS::StackName}-prod"
+                ChangeSetName: !Sub "${AWS::StackName}-prod-change-set"
+                Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND
+
+  # TODO
+  #
+  # Copied from external source.  Sets up a
+  #
+  # Certificate:
+  #   Type: AWS::CertificateManager::Certificate
+  #   Conditional: DNSEnabled
+  #   Properties:
+  #     DomainName: !Ref DNSName
+  #     DomainValidationOptions:
+  #     - DomainName: !Ref DNSName
+  #       ValidationDomain: !Ref DNSName
+  #
+  # CloudFrontOrigin:
+  #   Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+  #   Conditional: DNSEnabled
+  #   Properties:
+  #     CloudFrontOriginAccessIdentityConfig:
+  #       Comment: !Sub "The origin for ${DNSName}"
+  #
+  # CloudFrontDistribution:
+  #   Type: AWS::CloudFront::Distribution
+  #   Conditional: DNSEnabled
+  #   Properties:
+  #     DistributionConfig:
+  #       Aliases:
+  #         - !Ref DNSName
+  #       DefaultCacheBehavior:
+  #         AllowedMethods:
+  #           - GET
+  #           - HEAD
+  #           - OPTIONS
+  #         ForwardedValues:
+  #           QueryString: false
+  #           Cookies:
+  #             Forward: none
+  #         TargetOriginId: Root
+  #         ViewerProtocolPolicy: https-only
+  #       DefaultRootObject: index.html
+  #       Enabled: true
+  #       Origins:
+  #         - Id: Root
+  #           DomainName: !Sub "${Bucket}.s3.amazonaws.com"
+  #           OriginPath: !Sub "/${Prefix}/static"
+  #           S3OriginConfig:
+  #             OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOrigin}"
+  #       ViewerCertificate:
+  #         AcmCertificateArn: !Ref Certificate
+  #         SslSupportMethod: sni-only
+  #
+  # RecordSetGroup:
+  #   Type: AWS::Route53::RecordSetGroup
+  #   Condition: DNSEnabled
+  #   Properties:
+  #     HostedZoneId: !Ref HostedZoneID
+  #     RecordSets:
+  #       - Type: A
+  #         Name: !Ref DNSName
+  #         AliasTarget:
+  #           DNSName: !GetAtt CloudFrontDistribution.DomainName
+  #           HostedZoneId: Z2FDTNDATAQYW2
+  #       {{- range .Domains }}
+  #       - Type: A
+  #         Name: !Sub "{{ .ID }}.${DNSName}"
+  #         AliasTarget:
+  #           DNSName: !GetAtt {{ .Name }}Domain.Outputs.DistributionDomainName
+  #           HostedZoneId: Z2FDTNDATAQYW2
+  #       {{- end }}

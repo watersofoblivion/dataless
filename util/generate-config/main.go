@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -11,10 +10,6 @@ import (
 
 func main() {
 	var (
-		partition                                                      = os.Getenv("PARTITION")
-		region                                                         = os.Getenv("AWS_REGION")
-		accountID                                                      = os.Getenv("ACCOUNT_ID")
-		projectID                                                      = os.Getenv("PROJECT_ID")
 		stageName                                                      string
 		codeBucket, codePrefix                                         string
 		dnsDomainName, dnsName, validationDomain, hostedZoneID         string
@@ -28,10 +23,6 @@ func main() {
 		output                                                         string
 	)
 
-	flag.StringVar(&partition, "partition", partition, "The AWS partition containing the CodeStar project")
-	flag.StringVar(&region, "region", region, "The region containing the CodeStar project")
-	flag.StringVar(&accountID, "account-id", accountID, "The AWS account containing the CodeStar project")
-	flag.StringVar(&projectID, "project-id", projectID, "The CodeStar project")
 	flag.StringVar(&codeBucket, "code-bucket", codeBucket, "The bucket containing user code to run")
 	flag.StringVar(&codePrefix, "code-prefix", codePrefix, "The prefix into the bucket containing user code to run")
 	flag.StringVar(&stageName, "stage", stageName, "The name for a project pipeline stage, such as Staging or Prod, for which resources are provisioned and deployed.")
@@ -54,23 +45,6 @@ func main() {
 	flag.StringVar(&output, "o", output, "The file to output to.  If not given, STDOUT is used.")
 
 	flag.Parse()
-
-	if partition == "" {
-		log.Fatal("${PARTITION} not set")
-	}
-	if region == "" {
-		log.Fatal("${AWS_REGION} not set")
-	}
-	if accountID == "" {
-		log.Fatal("${ACCOUNT_ID} not set")
-	}
-	if projectID == "" {
-		log.Fatal("${PROJECT_ID} not set")
-	}
-
-	tags := map[string]interface{}{
-		"awscodestar:projectArn": fmt.Sprintf("arn:%s:codestar:%s:%s:project/%s", partition, region, accountID, projectID),
-	}
 
 	if codeBucket == "" {
 		log.Fatal("code bucket not set")
@@ -146,7 +120,7 @@ func main() {
 		}
 	}
 
-	config := map[string]interface{}{"Tags": tags}
+	config := make(map[string]interface{})
 	if len(parameters) > 0 {
 		config["Parameters"] = parameters
 	}
