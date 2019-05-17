@@ -278,6 +278,9 @@ Resources:
                   - ec2:*
                   - datapipeline:*
                   - serverlessrepo:*
+                  - glue:*
+                  - kinesisanalytics:*
+                  - cloudwatch:*
                   - iam:PassRole
                 Effect: Allow
                 Resource: "*"
