@@ -62,7 +62,7 @@ func (datum *AdImpression) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"Ad":   datum.Ad.String(),
 		"User": datum.User.String(),
-		"At":   datum.At.Format("2006-01-02 15:04:05.999"),
+		"At":   datum.At.Format("2006-01-02 15:04:05.000"),
 	})
 }
 
@@ -80,7 +80,7 @@ func (datum *AdClick) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"Ad":   datum.Ad.String(),
 		"User": datum.User.String(),
-		"At":   datum.At.Format("2006-01-02 15:04:05.999"),
+		"At":   datum.At.Format("2006-01-02 15:04:05.000"),
 	})
 }
 
