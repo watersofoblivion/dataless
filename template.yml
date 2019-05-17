@@ -868,9 +868,9 @@ Resources:
           InputSchema:
             RecordFormat:
               RecordFormatType: JSON
-              MappingParameters:
-                JSONMappingParameters:
-                  RecordRowPath: "$"
+              # MappingParameters:
+              #   JSONMappingParameters:
+              #     RecordRowPath: "$"
             RecordColumns:
               - Name: ad_id
                 SqlType: VARCHAR(255)
@@ -920,9 +920,9 @@ Resources:
           InputSchema:
             RecordFormat:
               RecordFormatType: JSON
-              MappingParameters:
-                JSONMappingParameters:
-                  RecordRowPath: "$"
+              # MappingParameters:
+              #   JSONMappingParameters:
+              #     RecordRowPath: "$"
             RecordColumns:
               - Name: ad_id
                 SqlType: VARCHAR(255)
