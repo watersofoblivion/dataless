@@ -858,13 +858,14 @@ Resources:
         CREATE OR REPLACE PUMP IMPRESSIONS_OUTPUT_PUMP AS
         INSERT INTO IMPRESSIONS_OUTPUT
         SELECT AD_ID, USER_ID, VIEWED_AT
-        FROM SOURCE_SQL_STREAM_001
+        FROM AD_IMPRESSIONS_001
         WINDOWED BY STAGGER (
           PARTITION BY AD_ID, USER_ID, VIEWED_AT
           RANGE INTERVAL '1' MINUTE
         );
       Inputs:
-        - KinesisFirehoseInput:
+        - NamePrefix: AD_IMPRESSIONS
+          KinesisFirehoseInput:
             ResourceARN: !GetAtt AdImpressionsDeliveryStream.Arn
             RoleARN: !GetAtt ApplicationRole.Arn
           InputSchema:
@@ -910,13 +911,14 @@ Resources:
         CREATE OR REPLACE PUMP CLICKS_OUTPUT_PUMP AS
         INSERT INTO CLICKS_OUTPUT
         SELECT AD_ID, USER_ID, CLICKED_AT
-        FROM SOURCE_SQL_STREAM_001
+        FROM AD_CLICKS_001
         WINDOWED BY STAGGER (
           PARTITION BY AD_ID, USER_ID, CLICKED_AT
           RANGE INTERVAL '1' MINUTE
         );
       Inputs:
-        - KinesisFirehoseInput:
+        - NamePrefix: AD_CLICKS
+          KinesisFirehoseInput:
             ResourceARN: !GetAtt AdClicksDeliveryStream.Arn
             RoleARN: !GetAtt ApplicationRole.Arn
           InputSchema:
