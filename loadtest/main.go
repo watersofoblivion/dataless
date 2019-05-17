@@ -58,6 +58,14 @@ type AdImpression struct {
 	At   time.Time `json:"at"`
 }
 
+func (datum *AdImpression) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"Ad":   datum.Ad.String(),
+		"User": datum.User.String(),
+		"At":   datum.At.Format("2006-01-02 15:04:05.999"),
+	})
+}
+
 type AdClicks struct {
 	Clicks []*AdClick `json:"clicks"`
 }
@@ -66,6 +74,14 @@ type AdClick struct {
 	Ad   uuid.UUID `json:"ad"`
 	User uuid.UUID `json:"user"`
 	At   time.Time `json:"at"`
+}
+
+func (datum *AdClick) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"Ad":   datum.Ad.String(),
+		"User": datum.User.String(),
+		"At":   datum.At.Format("2006-01-02 15:04:05.999"),
+	})
 }
 
 type Ads struct {
@@ -339,5 +355,6 @@ outer:
 		}
 	}
 
+	cancel()
 	wg.Wait()
 }

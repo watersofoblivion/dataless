@@ -1,5 +1,5 @@
 BaseURL: https://${API_ID}.execute-api.${REGION}.amazonaws.com/${STAGE}
-Events: 1000000
+Events: 1000000000
 Tags: 10000
 Duration: 1h
 Ads:
