@@ -77,7 +77,8 @@ phases:
           -emr-core-count     ${EMR_CORE_INSTANCE_COUNT:-1} \
           -redshift          "${ENABLE_REDSHIFT}" \
           -redshift-type     "${REDSHIFT_NODE_TYPE}" \
-          -redshift-count     ${REDSHIFT_NUMBER_OF_NODES:-1}
+          -redshift-count     ${REDSHIFT_NUMBER_OF_NODES:-1} \
+          -api-name          "${API_NAME}"
 
 artifacts:
   type: zip

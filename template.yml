@@ -93,6 +93,9 @@ Parameters:
     MinValue: 1
     MaxValue: 100
     Default: 1
+  APIName:
+    Type: String
+    Description: The name of the API Gateway api.
 
 Conditions:
   DNSEnabled: !And
@@ -990,7 +993,7 @@ Resources:
         openapi: 3.0.0
         info:
           version: 0.1.0
-          title: Warehouse Service
+          title: ${APIName}
         paths:
           /data/ad/impressions:
             post:
@@ -1588,7 +1591,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "Count", "ApiName", "Warehouse Service", "Stage", "${Stage}"]
+                  ["AWS/ApiGateway", "Count", "ApiName", "${APIName}", "Stage", "${Stage}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1602,11 +1605,11 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "Latency", "ApiName", "Warehouse Service", "Stage", "${Stage}", { "stat": "p50" }],
-                  [".",              ".",       ".",       "Warehouse Service", ".",     "${Stage}", { "stat": "p75" }],
-                  [".",              ".",       ".",       "Warehouse Service", ".",     "${Stage}", { "stat": "p95" }],
-                  [".",              ".",       ".",       "Warehouse Service", ".",     "${Stage}", { "stat": "p98" }],
-                  [".",              ".",       ".",       "Warehouse Service", ".",     "${Stage}", { "stat": "p99" }]
+                  ["AWS/ApiGateway", "Latency", "ApiName", "${APIName}", "Stage", "${Stage}", { "stat": "p50" }],
+                  [".",              ".",       ".",       "${APIName}", ".",     "${Stage}", { "stat": "p75" }],
+                  [".",              ".",       ".",       "${APIName}", ".",     "${Stage}", { "stat": "p95" }],
+                  [".",              ".",       ".",       "${APIName}", ".",     "${Stage}", { "stat": "p98" }],
+                  [".",              ".",       ".",       "${APIName}", ".",     "${Stage}", { "stat": "p99" }]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1619,11 +1622,11 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "Warehouse Service", "Stage", "${Stage}", { "stat": "p50" }],
-                  [".",              ".",                  ".",       "Warehouse Service", ".",     "${Stage}", { "stat": "p75" }],
-                  [".",              ".",                  ".",       "Warehouse Service", ".",     "${Stage}", { "stat": "p95" }],
-                  [".",              ".",                  ".",       "Warehouse Service", ".",     "${Stage}", { "stat": "p98" }],
-                  [".",              ".",                  ".",       "Warehouse Service", ".",     "${Stage}", { "stat": "p99" }]
+                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "${APIName}", "Stage", "${Stage}", { "stat": "p50" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",     "${Stage}", { "stat": "p75" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",     "${Stage}", { "stat": "p95" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",     "${Stage}", { "stat": "p98" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",     "${Stage}", { "stat": "p99" }]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1636,8 +1639,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "4XXError", "ApiName", "Warehouse Service", "Stage", "${Stage}"],
-                  [".",              "5XXError", ".",       "Warehouse Service", ".",     "${Stage}"]
+                  ["AWS/ApiGateway", "4XXError", "ApiName", "${APIName}", "Stage", "${Stage}"],
+                  [".",              "5XXError", ".",       "${APIName}", ".",     "${Stage}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1651,7 +1654,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "Count", "ApiName", "Warehouse Service", "Stage", "${Stage}"]
+                  ["AWS/ApiGateway", "Count", "ApiName", "${APIName}", "Stage", "${Stage}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1665,11 +1668,11 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "Latency", "ApiName", "Warehouse Service", "Stage", "${Stage}", { "stat": "p50" }],
-                  [".",              ".",       ".",       "Warehouse Service", ".",     "${Stage}", { "stat": "p75" }],
-                  [".",              ".",       ".",       "Warehouse Service", ".",     "${Stage}", { "stat": "p95" }],
-                  [".",              ".",       ".",       "Warehouse Service", ".",     "${Stage}", { "stat": "p98" }],
-                  [".",              ".",       ".",       "Warehouse Service", ".",     "${Stage}", { "stat": "p99" }]
+                  ["AWS/ApiGateway", "Latency", "ApiName", "${APIName}", "Stage", "${Stage}", { "stat": "p50" }],
+                  [".",              ".",       ".",       "${APIName}", ".",     "${Stage}", { "stat": "p75" }],
+                  [".",              ".",       ".",       "${APIName}", ".",     "${Stage}", { "stat": "p95" }],
+                  [".",              ".",       ".",       "${APIName}", ".",     "${Stage}", { "stat": "p98" }],
+                  [".",              ".",       ".",       "${APIName}", ".",     "${Stage}", { "stat": "p99" }]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1682,11 +1685,11 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "Warehouse Service", "Stage", "${Stage}", { "stat": "p50" }],
-                  [".",              ".",                  ".",       "Warehouse Service", ".",     "${Stage}", { "stat": "p75" }],
-                  [".",              ".",                  ".",       "Warehouse Service", ".",     "${Stage}", { "stat": "p95" }],
-                  [".",              ".",                  ".",       "Warehouse Service", ".",     "${Stage}", { "stat": "p98" }],
-                  [".",              ".",                  ".",       "Warehouse Service", ".",     "${Stage}", { "stat": "p99" }]
+                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "${APIName}", "Stage", "${Stage}", { "stat": "p50" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",     "${Stage}", { "stat": "p75" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",     "${Stage}", { "stat": "p95" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",     "${Stage}", { "stat": "p98" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",     "${Stage}", { "stat": "p99" }]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1699,8 +1702,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "4XXError", "ApiName", "Warehouse Service", "Stage", "${Stage}"],
-                  [".",              "5XXError", ".",       "Warehouse Service", ".",     "${Stage}"]
+                  ["AWS/ApiGateway", "4XXError", "ApiName", "${APIName}", "Stage", "${Stage}"],
+                  [".",              "5XXError", ".",       "${APIName}", ".",     "${Stage}"]
                 ],
                 "period": 60,
                 "stat": "Sum",

@@ -24,6 +24,7 @@ func main() {
 		emrMasterInstanceCount, emrCoreInstanceCount                   int
 		redshiftNodeType                                               string
 		redshiftNumberOfNodes                                          int
+		apiName                                                        string
 		output                                                         string
 	)
 
@@ -49,6 +50,7 @@ func main() {
 	flag.StringVar(&enableRedshift, "redshift", enableRedshift, "")
 	flag.StringVar(&redshiftNodeType, "redshift-type", redshiftNodeType, "")
 	flag.IntVar(&redshiftNumberOfNodes, "redshift-count", redshiftNumberOfNodes, "")
+	flag.StringVar(&apiName, "api-name", apiName, "")
 	flag.StringVar(&output, "o", output, "The file to output to.  If not given, STDOUT is used.")
 
 	flag.Parse()
@@ -76,10 +78,14 @@ func main() {
 	if codePrefix == "" {
 		log.Fatal("code prefix not set")
 	}
+	if apiName == "" {
+		log.Fatal("${API_NAME} not set")
+	}
 
 	parameters := map[string]interface{}{
 		"CodeBucket": codeBucket,
 		"CodePrefix": codePrefix,
+		"APIName":    apiName,
 	}
 
 	// Stage

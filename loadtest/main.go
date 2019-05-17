@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -58,13 +59,13 @@ type AdImpression struct {
 	At   time.Time `json:"at"`
 }
 
-func (datum *AdImpression) MarshalJSON() ([]byte, error) {
-	return json.Marshal(map[string]interface{}{
-		"Ad":   datum.Ad.String(),
-		"User": datum.User.String(),
-		"At":   datum.At.Format("2006-01-02 15:04:05.000"),
-	})
-}
+// func (datum *AdImpression) MarshalJSON() ([]byte, error) {
+// 	return json.Marshal(map[string]interface{}{
+// 		"Ad":   datum.Ad.String(),
+// 		"User": datum.User.String(),
+// 		"At":   datum.At.Format("2006-01-02 15:04:05.000"),
+// 	})
+// }
 
 type AdClicks struct {
 	Clicks []*AdClick `json:"clicks"`
@@ -76,13 +77,13 @@ type AdClick struct {
 	At   time.Time `json:"at"`
 }
 
-func (datum *AdClick) MarshalJSON() ([]byte, error) {
-	return json.Marshal(map[string]interface{}{
-		"Ad":   datum.Ad.String(),
-		"User": datum.User.String(),
-		"At":   datum.At.Format("2006-01-02 15:04:05.000"),
-	})
-}
+// func (datum *AdClick) MarshalJSON() ([]byte, error) {
+// 	return json.Marshal(map[string]interface{}{
+// 		"Ad":   datum.Ad.String(),
+// 		"User": datum.User.String(),
+// 		"At":   datum.At.Format("2006-01-02 15:04:05.000"),
+// 	})
+// }
 
 type Ads struct {
 	Ads []*Ad
@@ -208,6 +209,8 @@ func main() {
 
 			if resp.StatusCode != http.StatusOK {
 				log.Printf("non-%d status code publishing impressions batch: %d", http.StatusOK, resp.StatusCode)
+				defer resp.Body.Close()
+				io.Copy(os.Stderr, resp.Body)
 			}
 		}
 	}()
@@ -236,6 +239,8 @@ func main() {
 
 			if resp.StatusCode != http.StatusOK {
 				log.Printf("non-%d status code publishing impressions batch: %d", http.StatusOK, resp.StatusCode)
+				defer resp.Body.Close()
+				io.Copy(os.Stderr, resp.Body)
 			}
 		}
 	}()
