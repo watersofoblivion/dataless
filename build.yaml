@@ -184,10 +184,10 @@ Parameters:
 Conditions:
   UseGitHub: !And
     - !Not [!Equals [!Ref Owner, ""]]
-    - !Not [!Equals [!Ref GitHubAccessToken, ""]]
+    - !Not [!Equals [!Ref AccessToken, ""]]
   UseCodeCommit: !Or
     - !Equals [!Ref Owner, ""]
-    - !Equals [!Ref GitHubAccessToken, ""]
+    - !Equals [!Ref AccessToken, ""]
   DNSEnabled: !And
     - !Not [!Equals [!Ref DNSDomainName, ""]]
     - !Not [!Equals [!Ref DNSName, ""]]
@@ -212,7 +212,7 @@ Outputs:
     Value: !If
       - UseGitHub
       - !Sub "https://github.com/${Owner}/${Repo}"
-      - !GetAtt Repo.CloneUrlHttp
+      - !GetAtt Repository.CloneUrlHttp
     Description: The HTTP URL for the source repository.
 
 Resources:
@@ -301,7 +301,7 @@ Resources:
   #
   # This could be replaced in the build (below) with a GitHub repository, but
   # that requires a manual step of creating a access token.
-  Repo:
+  Repository:
     Type: AWS::CodeCommit::Repository
     Condition: UseCodeCommit
     DeletionPolicy: Retain
@@ -340,7 +340,7 @@ Resources:
             Value: !Ref Stage
           - Type: PLAINTEXT
             Name: DNS_DOMAIN_NAME
-            Value: !Ref DomainName
+            Value: !Ref DNSDomainName
           - Type: PLAINTEXT
             Name: DNS_NAME
             Value: !Ref DNSName
@@ -417,9 +417,9 @@ Resources:
                 - UseGitHub
                 - Owner: !Ref Owner
                   Repo: !Ref Repo
-                  OAuthToken: !Ref GitHubAccessToken
+                  OAuthToken: !Ref AccessToken
                   Branch: !Ref Branch
-                - RepositoryName: !GetAtt Repo.Name
+                - RepositoryName: !GetAtt Repository.Name
                   BranchName: !Ref Branch
               OutputArtifacts:
                 - Name: Source
