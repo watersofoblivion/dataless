@@ -1449,28 +1449,28 @@ Resources:
               StringValue: hive.metastore.glue.catalogid
             - Key: value
               StringValue: !Ref AWS::AccountId
-        - Id: GlueCatalogAsHiveMetastore
-          Name: Glue Catalog as Hive Metastore
-          Fields:
-            - Key: type
-              StringValue: EmrConfiguration
-            - Key: classification
-              StringValue: hive-site
-            - Key: property
-              RefValue: HiveMetastoreClientFactoryClass
-            - Key: property
-              RefValue: HiveMetastoreCatalog
-        - Id: GlueCatalogAsSparkMetastore
-          Name: Glue Catalog as Spark Metastore
-          Fields:
-            - Key: type
-              StringValue: EmrConfiguration
-            - Key: classification
-              StringValue: spark-hive-site
-            - Key: property
-              RefValue: HiveMetastoreClientFactoryClass
-            - Key: property
-              RefValue: HiveMetastoreCatalog
+        # - Id: GlueCatalogAsHiveMetastore
+        #   Name: Glue Catalog as Hive Metastore
+        #   Fields:
+        #     - Key: type
+        #       StringValue: EmrConfiguration
+        #     - Key: classification
+        #       StringValue: hive-site
+        #     - Key: property
+        #       RefValue: HiveMetastoreClientFactoryClass
+        #     - Key: property
+        #       RefValue: HiveMetastoreCatalog
+        # - Id: GlueCatalogAsSparkMetastore
+        #   Name: Glue Catalog as Spark Metastore
+        #   Fields:
+        #     - Key: type
+        #       StringValue: EmrConfiguration
+        #     - Key: classification
+        #       StringValue: spark-hive-site
+        #     - Key: property
+        #       RefValue: HiveMetastoreClientFactoryClass
+        #     - Key: property
+        #       RefValue: HiveMetastoreCatalog
         - Id: EMRCluster
           Name: EMR Cluster
           Fields:
@@ -1494,10 +1494,10 @@ Resources:
               StringValue: spark
             - Key: terminateAfter
               StringValue: 1 hours
-            - Key: configuration
-              RefValue: GlueCatalogAsHiveMetastore
-            - Key: configuration
-              RefValue: GlueCatalogAsSparkMetastore
+            # - Key: configuration
+            #   RefValue: GlueCatalogAsHiveMetastore
+            # - Key: configuration
+            #   RefValue: GlueCatalogAsSparkMetastore
         - Id: AdsJob
           Name: Ads Job
           Fields:
