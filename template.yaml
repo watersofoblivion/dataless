@@ -1320,6 +1320,7 @@ Resources:
           KeyType: HASH
         - AttributeName: Date
           KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: true
 
