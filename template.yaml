@@ -1564,7 +1564,7 @@ Resources:
               x-amazon-apigateway-integration:
                 type: AWS
                 httpMethod: POST
-                uri: !Sub "arn:aws:apigateway:${AWS::Region}:dynamody:action/Query"
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:dynamodb:action/Query"
                 credentials: !GetAtt APIRole.Arn
                 requestTemplates:
                   application/json: !Sub |
