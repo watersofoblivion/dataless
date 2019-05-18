@@ -1324,26 +1324,6 @@ Resources:
       SSESpecification:
         SSEEnabled: true
 
-  # TempRole:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Action:
-  #             - sts:AssumeRole
-  #           Effect: Allow
-  #           Principal:
-  #             Service: "*"
-  #     Policies:
-  #       - PolicyName: "root"
-  #         PolicyDocument:
-  #           Version: "2012-10-17"
-  #           Statement:
-  #             - Action: "*"
-  #               Effect: Allow
-  #               Resource: "*"
-
   PipelineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -1472,7 +1452,7 @@ Resources:
 
   SharedClusterPipeline:
     Type: AWS::DataPipeline::Pipeline
-    Conditions: EMREnabled
+    Condition: EMREnabled
     Properties:
       Name: Ads Pipeline on Shared EMR Cluster
       Activate: false
