@@ -1357,6 +1357,15 @@ Resources:
                 - !Sub "sqs.${AWS::URLSuffix}"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSDataPipelineRole
+      Policies:
+        - PolicyName: GlueAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - glue:*
+                Effect: Allow
+                Resource: "*"
 
   PipelineProfile:
     Type: AWS::IAM::InstanceProfile
@@ -1389,6 +1398,15 @@ Resources:
                 - !Sub "sqs.${AWS::URLSuffix}"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforDataPipelineRole
+      Policies:
+        - PolicyName: GlueAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - glue:*
+                Effect: Allow
+                Resource: "*"
 
   PipelineResourceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -1406,15 +1424,15 @@ Resources:
       Name: Ads Pipeline
       Activate: false
       ParameterObjects:
-        - Id: myParam
+        - Id: myRegion
           Attributes:
             - Key: type
-              StringValue: Double
+              StringValue: String
             - Key: default
-              StringValue: 0.2
+              StringValue: !Ref AWS::Region
       ParameterValues:
-        - Id: myParam
-          StringValue: 0.3
+        - Id: myRegion
+          StringValue: !Ref AWS::Region
       PipelineObjects:
         - Id: Default
           Name: Default
@@ -1505,53 +1523,12 @@ Resources:
               StringValue: HiveActivity
             - Key: scriptUri
               StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/ads.hql"
-            - Key: runsOn
-              RefValue: EMRCluster
-            - Key: stage
-              StringValue: false
-
-  SharedClusterPipeline:
-    Type: AWS::DataPipeline::Pipeline
-    Condition: EMREnabled
-    DependsOn:
-      - PipelineProfile
-      - PipelineResourceProfile
-    Properties:
-      Name: Ads Pipeline on Shared EMR Cluster
-      Activate: false
-      ParameterObjects:
-        - Id: myParam
-          Attributes:
-            - Key: type
-              StringValue: Double
-            - Key: default
-              StringValue: 0.2
-      ParameterValues:
-        - Id: myParam
-          StringValue: 0.3
-      PipelineObjects:
-        - Id: Default
-          Name: Default
-          Fields:
-            - Key: type
-              StringValue: Default
-            - Key: scheduleType
-              StringValue: ondemand
-            - Key: role
-              StringValue: !Ref PipelineRole
-            - Key: resourceRole
-              StringValue: !Ref PipelineResourceRole
-            - Key: pipelineLogUri
-              StringValue: !Sub "s3://${Bucket}/logs/data-pipeline/"
-        - Id: AdsJob
-          Name: Ads Job
-          Fields:
-            - Key: type
-              StringValue: HiveActivity
-            - Key: scriptUri
-              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/ads.hql"
-            - Key: workerGroup
-              StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+            - !If
+                - EMREnabled
+                - Key: workerGroup
+                  StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+                - Key: runsOn
+                  RefValue: EMRCluster
             - Key: stage
               StringValue: false
 
