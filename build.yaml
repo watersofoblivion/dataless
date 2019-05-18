@@ -29,6 +29,7 @@ Metadata:
       - Label: EMR Cluster
         Parameters:
           - EnableEMRCluster
+          - EMRVersion
           - EMRMasterInstanceType
           - EMRMasterInstanceCount
           - EMRWorkerInstanceType
@@ -66,6 +67,8 @@ Metadata:
         default: Type of EC2 instance
       EnableEMRCluster:
         default: Create an EMR cluster for Data Pipeline
+      EMRVersion:
+        default: EMR version
       EMRMasterInstanceType:
         default: Type of EMR master instances
       EMRMasterInstanceCount:
@@ -136,6 +139,10 @@ Parameters:
     Type: String
     Description: If non-empty, create an EMR cluster.
     Default: ''
+  EMRVersion:
+    Type: String
+    Description: The EMR version to use.
+    Default: emr-5.23.0
   EMRMasterInstanceType:
     Type: String
     Description: The instance type of the master instances in the EMR cluster.
@@ -366,6 +373,9 @@ Resources:
           - Type: PLAINTEXT
             Name: ENABLE_EMR_CLUSTER
             Value: !If [EMREnabled, "enabled", ""]
+          - Type: PLAINTEXT
+            Name: EMR_VERSION
+            Value: !Ref EMRVersion
           - Type: PLAINTEXT
             Name: EMR_MASTER_INSTANCE_TYPE
             Value: !Ref EMRMasterInstanceType

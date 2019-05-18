@@ -15,6 +15,7 @@ func main() {
 		dnsDomainName, dnsName, validationDomain, hostedZoneID         string
 		enableVPC, enableEC2Instance, enableEMRCluster, enableRedshift string
 		ec2InstanceSize                                                string
+		emrVersion                                                     string
 		emrMasterInstanceType, emrCoreInstanceType                     string
 		emrMasterInstanceCount, emrCoreInstanceCount                   int
 		redshiftNodeType                                               string
@@ -34,6 +35,7 @@ func main() {
 	flag.StringVar(&enableEC2Instance, "ec2", enableEC2Instance, "")
 	flag.StringVar(&ec2InstanceSize, "ec2-type", ec2InstanceSize, "")
 	flag.StringVar(&enableEMRCluster, "emr", enableEMRCluster, "")
+	flag.StringVar(&emrVersion, "emr-version", emrVersion, "")
 	flag.StringVar(&emrMasterInstanceType, "emr-master-type", emrMasterInstanceType, "")
 	flag.IntVar(&emrMasterInstanceCount, "emr-master-count", emrMasterInstanceCount, "")
 	flag.StringVar(&emrCoreInstanceType, "emr-core-type", emrCoreInstanceType, "")
@@ -95,6 +97,9 @@ func main() {
 	if enableEMRCluster != "" {
 		parameters["EnableEMRCluster"] = "true"
 
+		if emrVersion != "" {
+			parameters["EMRVersion"] = emrVersion
+		}
 		if emrMasterInstanceType != "" {
 			parameters["EMRMasterInstanceType"] = emrMasterInstanceType
 		}
