@@ -1327,9 +1327,9 @@ Resources:
     Type: AWS::DataPipeline::Pipeline
     Properties:
       Name: Ads Pipeline
-      PipelineParameters:
-      PipelineValues:
-      PipelineObjects:
+      ParameterObjects:
+      # ParameterValues:
+      # PipelineObjects:
 
   #######
   # API #
