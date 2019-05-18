@@ -10,7 +10,7 @@ phases:
       - ln -s "${CODEBUILD_SRC_DIR}" "/go/src/lambdas"
 
       # Install gettext to get envsubst
-      - sudo yum install -y gettext
+      - sudo apt-get install -y gettext
 
       # Install dependencies
       - go get golang.org/x/lint/golint
