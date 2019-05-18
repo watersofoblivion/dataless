@@ -7,6 +7,9 @@ phases:
       # application source code into that directory structure.
       - ln -s "${CODEBUILD_SRC_DIR}" "/go/src/lambdas"
 
+      # Install gettext to get envsubst
+      - sudo yum install -y gettext
+
       # Install dependencies
       - go get golang.org/x/lint/golint
       - go get -u github.com/stretchr/testify
@@ -24,9 +27,6 @@ phases:
       - go test .
   build:
     commands:
-      # Build the tool to configure the application
-      - go build -o "${GOPATH}/bin/generate-config" ./util/generate-config
-
       # Build the Go lambdas
       - mkdir -p bin/
       - go build -o bin/ad-impressions ./lambdas/ad-impressions
@@ -42,27 +42,7 @@ phases:
       - aws cloudformation package --template template.yaml --s3-bucket "${S3_BUCKET}" --s3-prefix "build/${CODEBUILD_BUILD_ID}/" --output-template cloudformation.yaml
   post_build:
     commands:
-      - |
-        ${GOPATH}/bin/generate-config -o prod.json \
-          -code-bucket       "${S3_BUCKET}" \
-          -code-prefix       "build/${CODEBUILD_BUILD_ID}" \
-          -stage             "${STAGE_NAME}" \
-          -dns-domain-name   "${DNS_DOMAIN_NAME}" \
-          -dns-name          "${DNS_NAME}" \
-          -validation-domain "${VALIDATION_DOMAIN}" \
-          -hosted-zone-id    "${HOSTED_ZONE_ID}" \
-          -vpc               "${ENABLE_VPC}" \
-          -ec2               "${ENABLE_EC2_INSTANCE}" \
-          -ec2-type          "${EC2_INSTANCE_TYPE}" \
-          -emr               "${ENABLE_EMR_CLUSTER}" \
-          -emr-master-type   "${EMR_MASTER_INSTANCE_TYPE}" \
-          -emr-master-count   ${EMR_MASTER_INSTANCE_COUNT:-1} \
-          -emr-core-type     "${EMR_CORE_INSTANCE_TYPE}" \
-          -emr-core-count     ${EMR_CORE_INSTANCE_COUNT:-1} \
-          -redshift          "${ENABLE_REDSHIFT}" \
-          -redshift-type     "${REDSHIFT_NODE_TYPE}" \
-          -redshift-count     ${REDSHIFT_NUMBER_OF_NODES:-1} \
-          -api-name          "${API_NAME}"
+      - envsubst < config.json > prod.json
 
 artifacts:
   type: zip
