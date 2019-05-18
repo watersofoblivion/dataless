@@ -1444,7 +1444,7 @@ Resources:
             - Key: applications
               StringValue: spark
             - Key: terminateAfter
-              StringValue: 1
+              StringValue: 1 hours
         - Id: AdsJob
           Name: Ads Job
           Fields:
