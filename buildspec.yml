@@ -22,7 +22,7 @@ phases:
 
       # Lint, vet, and test
       - golint -set_exit_status
-      - go tool vet .
+      - go vet .
       - go test .
   build:
     commands:
