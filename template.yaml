@@ -1334,9 +1334,15 @@ Resources:
               StringValue: Double
             - Key: default
               StringValue: 0.2
-      # ParameterValues:
-      # PipelineObjects:
-
+      ParameterValues:
+        - Id: myParam
+          StringValue: 0.3
+      PipelineObjects:
+        - Id: Default
+          Name: Default
+          Fields:
+            - Key: type
+              StringValue: Default
   #######
   # API #
   #######
