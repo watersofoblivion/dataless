@@ -1417,6 +1417,8 @@ Resources:
               StringValue: !Ref PipelineResourceRole
             - Key: pipelineLogUri
               StringValue: !Sub "s3://${Bucket}/logs/data-pipeline/"
+            - Key: failureAndRerunMode
+              StringValue: cascade
         - Id: EMRCluster
           Name: EMR Cluster
           Fields:
@@ -1438,6 +1440,8 @@ Resources:
               StringValue: pig
             - Key: applications
               StringValue: spark
+            - Key: terminateAfter
+              StringValue: 1
         - Id: AdsJob
           Name: Ads Job
           Fields:
