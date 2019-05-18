@@ -1407,6 +1407,8 @@ Resources:
               StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/ads.hql"
             - Key: runsOn
               RefValue: EMRCluster
+            - Key: stage
+              StringValue: false
 
   #######
   # API #
