@@ -1328,6 +1328,12 @@ Resources:
     Properties:
       Name: Ads Pipeline
       ParameterObjects:
+        - Id: myParam
+          Attributes:
+            - Key: type
+              Value: Double
+            - Key: default
+              Value: 0.2
       # ParameterValues:
       # PipelineObjects:
 
