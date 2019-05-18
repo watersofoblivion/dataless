@@ -1324,6 +1324,26 @@ Resources:
       SSESpecification:
         SSEEnabled: true
 
+  # TempRole:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Action:
+  #             - sts:AssumeRole
+  #           Effect: Allow
+  #           Principal:
+  #             Service: "*"
+  #     Policies:
+  #       - PolicyName: "root"
+  #         PolicyDocument:
+  #           Version: "2012-10-17"
+  #           Statement:
+  #             - Action: "*"
+  #               Effect: Allow
+  #               Resource: "*"
+
   PipelineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -1398,9 +1418,9 @@ Resources:
             - Key: scheduleType
               StringValue: ondemand
             - Key: role
-              StringValue: !GetAtt PipelineRole.Arn
+              StringValue: !Ref PipelineRole
             - Key: resourceRole
-              StringValue: !GetAtt PipelineResourceRole.Arn
+              StringValue: !Ref PipelineResourceRole
             - Key: pipelineLogUri
               StringValue: !Sub "s3://${Bucket}/logs/data-pipeline/"
         - Id: EMRCluster
