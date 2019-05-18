@@ -1331,9 +1331,9 @@ Resources:
         - Id: myParam
           Attributes:
             - Key: type
-              Value: Double
+              StringValue: Double
             - Key: default
-              Value: 0.2
+              StringValue: 0.2
       # ParameterValues:
       # PipelineObjects:
 
