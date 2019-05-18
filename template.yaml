@@ -1368,7 +1368,7 @@ Resources:
                   - dynamodb:Query
                 Effect: Allow
                 Resource:
-                  - !GetAtt AdsTable.Arn
+                  - !GetAtt AdInfoTable.Arn
 
   API:
     Type: AWS::Serverless::Api
