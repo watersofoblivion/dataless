@@ -1324,6 +1324,32 @@ Resources:
       SSESpecification:
         SSEEnabled: true
 
+  PipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "logs.${AWS::Region}.${AWS::URLSuffix}"
+                - !Sub "datapipeline.${AWS::URLSuffix}"
+                - !Sub "dynamodb.${AWS::URLSuffix}"
+                - !Sub "ec2.${AWS::URLSuffix}"
+                - !Sub "elasticmapreduce.${AWS::URLSuffix}"
+                - !Sub "iam.${AWS::URLSuffix}"
+                - !Sub "rds.${AWS::URLSuffix}"
+                - !Sub "redshift.${AWS::URLSuffix}"
+                - !Sub "s3.${AWS::URLSuffix}"
+                - !Sub "sns.${AWS::URLSuffix}"
+                - !Sub "sqs.${AWS::URLSuffix}"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSDataPipelineRole
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforDataPipelineRole
+
   AdsPipeline:
     Type: AWS::DataPipeline::Pipeline
     Properties:
@@ -1345,6 +1371,43 @@ Resources:
           Fields:
             - Key: type
               StringValue: Default
+            - Key: scheduleType
+              StringValue: ondemand
+            - Key: role
+              StringValue: !Ref PipelineRole.Arn
+            - Key: resourceRole
+              StringValue: !Ref PipelineRole.Arn
+        - Id: EMRCluster
+          Name: EMR Cluster
+          Fields:
+            - Key: type
+              StringValue: EmrCluster
+            - Key: keyPair
+              StringValue: temp
+            - Key: masterInstanceType
+              StringValue: m1.medium
+            - Key: coreInstanceType
+              StringValue: m1.medium
+            - Key: coreInstanceCount
+              StringValue: 1
+            - Key: releaseLabel
+              StringValue: emr-5.17.0
+            - Key: applications
+              StringValue: hive
+            - Key: applications
+              StringValue: pig
+            - Key: applications
+              StringValue: spark
+        - Id: AdsJob
+          Name: Ads Job
+          Fields:
+            - Key: type
+              StringValue: HiveActivity
+            - Key: scriptUri
+              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/ads.hql"
+            - Key: runsOn
+              RefValue: EMRCluster
+
   #######
   # API #
   #######
