@@ -457,7 +457,7 @@ Resources:
                 ChangeSetName: !Sub "${AWS::StackName}-prod-change-set"
                 TemplatePath: Package::cloudformation.yaml
                 TemplateConfiguration: Package::prod.json
-                Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND
+                Capabilities: CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
               InputArtifacts:
                 - Name: Package
             - Name: ExecuteChangeSet
@@ -472,7 +472,7 @@ Resources:
                 RoleArn: !GetAtt Role.Arn
                 StackName: !Sub "${AWS::StackName}-prod"
                 ChangeSetName: !Sub "${AWS::StackName}-prod-change-set"
-                Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND
+                Capabilities: CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
 
   # TODO
   #
