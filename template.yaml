@@ -1348,6 +1348,30 @@ Resources:
                 - !Sub "sqs.${AWS::URLSuffix}"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSDataPipelineRole
+
+  PipelineResourceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "logs.${AWS::Region}.${AWS::URLSuffix}"
+                - !Sub "datapipeline.${AWS::URLSuffix}"
+                - !Sub "dynamodb.${AWS::URLSuffix}"
+                - !Sub "ec2.${AWS::URLSuffix}"
+                - !Sub "elasticmapreduce.${AWS::URLSuffix}"
+                - !Sub "iam.${AWS::URLSuffix}"
+                - !Sub "rds.${AWS::URLSuffix}"
+                - !Sub "redshift.${AWS::URLSuffix}"
+                - !Sub "s3.${AWS::URLSuffix}"
+                - !Sub "sns.${AWS::URLSuffix}"
+                - !Sub "sqs.${AWS::URLSuffix}"
+      ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforDataPipelineRole
 
   AdsPipeline:
@@ -1376,7 +1400,9 @@ Resources:
             - Key: role
               StringValue: !GetAtt PipelineRole.Arn
             - Key: resourceRole
-              StringValue: !GetAtt PipelineRole.Arn
+              StringValue: !GetAtt PipelineResourceRole.Arn
+            - Key: pipelineLogUri
+              StringValue: !Sub "s3://${Bucket}/logs/data-pipeline/"
         - Id: EMRCluster
           Name: EMR Cluster
           Fields:
