@@ -1397,118 +1397,118 @@ Resources:
       Roles:
         - !Ref PipelineResourceRole
 
-  AdsPipeline:
-    Type: AWS::DataPipeline::Pipeline
-    DependsOn:
-      - PipelineProfile
-      - PipelineResourceProfile
-    Properties:
-      Name: Ads Pipeline
-      Activate: false
-      ParameterObjects:
-        - Id: myParam
-          Attributes:
-            - Key: type
-              StringValue: Double
-            - Key: default
-              StringValue: 0.2
-      ParameterValues:
-        - Id: myParam
-          StringValue: 0.3
-      PipelineObjects:
-        - Id: Default
-          Name: Default
-          Fields:
-            - Key: type
-              StringValue: Default
-            - Key: scheduleType
-              StringValue: ondemand
-            - Key: role
-              StringValue: !Ref PipelineRole
-            - Key: resourceRole
-              StringValue: !Ref PipelineResourceRole
-            - Key: pipelineLogUri
-              StringValue: !Sub "s3://${Bucket}/logs/data-pipeline/"
-            - Key: failureAndRerunMode
-              StringValue: cascade
-        - Id: HiveMetastoreClientFactoryClass
-          Name: Hive Metastore Client Factory Class
-          Fields:
-            - Key: type
-              StringValue: Property
-            - Key: key
-              StringValue: hive.metastore.client.factory.class
-            - Key: value
-              StringValue: com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory
-        - Id: HiveMetastoreCatalog
-          Name: Hive Metastore Catalog
-          Fields:
-            - Key: type
-              StringValue: Property
-            - Key: key
-              StringValue: hive.metastore.glue.catalogid
-            - Key: value
-              StringValue: !Ref AWS::AccountId
-        - Id: GlueCatalogAsHiveMetastore
-          Name: Glue Catalog as Hive Metastore
-          Fields:
-            - Key: type
-              StringValue: EmrConfiguration
-            - Key: classification
-              StringValue: hive-site
-            - Key: property
-              RefValue: HiveMetastoreClientFactoryClass
-            - Key: property
-              RefValue: HiveMetastoreCatalog
-        - Id: GlueCatalogAsSparkMetastore
-          Name: Glue Catalog as Spark Metastore
-          Fields:
-            - Key: type
-              StringValue: EmrConfiguration
-            - Key: classification
-              StringValue: spark-hive-site
-            - Key: property
-              RefValue: HiveMetastoreClientFactoryClass
-            - Key: property
-              RefValue: HiveMetastoreCatalog
-        - Id: EMRCluster
-          Name: EMR Cluster
-          Fields:
-            - Key: type
-              StringValue: EmrCluster
-            - Key: keyPair
-              StringValue: temp
-            - Key: masterInstanceType
-              StringValue: m1.medium
-            - Key: coreInstanceType
-              StringValue: m1.medium
-            - Key: coreInstanceCount
-              StringValue: 1
-            - Key: releaseLabel
-              StringValue: emr-5.17.0
-            - Key: applications
-              StringValue: hive
-            - Key: applications
-              StringValue: pig
-            - Key: applications
-              StringValue: spark
-            - Key: terminateAfter
-              StringValue: 1 hours
-            - Key: configuration
-              RefValue: GlueCatalogAsHiveMetastore
-            - Key: configuration
-              RefValue: GlueCatalogAsSparkMetastore
-        - Id: AdsJob
-          Name: Ads Job
-          Fields:
-            - Key: type
-              StringValue: HiveActivity
-            - Key: scriptUri
-              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/ads.hql"
-            - Key: runsOn
-              RefValue: EMRCluster
-            - Key: stage
-              StringValue: false
+  # AdsPipeline:
+  #   Type: AWS::DataPipeline::Pipeline
+  #   DependsOn:
+  #     - PipelineProfile
+  #     - PipelineResourceProfile
+  #   Properties:
+  #     Name: Ads Pipeline
+  #     Activate: false
+  #     ParameterObjects:
+  #       - Id: myParam
+  #         Attributes:
+  #           - Key: type
+  #             StringValue: Double
+  #           - Key: default
+  #             StringValue: 0.2
+  #     ParameterValues:
+  #       - Id: myParam
+  #         StringValue: 0.3
+  #     PipelineObjects:
+  #       - Id: Default
+  #         Name: Default
+  #         Fields:
+  #           - Key: type
+  #             StringValue: Default
+  #           - Key: scheduleType
+  #             StringValue: ondemand
+  #           - Key: role
+  #             StringValue: !Ref PipelineRole
+  #           - Key: resourceRole
+  #             StringValue: !Ref PipelineResourceRole
+  #           - Key: pipelineLogUri
+  #             StringValue: !Sub "s3://${Bucket}/logs/data-pipeline/"
+  #           - Key: failureAndRerunMode
+  #             StringValue: cascade
+  #       - Id: HiveMetastoreClientFactoryClass
+  #         Name: Hive Metastore Client Factory Class
+  #         Fields:
+  #           - Key: type
+  #             StringValue: Property
+  #           - Key: key
+  #             StringValue: hive.metastore.client.factory.class
+  #           - Key: value
+  #             StringValue: com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory
+  #       - Id: HiveMetastoreCatalog
+  #         Name: Hive Metastore Catalog
+  #         Fields:
+  #           - Key: type
+  #             StringValue: Property
+  #           - Key: key
+  #             StringValue: hive.metastore.glue.catalogid
+  #           - Key: value
+  #             StringValue: !Ref AWS::AccountId
+  #       - Id: GlueCatalogAsHiveMetastore
+  #         Name: Glue Catalog as Hive Metastore
+  #         Fields:
+  #           - Key: type
+  #             StringValue: EmrConfiguration
+  #           - Key: classification
+  #             StringValue: hive-site
+  #           - Key: property
+  #             RefValue: HiveMetastoreClientFactoryClass
+  #           - Key: property
+  #             RefValue: HiveMetastoreCatalog
+  #       - Id: GlueCatalogAsSparkMetastore
+  #         Name: Glue Catalog as Spark Metastore
+  #         Fields:
+  #           - Key: type
+  #             StringValue: EmrConfiguration
+  #           - Key: classification
+  #             StringValue: spark-hive-site
+  #           - Key: property
+  #             RefValue: HiveMetastoreClientFactoryClass
+  #           - Key: property
+  #             RefValue: HiveMetastoreCatalog
+  #       - Id: EMRCluster
+  #         Name: EMR Cluster
+  #         Fields:
+  #           - Key: type
+  #             StringValue: EmrCluster
+  #           - Key: keyPair
+  #             StringValue: temp
+  #           - Key: masterInstanceType
+  #             StringValue: m1.medium
+  #           - Key: coreInstanceType
+  #             StringValue: m1.medium
+  #           - Key: coreInstanceCount
+  #             StringValue: 1
+  #           - Key: releaseLabel
+  #             StringValue: emr-5.17.0
+  #           - Key: applications
+  #             StringValue: hive
+  #           - Key: applications
+  #             StringValue: pig
+  #           - Key: applications
+  #             StringValue: spark
+  #           - Key: terminateAfter
+  #             StringValue: 1 hours
+  #           - Key: configuration
+  #             RefValue: GlueCatalogAsHiveMetastore
+  #           - Key: configuration
+  #             RefValue: GlueCatalogAsSparkMetastore
+  #       - Id: AdsJob
+  #         Name: Ads Job
+  #         Fields:
+  #           - Key: type
+  #             StringValue: HiveActivity
+  #           - Key: scriptUri
+  #             StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/ads.hql"
+  #           - Key: runsOn
+  #             RefValue: EMRCluster
+  #           - Key: stage
+  #             StringValue: false
 
   SharedClusterPipeline:
     Type: AWS::DataPipeline::Pipeline
