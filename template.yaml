@@ -652,6 +652,15 @@ Resources:
               - !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
               - !Ref AWS::Region
               - !Sub "s3://${Bucket}/logs/task-runner/emr/"
+      Configurations:
+        - Classification: hive-site
+          ConfigurationProperties:
+            hive.metastore.client.factory.class: com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory
+            hive.metastore.glue.catalogid: !Ref AWS::AccountId
+        - Classification: spark-hive-site
+          ConfigurationProperties:
+            hive.metastore.client.factory.class: com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory
+            hive.metastore.glue.catalogid: !Ref AWS::AccountId
       Instances:
         AdditionalMasterSecurityGroups:
           - !Ref SecurityGroup
