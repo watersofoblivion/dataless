@@ -1390,6 +1390,9 @@ Resources:
 
   AdsPipeline:
     Type: AWS::DataPipeline::Pipeline
+    DependsOn:
+      - PipelineProfile
+      - PipelineResourceProfile
     Properties:
       Name: Ads Pipeline
       Activate: false
@@ -1457,6 +1460,9 @@ Resources:
   SharedClusterPipeline:
     Type: AWS::DataPipeline::Pipeline
     Condition: EMREnabled
+    DependsOn:
+      - PipelineProfile
+      - PipelineResourceProfile
     Properties:
       Name: Ads Pipeline on Shared EMR Cluster
       Activate: false
