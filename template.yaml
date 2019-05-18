@@ -1470,6 +1470,48 @@ Resources:
             - Key: stage
               StringValue: false
 
+  SharedClusterPipeline:
+    Type: AWS::DataPipeline::Pipeline
+    Conditions: EMREnabled
+    Properties:
+      Name: Ads Pipeline on Shared EMR Cluster
+      Activate: false
+      ParameterObjects:
+        - Id: myParam
+          Attributes:
+            - Key: type
+              StringValue: Double
+            - Key: default
+              StringValue: 0.2
+      ParameterValues:
+        - Id: myParam
+          StringValue: 0.3
+      PipelineObjects:
+        - Id: Default
+          Name: Default
+          Fields:
+            - Key: type
+              StringValue: Default
+            - Key: scheduleType
+              StringValue: ondemand
+            - Key: role
+              StringValue: !Ref PipelineRole
+            - Key: resourceRole
+              StringValue: !Ref PipelineResourceRole
+            - Key: pipelineLogUri
+              StringValue: !Sub "s3://${Bucket}/logs/data-pipeline/"
+        - Id: AdsJob
+          Name: Ads Job
+          Fields:
+            - Key: type
+              StringValue: HiveActivity
+            - Key: scriptUri
+              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/ads.hql"
+            - Key: workerGroup
+              StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+            - Key: stage
+              StringValue: false
+
   #######
   # API #
   #######
