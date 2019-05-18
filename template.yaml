@@ -1259,7 +1259,77 @@ Resources:
   # Batch #
   #########
 
-  
+  AdsTable:
+    Type: AWS::Glue::Table
+    DependsOn:
+      - Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref Database
+      TableInput:
+          Name: ads
+          Description: Ads
+          TableType: EXTERNAL_TABLE
+          Parameters:
+            classification: orc
+          StorageDescriptor:
+            Location: !Sub "s3://${Bucket}/data/lake/ads/"
+            StoredAsSubDirectories: true
+            InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+            SerdeInfo:
+              SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
+            OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
+            Columns:
+              - Name: id
+                Type: string
+
+  UsersTable:
+    Type: AWS::Glue::Table
+    DependsOn:
+      - Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref Database
+      TableInput:
+          Name: users
+          Description: Users
+          TableType: EXTERNAL_TABLE
+          Parameters:
+            classification: orc
+          StorageDescriptor:
+            Location: !Sub "s3://${Bucket}/data/lake/users/"
+            StoredAsSubDirectories: true
+            InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+            SerdeInfo:
+              SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
+            OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
+            Columns:
+              - Name: id
+                Type: string
+
+  AdInfoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: ID
+          AttributeType: S
+        - AttributeName: Date
+          AttributeType: S
+      KeySchema:
+        - AttributeName: ID
+          KeyType: HASH
+        - AttributeName: Date
+          KeyType: RANGE
+      SSESpecification:
+        SSEEnabled: true
+
+  AdsPipeline:
+    Type: AWS::DataPipeline::Pipeline
+    Properties:
+      Name: Ads Pipeline
+      PipelineParameters:
+      PipelineValues:
+      PipelineObjects:
 
   #######
   # API #
@@ -1288,6 +1358,11 @@ Resources:
                 Resource:
                   - !GetAtt AdImpressionsDeliveryStream.Arn
                   - !GetAtt AdClicksDeliveryStream.Arn
+              - Action:
+                  - dynamodb:Query
+                Effect: Allow
+                Resource:
+                  - !GetAtt AdsTable.Arn
 
   API:
     Type: AWS::Serverless::Api
@@ -1432,6 +1507,99 @@ Resources:
                     application/json:
                       schema:
                         $ref: "#/components/schemas/BatchWriteResponse"
+          /info/ads/{id}:
+            get:
+              summary: Get info about an ad over time
+              operationId: info-ads
+              parameters:
+                - name: id
+                  in: path
+                  description: The ad to query
+                  required: true
+                  schema:
+                    type: string
+                    format: uuid
+                - name: start
+                  in: query
+                  description: The start date
+                  required: true
+                  schema:
+                    type:
+                      $ref: "#/components/schemas/Date"
+                - name: end
+                  in: query
+                  description: The end date
+                  required: false
+                  schema:
+                    type:
+                      $ref: "#/components/schemas/Date"
+                - name: page
+                  in: query
+                  description: The page of results to fetch
+                  required: false
+                  schema:
+                    type:
+                      $ref: "#/components/schemas/Base64"
+                - name: limit
+                  in: query
+                  description: The maximum number of results to fetch
+                  required: false
+                  schema:
+                    type: integer
+                    minimum: 1
+                    default: 100
+              x-amazon-apigateway-integration:
+                type: AWS
+                httpMethod: POST
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:dynamody:action/Query"
+                credentials: !GetAtt APIRole.Arn
+                requestTemplates:
+                  application/json: !Sub |
+                    {
+                      #if($input.params('page') != "")
+                      "ExclusiveStartKey": $util.parseJSON($util.base64Decode($input.params('page'))),
+                      #end
+                      "ExpressionAttributeNames": {
+                        "#ID": "ID",
+                        "#Date": "Date"
+                      },
+                      "ExpressionAttributeValues": {
+                        ":id": { "S": "$input.params('id')" },
+                        ":start": { "S": "$input.params('start')" },
+                        ":end": { "S": #if($input.params('end') != "") "$input.params('end')" #else "$input.params('start')" #end }
+                      },
+                      "KeyConditionExpression": "#ID = :id AND #Date BETWEEN #start AND #end",
+                      "Limit": $input.params('limit'),
+                      "TableName": "${AdInfoTable}"
+                    }
+                requestParameters:
+                  integration.request.header.Content-Type: "'x-amz-json-1.1'"
+                responses:
+                  '200':
+                    statusCode: 200
+                    responseTemplates:
+                      application/json: |
+                        {
+                          #if($input.path('$.LastEvaluatedKey') != "")
+                          "next": "$util.base64Encode($input.json('$.LastEvaluatedKey'))",
+                          #end
+                          "count": $input.path('$.Count'),
+                          "ads": [
+                            #foreach($elem in $input.path('$.Items'))
+                            {
+                              "id": "$elem.ID"
+                            }#if($foreach.hasNext),#end
+                            #end
+                          ]
+                        }
+              responses:
+                '200':
+                  description: |
+                    The query was successful.
+                  content:
+                    application/json:
+                      schema:
+                        $ref: "#/components/schemas/AdsInfo"
         x-amazon-apigateway-request-validators:
           all:
             validateRequestBody: true
@@ -1455,8 +1623,8 @@ Resources:
               type: object
               properties:
                 at:
-                  type: string
-                  format: "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?$"
+                  type:
+                    $ref: "#/components/schemas/Timestamp"
                 user:
                   type: string
                   format: uuid
@@ -1484,8 +1652,8 @@ Resources:
               type: object
               properties:
                 at:
-                  type: string
-                  format: "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?$"
+                  type:
+                    $ref: "#/components/schemas/Timestamp"
                 user:
                   type: string
                   format: uuid
@@ -1521,6 +1689,32 @@ Resources:
               required:
                 - failed
               additionalProperties: false
+            AdsInfo:
+              type: object
+              properties:
+                next:
+                  type:
+                    $ref: "#/components/schemas/Base64"
+                count:
+                  type: integer
+                  minimum: 0
+                ads:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/AdInfo"
+              required:
+                - count
+                - ads
+              additionalProperties: false
+            AdInfo:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+              required:
+                - id
+              additionalProperties: false
             Error:
               type: object
               properties:
@@ -1533,6 +1727,15 @@ Resources:
                 - code
                 - message
               additionalProperties: false
+            Date:
+              type: string
+              format: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+            Timestamp:
+              type: string
+              format: "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?$"
+            Base64:
+              type: string
+              format: "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
 
   Certificate:
     Type: AWS::CertificateManager::Certificate
