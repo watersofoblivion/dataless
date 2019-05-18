@@ -1374,9 +1374,9 @@ Resources:
             - Key: scheduleType
               StringValue: ondemand
             - Key: role
-              StringValue: !Ref PipelineRole.Arn
+              StringValue: !GetAtt PipelineRole.Arn
             - Key: resourceRole
-              StringValue: !Ref PipelineRole.Arn
+              StringValue: !GetAtt PipelineRole.Arn
         - Id: EMRCluster
           Name: EMR Cluster
           Fields:
