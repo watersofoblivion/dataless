@@ -55,7 +55,6 @@ phases:
           -ec2               "${ENABLE_EC2_INSTANCE}" \
           -ec2-type          "${EC2_INSTANCE_TYPE}" \
           -emr               "${ENABLE_EMR_CLUSTER}" \
-          -emr-version       "${EMR_VERSION}" \
           -emr-master-type   "${EMR_MASTER_INSTANCE_TYPE}" \
           -emr-master-count   ${EMR_MASTER_INSTANCE_COUNT:-1} \
           -emr-core-type     "${EMR_CORE_INSTANCE_TYPE}" \
