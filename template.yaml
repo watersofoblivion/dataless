@@ -1020,6 +1020,247 @@ Resources:
           ResourceARN: !Ref AdClicksLambda.Alias
           RoleARN: !GetAtt ApplicationRole.Arn
 
+  #############
+  # Data Lake #
+  #############
+
+  Database:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Name: warehouse
+
+  CrawlerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "glue.${AWS::URLSuffix}"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
+      Policies:
+        - PolicyName: Execution
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - s3:GetObject*
+                  - s3:PutObject*
+                Effect: Allow
+                Resource:
+                  - !Sub "${Bucket.Arn}/data/raw/ad/impressions/*"
+                  - !Sub "${Bucket.Arn}/data/raw/ad/clicks/*"
+              - Action:
+                  - s3:ListBucket*
+                Effect: Allow
+                Resource:
+                  - !GetAtt Bucket.Arn
+
+  RawAdCrawler:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Name: raw_ad_crawler
+      Description: Crawls the raw data
+      Role: !GetAtt CrawlerRole.Arn
+      DatabaseName: !Ref Database
+      Targets: # CloudFormation does not seem to support targeting an existing table.  Console does, at least.
+        S3Targets:
+          - Path: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
+          - Path: !Sub "s3://${Bucket}/data/raw/ad/clicks/"
+      TablePrefix: raw_ad_
+      SchemaChangePolicy:
+        UpdateBehavior: UPDATE_IN_DATABASE
+        DeleteBehavior: LOG
+      Schedule:
+        ScheduleExpression: cron(20 * * * ? *)
+      Configuration: |
+        {
+          "Version": 1.0,
+          "Grouping": {
+            "TableGroupingPolicy": "CombineCompatibleSchemas"
+          },
+          "CrawlerOutput": {
+            "Partitions": {
+              "AddOrUpdateBehavior": "InheritFromTable"
+            },
+            "Tables": {
+              "AddOrUpdateBehavior": "MergeNewColumns"
+            }
+          }
+        }
+
+  AdImpressionsTable:
+    Type: AWS::Glue::Table
+    DependsOn:
+      - Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref Database
+      TableInput:
+          Name: ad_impressions
+          Description: Ad Impressions
+          TableType: EXTERNAL_TABLE
+          Parameters:
+            classification: orc
+          PartitionKeys:
+            - Name: year
+              Type: int
+            - Name: month
+              Type: int
+          StorageDescriptor:
+            Location: !Sub "s3://${Bucket}/data/lake/ad/impressions/"
+            StoredAsSubDirectories: true
+            InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+            SerdeInfo:
+              SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
+            OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
+            Columns:
+              - Name: user
+                Type: string
+              - Name: ad
+                Type: string
+              - Name: at
+                Type: timestamp
+
+  AdClicksTable:
+    Type: AWS::Glue::Table
+    DependsOn:
+      - Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref Database
+      TableInput:
+          Name: ad_clicks
+          Description: Ad Clicks
+          TableType: EXTERNAL_TABLE
+          Parameters:
+            classification: orc
+          PartitionKeys:
+            - Name: year
+              Type: int
+            - Name: month
+              Type: int
+          StorageDescriptor:
+            Location: !Sub "s3://${Bucket}/data/lake/ad/clicks/"
+            StoredAsSubDirectories: true
+            InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+            SerdeInfo:
+              SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
+            OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
+            Columns:
+              - Name: user
+                Type: string
+              - Name: ad
+                Type: string
+              - Name: at
+                Type: timestamp
+
+  ETLJobRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+            - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "glue.${AWS::URLSuffix}"
+      Policies:
+        - PolicyName: "root"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action: "*"
+                Effect: Allow
+                Resource: "*"
+
+  AdImpressionsPythonJob:
+    Type: AWS::Glue::Job
+    Properties:
+      Role: !GetAtt ETLJobRole.Arn
+      Command:
+        Name: glueetl
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_impressions_etl.py"
+      DefaultArguments:
+        "--enable-glue-datacatalog": ""
+        "--job-bookmark-option": "job-bookmark-enable"
+        "--database_name": !Ref Database
+        "--raw_table_name": raw_ad_impressions # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
+        "--table_name": !Ref AdImpressionsTable
+      ExecutionProperty:
+        MaxConcurrentRuns: 1
+      MaxRetries: 0
+
+  AdImpressionsScalaJob:
+    Type: AWS::Glue::Job
+    Properties:
+      Role: !GetAtt ETLJobRole.Arn
+      Command:
+        Name: glueetl
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_impressions_etl.scala"
+      DefaultArguments:
+        "--job-language": scala
+        "--class": GlueApp
+        "--enable-glue-datacatalog": ""
+        "--job-bookmark-option": "job-bookmark-enable"
+        "--database_name": !Ref Database
+        "--raw_table_name": raw_ad_impressions # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
+        "--table_name": !Ref AdImpressionsTable
+      ExecutionProperty:
+        MaxConcurrentRuns: 1
+      MaxRetries: 0
+
+  AdClicksPythonJob:
+    Type: AWS::Glue::Job
+    Properties:
+      Role: !GetAtt ETLJobRole.Arn
+      Command:
+        Name: glueetl
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_clicks_etl.py"
+      DefaultArguments:
+        "--enable-glue-datacatalog": ""
+        "--job-bookmark-option": "job-bookmark-enable"
+        "--database_name": !Ref Database
+        "--raw_table_name": raw_ad_clicks # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
+        "--table_name": !Ref AdClicksTable
+      ExecutionProperty:
+        MaxConcurrentRuns: 1
+      MaxRetries: 0
+
+  AdClicksScalaJob:
+    Type: AWS::Glue::Job
+    Properties:
+      Role: !GetAtt ETLJobRole.Arn
+      Command:
+        Name: glueetl
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_clicks_etl.scala"
+      DefaultArguments:
+        "--job-language": scala
+        "--class": GlueApp
+        "--enable-glue-datacatalog": ""
+        "--job-bookmark-option": "job-bookmark-enable"
+        "--database_name": !Ref Database
+        "--raw_table_name": raw_ad_clicks # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
+        "--table_name": !Ref AdClicksTable
+      ExecutionProperty:
+        MaxConcurrentRuns: 1
+      MaxRetries: 0
+
+  #########
+  # Batch #
+  #########
+
+  
+
   #######
   # API #
   #######
@@ -1338,241 +1579,6 @@ Resources:
           AliasTarget:
             DNSName: !GetAtt DomainName.DistributionDomainName
             HostedZoneId: Z2FDTNDATAQYW2
-
-  #############
-  # Data Lake #
-  #############
-
-  Database:
-    Type: AWS::Glue::Database
-    Properties:
-      CatalogId: !Ref AWS::AccountId
-      DatabaseInput:
-        Name: warehouse
-
-  CrawlerRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Action:
-              - sts:AssumeRole
-            Effect: Allow
-            Principal:
-              Service:
-                - !Sub "glue.${AWS::URLSuffix}"
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
-      Policies:
-        - PolicyName: Execution
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Action:
-                  - s3:GetObject*
-                  - s3:PutObject*
-                Effect: Allow
-                Resource:
-                  - !Sub "${Bucket.Arn}/data/raw/ad/impressions/*"
-                  - !Sub "${Bucket.Arn}/data/raw/ad/clicks/*"
-              - Action:
-                  - s3:ListBucket*
-                Effect: Allow
-                Resource:
-                  - !GetAtt Bucket.Arn
-
-  RawAdCrawler:
-    Type: AWS::Glue::Crawler
-    Properties:
-      Name: raw_ad_crawler
-      Description: Crawls the raw data
-      Role: !GetAtt CrawlerRole.Arn
-      DatabaseName: !Ref Database
-      Targets: # CloudFormation does not seem to support targeting an existing table.  Console does, at least.
-        S3Targets:
-          - Path: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
-          - Path: !Sub "s3://${Bucket}/data/raw/ad/clicks/"
-      TablePrefix: raw_ad_
-      SchemaChangePolicy:
-        UpdateBehavior: UPDATE_IN_DATABASE
-        DeleteBehavior: LOG
-      Schedule:
-        ScheduleExpression: cron(20 * * * ? *)
-      Configuration: |
-        {
-          "Version": 1.0,
-          "Grouping": {
-            "TableGroupingPolicy": "CombineCompatibleSchemas"
-          },
-          "CrawlerOutput": {
-            "Partitions": {
-              "AddOrUpdateBehavior": "InheritFromTable"
-            },
-            "Tables": {
-              "AddOrUpdateBehavior": "MergeNewColumns"
-            }
-          }
-        }
-
-  AdImpressionsTable:
-    Type: AWS::Glue::Table
-    DependsOn:
-      - Database
-    Properties:
-      CatalogId: !Ref AWS::AccountId
-      DatabaseName: !Ref Database
-      TableInput:
-          Name: ad_impressions
-          Description: Ad Impressions
-          TableType: EXTERNAL_TABLE
-          Parameters:
-            classification: orc
-          PartitionKeys:
-            - Name: year
-              Type: int
-            - Name: month
-              Type: int
-          StorageDescriptor:
-            Location: !Sub "s3://${Bucket}/data/lake/ad/impressions/"
-            StoredAsSubDirectories: true
-            InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
-            SerdeInfo:
-              SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
-            OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
-            Columns:
-              - Name: user
-                Type: string
-              - Name: ad
-                Type: string
-              - Name: at
-                Type: timestamp
-
-  AdClicksTable:
-    Type: AWS::Glue::Table
-    DependsOn:
-      - Database
-    Properties:
-      CatalogId: !Ref AWS::AccountId
-      DatabaseName: !Ref Database
-      TableInput:
-          Name: ad_clicks
-          Description: Ad Clicks
-          TableType: EXTERNAL_TABLE
-          Parameters:
-            classification: orc
-          PartitionKeys:
-            - Name: year
-              Type: int
-            - Name: month
-              Type: int
-          StorageDescriptor:
-            Location: !Sub "s3://${Bucket}/data/lake/ad/clicks/"
-            StoredAsSubDirectories: true
-            InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
-            SerdeInfo:
-              SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
-            OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
-            Columns:
-              - Name: user
-                Type: string
-              - Name: ad
-                Type: string
-              - Name: at
-                Type: timestamp
-
-  ETLJobRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Action:
-            - sts:AssumeRole
-            Effect: Allow
-            Principal:
-              Service:
-                - !Sub "glue.${AWS::URLSuffix}"
-      Policies:
-        - PolicyName: "root"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Action: "*"
-                Effect: Allow
-                Resource: "*"
-
-  AdImpressionsPythonJob:
-    Type: AWS::Glue::Job
-    Properties:
-      Role: !GetAtt ETLJobRole.Arn
-      Command:
-        Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_impressions_etl.py"
-      DefaultArguments:
-        "--enable-glue-datacatalog": ""
-        "--job-bookmark-option": "job-bookmark-enable"
-        "--database_name": !Ref Database
-        "--raw_table_name": raw_ad_impressions # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
-        "--table_name": !Ref AdImpressionsTable
-      ExecutionProperty:
-        MaxConcurrentRuns: 1
-      MaxRetries: 0
-
-  AdImpressionsScalaJob:
-    Type: AWS::Glue::Job
-    Properties:
-      Role: !GetAtt ETLJobRole.Arn
-      Command:
-        Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_impressions_etl.scala"
-      DefaultArguments:
-        "--job-language": scala
-        "--class": GlueApp
-        "--enable-glue-datacatalog": ""
-        "--job-bookmark-option": "job-bookmark-enable"
-        "--database_name": !Ref Database
-        "--raw_table_name": raw_ad_impressions # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
-        "--table_name": !Ref AdImpressionsTable
-      ExecutionProperty:
-        MaxConcurrentRuns: 1
-      MaxRetries: 0
-
-  AdClicksPythonJob:
-    Type: AWS::Glue::Job
-    Properties:
-      Role: !GetAtt ETLJobRole.Arn
-      Command:
-        Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_clicks_etl.py"
-      DefaultArguments:
-        "--enable-glue-datacatalog": ""
-        "--job-bookmark-option": "job-bookmark-enable"
-        "--database_name": !Ref Database
-        "--raw_table_name": raw_ad_clicks # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
-        "--table_name": !Ref AdClicksTable
-      ExecutionProperty:
-        MaxConcurrentRuns: 1
-      MaxRetries: 0
-
-  AdClicksScalaJob:
-    Type: AWS::Glue::Job
-    Properties:
-      Role: !GetAtt ETLJobRole.Arn
-      Command:
-        Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_clicks_etl.scala"
-      DefaultArguments:
-        "--job-language": scala
-        "--class": GlueApp
-        "--enable-glue-datacatalog": ""
-        "--job-bookmark-option": "job-bookmark-enable"
-        "--database_name": !Ref Database
-        "--raw_table_name": raw_ad_clicks # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
-        "--table_name": !Ref AdClicksTable
-      ExecutionProperty:
-        MaxConcurrentRuns: 1
-      MaxRetries: 0
 
   #################
   # Ops Dashboard #
