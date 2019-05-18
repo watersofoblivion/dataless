@@ -1372,6 +1372,7 @@ Resources:
   PipelineProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
+      InstanceProfileName: !Ref PipelineRole
       Roles:
         - !Ref PipelineRole
 
@@ -1403,6 +1404,7 @@ Resources:
   PipelineResourceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
+      InstanceProfileName: !Ref PipelineResourceRole
       Roles:
         - !Ref PipelineResourceRole
 
