@@ -1676,10 +1676,10 @@ Resources:
               "properties": {
                 "metrics": [
                   ["AWS/ApiGateway", "Latency", "ApiName", "${APIName}", "Resource", "/data/ad/clicks", "Method", "POST", "Stage", "${Stage}", { "stat": "p50" }],
-                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/clicks", ".,       "POST", ".",     "${Stage}", { "stat": "p75" }],
-                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/clicks", ".,       "POST", ".",     "${Stage}", { "stat": "p95" }],
-                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/clicks", ".,       "POST", ".",     "${Stage}", { "stat": "p98" }],
-                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/clicks", ".,       "POST", ".",     "${Stage}", { "stat": "p99" }]
+                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/clicks", ".",      "POST", ".",     "${Stage}", { "stat": "p75" }],
+                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/clicks", ".",      "POST", ".",     "${Stage}", { "stat": "p95" }],
+                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/clicks", ".",      "POST", ".",     "${Stage}", { "stat": "p98" }],
+                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/clicks", ".",      "POST", ".",     "${Stage}", { "stat": "p99" }]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
