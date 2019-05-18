@@ -9,9 +9,6 @@ phases:
       # application source code into that directory structure.
       - ln -s "${CODEBUILD_SRC_DIR}" "/go/src/lambdas"
 
-      # Install gettext to get envsubst
-      - sudo apt-get install -y gettext
-
       # Install dependencies
       - go get golang.org/x/lint/golint
       - go get -u github.com/stretchr/testify
