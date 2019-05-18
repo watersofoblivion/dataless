@@ -1328,6 +1328,7 @@ Resources:
     Type: AWS::DataPipeline::Pipeline
     Properties:
       Name: Ads Pipeline
+      Activate: false
       ParameterObjects:
         - Id: myParam
           Attributes:
