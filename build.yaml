@@ -335,7 +335,7 @@ Resources:
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/golang:1.11
+        Image: ubuntu/standard/2.0
         EnvironmentVariables:
           - Type: PLAINTEXT
             Name: BUCKET
