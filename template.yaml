@@ -289,8 +289,7 @@ Resources:
       VpcId: !Ref VPC
       AvailabilityZone: !Select
         - 0
-        - !GetAZs
-          - !Ref AWS::Region
+        - Fn::GetAZs: !Ref AWS::Region
       CidrBlock: 172.31.0.0/16
       MapPublicIpOnLaunch: true
 
