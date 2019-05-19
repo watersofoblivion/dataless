@@ -28,8 +28,7 @@ phases:
     commands:
       # Build the Go lambdas
       - mkdir -p bin/
-      - go build -o bin/ad-impressions ./lambdas/ad-impressions
-      - go build -o bin/ad-clicks ./lambdas/ad-clicks
+      - go build -o bin/events ./lambdas/events
       - zip -r lambdas.zip bin/
 
       # Copy lambdas, scripts, and static assets to S3

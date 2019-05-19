@@ -247,14 +247,10 @@ Resources:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: aws:kms
       MetricsConfigurations:
-        - Id: raw-ad-impressions
-          Prefix: data/raw/ad/impressions/
-        - Id: raw-ad-clicks
-          Prefix: data/raw/ad/clicks/
-        - Id: ad-impressions
-          Prefix: data/lake/ad/impressions/
-        - Id: ad-clicks
-          Prefix: data/lake/ad/clicks/
+        - Id: raw-events
+          Prefix: data/raw/events/
+        - Id: events
+          Prefix: data/lake/events/
 
   #######
   # VPC #
@@ -717,23 +713,22 @@ Resources:
                   - s3:PutObject*
                 Effect: Allow
                 Resource:
-                  - !Sub "${Bucket.Arn}/data/raw/ad/impressions/*"
-                  - !Sub "${Bucket.Arn}/data/raw/ad/clicks/*"
+                  - !Sub "${Bucket.Arn}/data/raw/events/*"
 
-  AdImpressionsDeliveryStream:
+  EventsDeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
     Properties:
       DeliveryStreamType: DirectPut
       S3DestinationConfiguration:
         BucketARN: !GetAtt Bucket.Arn
-        Prefix: data/raw/ad/impressions/
+        Prefix: data/raw/events/
         BufferingHints:
           IntervalInSeconds: 900
           SizeInMBs: 128
         CompressionFormat: GZIP
         RoleARN: !GetAtt DeliveryStreamRole.Arn
 
-  AdImpressionsDeliveryStreamRecordsPerSecondAlarm:
+  EventsDeliveryStreamRecordsPerSecondAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       Statistic: Average
@@ -741,14 +736,14 @@ Resources:
       MetricName: IncomingRecords
       Dimensions:
         - Name: DeliveryStreamName
-          Value: !Ref AdImpressionsDeliveryStream
+          Value: !Ref EventsDeliveryStream
       ComparisonOperator: GreaterThanThreshold
       Threshold: 4000
       DatapointsToAlarm: 3
       EvaluationPeriods: 5
       Period: 60
 
-  AdImpressionsDeliveryStreamTransactionsPerSecondAlarm:
+  EventsDeliveryStreamTransactionsPerSecondAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       Statistic: Average
@@ -756,14 +751,14 @@ Resources:
       MetricName: PutRecordBatch.Requests
       Dimensions:
         - Name: DeliveryStreamName
-          Value: !Ref AdImpressionsDeliveryStream
+          Value: !Ref EventsDeliveryStream
       ComparisonOperator: GreaterThanThreshold
       Threshold: 1600
       DatapointsToAlarm: 3
       EvaluationPeriods: 5
       Period: 60
 
-  AdImpressionsDeliveryStreamDataThroughputAlarm:
+  EventsDeliveryStreamDataThroughputAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       Statistic: Average
@@ -771,65 +766,7 @@ Resources:
       MetricName: IncomingBytes
       Dimensions:
         - Name: DeliveryStreamName
-          Value: !Ref AdImpressionsDeliveryStream
-      ComparisonOperator: GreaterThanThreshold
-      Threshold: 4194304
-      DatapointsToAlarm: 3
-      EvaluationPeriods: 5
-      Period: 60
-
-  AdClicksDeliveryStream:
-    Type: AWS::KinesisFirehose::DeliveryStream
-    Properties:
-      DeliveryStreamType: DirectPut
-      S3DestinationConfiguration:
-        BucketARN: !GetAtt Bucket.Arn
-        Prefix: data/raw/ad/clicks/
-        BufferingHints:
-          IntervalInSeconds: 900
-          SizeInMBs: 128
-        CompressionFormat: GZIP
-        RoleARN: !GetAtt DeliveryStreamRole.Arn
-
-  AdClicksDeliveryStreamRecordsPerSecondAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      Statistic: Average
-      Namespace: "AWS/Firehose"
-      MetricName: IncomingRecords
-      Dimensions:
-        - Name: DeliveryStreamName
-          Value: !Ref AdClicksDeliveryStream
-      ComparisonOperator: GreaterThanThreshold
-      Threshold: 4000
-      DatapointsToAlarm: 3
-      EvaluationPeriods: 5
-      Period: 60
-
-  AdClicksDeliveryStreamTransactionsPerSecondAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      Statistic: Average
-      Namespace: "AWS/Firehose"
-      MetricName: PutRecordBatch.Requests
-      Dimensions:
-        - Name: DeliveryStreamName
-          Value: !Ref AdClicksDeliveryStream
-      ComparisonOperator: GreaterThanThreshold
-      Threshold: 1600
-      DatapointsToAlarm: 3
-      EvaluationPeriods: 5
-      Period: 60
-
-  AdClicksDeliveryStreamDataThroughputAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      Statistic: Average
-      Namespace: "AWS/Firehose"
-      MetricName: IncomingBytes
-      Dimensions:
-        - Name: DeliveryStreamName
-          Value: !Ref AdClicksDeliveryStream
+          Value: !Ref EventsDeliveryStream
       ComparisonOperator: GreaterThanThreshold
       Threshold: 4194304
       DatapointsToAlarm: 3
@@ -871,7 +808,7 @@ Resources:
           ]
         }
 
-  ApplicationLambdaRole:
+  RealTimeEventsLambdaRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -885,19 +822,13 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
 
-  AdImpressionsLambda:
+  RealTimeEventsLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: bin/ad-impressions
-      Role: !GetAtt ApplicationLambdaRole.Arn
+      Handler: bin/events
+      Role: !GetAtt RealTimeEventsLambdaRole.Arn
 
-  AdClicksLambda:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: bin/ad-clicks
-      Role: !GetAtt ApplicationLambdaRole.Arn
-
-  ApplicationRole:
+  RealTimeEventsApplicationRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -921,17 +852,15 @@ Resources:
                   - lambda:GetFunctionConfiguration
                 Effect: Allow
                 Resource:
-                  - !Ref AdImpressionsLambda.Alias
-                  - !Ref AdClicksLambda.Alias
+                  - !Ref RealTimeEventsLambda.Alias
               - Action:
                   - firehose:DescribeDeliveryStream
                   - firehose:Get*
                 Effect: Allow
                 Resource:
-                  - !GetAtt AdImpressionsDeliveryStream.Arn
-                  - !GetAtt AdClicksDeliveryStream.Arn
+                  - !GetAtt EventsDeliveryStream.Arn
 
-  AdImpressionsApplication:
+  RealTimeEventsApplication:
     Type: AWS::KinesisAnalytics::Application
     Properties:
       ApplicationCode: |
@@ -950,10 +879,10 @@ Resources:
           RANGE INTERVAL '1' MINUTE
         );
       Inputs:
-        - NamePrefix: AD_IMPRESSIONS
+        - NamePrefix: EVENTS
           KinesisFirehoseInput:
-            ResourceARN: !GetAtt AdImpressionsDeliveryStream.Arn
-            RoleARN: !GetAtt ApplicationRole.Arn
+            ResourceARN: !GetAtt EventsDeliveryStream.Arn
+            RoleARN: !GetAtt RealTimeEventsApplicationRole.Arn
           InputSchema:
             RecordEncoding: UTF-8
             RecordFormat:
@@ -962,80 +891,33 @@ Resources:
                 JSONMappingParameters:
                   RecordRowPath: "$"
             RecordColumns:
-              - Name: AD_ID
-                SqlType: VARCHAR(64)
-                Mapping: "$.ad"
-              - Name: VIEWED_AT
-                SqlType: TIMESTAMP
-                Mapping: "$.at"
               - Name: USER_ID
                 SqlType: VARCHAR(64)
-                Mapping: "$.user"
+                Mapping: "$.user_id"
+              - Name: OBJECT_TYPE
+                SqlType: VARCHAR(255)
+                Mapping: "$.object_type"
+              - Name: OBJECT_ID
+                SqlType: VARCHAR(64)
+                Mapping: "$.object_id"
+              - Name: EVENT
+                SqlType: VARCHAR(255)
+                Mapping: "$.event"
+              - Name: OCCURRED_AT
+                SqlType: TIMESTAMP
+                Mapping: "$.occurred_at"
 
-  AdImpressionsOutputs:
+  RealTimeEventsOutputs:
     Type: AWS::KinesisAnalytics::ApplicationOutput
     Properties:
-      ApplicationName: !Ref AdImpressionsApplication
+      ApplicationName: !Ref RealTimeEventsApplication
       Output:
-        Name: IMPRESSIONS_OUTPUT
+        Name: EVENTS_OUTPUT
         DestinationSchema:
           RecordFormatType: JSON
         LambdaOutput:
-          ResourceARN: !Ref AdImpressionsLambda.Alias
-          RoleARN: !GetAtt ApplicationRole.Arn
-
-  AdClicksApplication:
-    Type: AWS::KinesisAnalytics::Application
-    Properties:
-      ApplicationCode: |
-        CREATE OR REPLACE STREAM CLICKS_OUTPUT (
-          AD_ID VARCHAR(64),
-          USER_ID VARCHAR(64),
-          CLICKED_AT TIMESTAMP
-        );
-
-        CREATE OR REPLACE PUMP CLICKS_OUTPUT_PUMP AS
-        INSERT INTO CLICKS_OUTPUT
-        SELECT AD_ID, USER_ID, CLICKED_AT
-        FROM AD_CLICKS_001
-        WINDOWED BY STAGGER (
-          PARTITION BY AD_ID, USER_ID, CLICKED_AT
-          RANGE INTERVAL '1' MINUTE
-        );
-      Inputs:
-        - NamePrefix: AD_CLICKS
-          KinesisFirehoseInput:
-            ResourceARN: !GetAtt AdClicksDeliveryStream.Arn
-            RoleARN: !GetAtt ApplicationRole.Arn
-          InputSchema:
-            RecordEncoding: UTF-8
-            RecordFormat:
-              RecordFormatType: JSON
-              MappingParameters:
-                JSONMappingParameters:
-                  RecordRowPath: "$"
-            RecordColumns:
-              - Name: AD_ID
-                SqlType: VARCHAR(64)
-                Mapping: "$.ad"
-              - Name: CLICKED_AT
-                SqlType: TIMESTAMP
-                Mapping: "$.at"
-              - Name: USER_ID
-                SqlType: VARCHAR(64)
-                Mapping: "$.user"
-
-  AdClicksOutputs:
-    Type: AWS::KinesisAnalytics::ApplicationOutput
-    Properties:
-      ApplicationName: !Ref AdClicksApplication
-      Output:
-        Name: CLICKS_OUTPUT
-        DestinationSchema:
-          RecordFormatType: JSON
-        LambdaOutput:
-          ResourceARN: !Ref AdClicksLambda.Alias
-          RoleARN: !GetAtt ApplicationRole.Arn
+          ResourceARN: !Ref RealTimeEventsLambda.Alias
+          RoleARN: !GetAtt RealTimeEventsApplicationRole.Arn
 
   #############
   # Data Lake #
@@ -1072,26 +954,24 @@ Resources:
                   - s3:PutObject*
                 Effect: Allow
                 Resource:
-                  - !Sub "${Bucket.Arn}/data/raw/ad/impressions/*"
-                  - !Sub "${Bucket.Arn}/data/raw/ad/clicks/*"
+                  - !Sub "${Bucket.Arn}/data/raw/events/*"
               - Action:
                   - s3:ListBucket*
                 Effect: Allow
                 Resource:
                   - !GetAtt Bucket.Arn
 
-  RawAdCrawler:
+  RawEventsCrawler:
     Type: AWS::Glue::Crawler
     Properties:
-      Name: raw_ad_crawler
-      Description: Crawls the raw data
+      Name: raw_events_crawler
+      Description: Crawls the raw event data
       Role: !GetAtt CrawlerRole.Arn
       DatabaseName: !Ref Database
       Targets: # CloudFormation does not seem to support targeting an existing table.  Console does, at least.
         S3Targets:
-          - Path: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
-          - Path: !Sub "s3://${Bucket}/data/raw/ad/clicks/"
-      TablePrefix: raw_ad_
+          - Path: !Sub "s3://${Bucket}/data/raw/events/"
+      TablePrefix: raw_
       SchemaChangePolicy:
         UpdateBehavior: UPDATE_IN_DATABASE
         DeleteBehavior: LOG
@@ -1113,7 +993,7 @@ Resources:
           }
         }
 
-  AdImpressionsTable:
+  EventsTable:
     Type: AWS::Glue::Table
     DependsOn:
       - Database
@@ -1121,8 +1001,8 @@ Resources:
       CatalogId: !Ref AWS::AccountId
       DatabaseName: !Ref Database
       TableInput:
-          Name: ad_impressions
-          Description: Ad Impressions
+          Name: events
+          Description: Events
           TableType: EXTERNAL_TABLE
           Parameters:
             classification: orc
@@ -1132,51 +1012,22 @@ Resources:
             - Name: month
               Type: int
           StorageDescriptor:
-            Location: !Sub "s3://${Bucket}/data/lake/ad/impressions/"
+            Location: !Sub "s3://${Bucket}/data/lake/events/"
             StoredAsSubDirectories: true
             InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
             SerdeInfo:
               SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
             OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
             Columns:
-              - Name: user
+              - Name: user_id
                 Type: string
-              - Name: ad
+              - Name: object_type
                 Type: string
-              - Name: at
-                Type: timestamp
-
-  AdClicksTable:
-    Type: AWS::Glue::Table
-    DependsOn:
-      - Database
-    Properties:
-      CatalogId: !Ref AWS::AccountId
-      DatabaseName: !Ref Database
-      TableInput:
-          Name: ad_clicks
-          Description: Ad Clicks
-          TableType: EXTERNAL_TABLE
-          Parameters:
-            classification: orc
-          PartitionKeys:
-            - Name: year
-              Type: int
-            - Name: month
-              Type: int
-          StorageDescriptor:
-            Location: !Sub "s3://${Bucket}/data/lake/ad/clicks/"
-            StoredAsSubDirectories: true
-            InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
-            SerdeInfo:
-              SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
-            OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
-            Columns:
-              - Name: user
+              - Name: object_id
                 Type: string
-              - Name: ad
+              - Name: event
                 Type: string
-              - Name: at
+              - Name: occurred_at
                 Type: timestamp
 
   ETLJobRole:
@@ -1200,74 +1051,38 @@ Resources:
                 Effect: Allow
                 Resource: "*"
 
-  AdImpressionsPythonJob:
+  EventsPythonETLJob:
     Type: AWS::Glue::Job
     Properties:
       Role: !GetAtt ETLJobRole.Arn
       Command:
         Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_impressions_etl.py"
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/events_etl.py"
       DefaultArguments:
         "--enable-glue-datacatalog": ""
         "--job-bookmark-option": "job-bookmark-enable"
         "--database_name": !Ref Database
-        "--raw_table_name": raw_ad_impressions # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
-        "--table_name": !Ref AdImpressionsTable
+        "--raw_table_name": raw_events # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
+        "--table_name": !Ref EventsTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
       MaxRetries: 0
 
-  AdImpressionsScalaJob:
+  EventsScalaETLJob:
     Type: AWS::Glue::Job
     Properties:
       Role: !GetAtt ETLJobRole.Arn
       Command:
         Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_impressions_etl.scala"
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/events_etl.scala"
       DefaultArguments:
         "--job-language": scala
         "--class": GlueApp
         "--enable-glue-datacatalog": ""
         "--job-bookmark-option": "job-bookmark-enable"
         "--database_name": !Ref Database
-        "--raw_table_name": raw_ad_impressions # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
-        "--table_name": !Ref AdImpressionsTable
-      ExecutionProperty:
-        MaxConcurrentRuns: 1
-      MaxRetries: 0
-
-  AdClicksPythonJob:
-    Type: AWS::Glue::Job
-    Properties:
-      Role: !GetAtt ETLJobRole.Arn
-      Command:
-        Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_clicks_etl.py"
-      DefaultArguments:
-        "--enable-glue-datacatalog": ""
-        "--job-bookmark-option": "job-bookmark-enable"
-        "--database_name": !Ref Database
-        "--raw_table_name": raw_ad_clicks # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
-        "--table_name": !Ref AdClicksTable
-      ExecutionProperty:
-        MaxConcurrentRuns: 1
-      MaxRetries: 0
-
-  AdClicksScalaJob:
-    Type: AWS::Glue::Job
-    Properties:
-      Role: !GetAtt ETLJobRole.Arn
-      Command:
-        Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/ad_clicks_etl.scala"
-      DefaultArguments:
-        "--job-language": scala
-        "--class": GlueApp
-        "--enable-glue-datacatalog": ""
-        "--job-bookmark-option": "job-bookmark-enable"
-        "--database_name": !Ref Database
-        "--raw_table_name": raw_ad_clicks # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
-        "--table_name": !Ref AdClicksTable
+        "--raw_table_name": raw_events # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
+        "--table_name": !Ref EventsTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
       MaxRetries: 0
@@ -1276,7 +1091,7 @@ Resources:
   # Batch #
   #########
 
-  AdsTable:
+  EventSummariesTable:
     Type: AWS::Glue::Table
     DependsOn:
       - Database
@@ -1284,13 +1099,13 @@ Resources:
       CatalogId: !Ref AWS::AccountId
       DatabaseName: !Ref Database
       TableInput:
-          Name: ads
-          Description: Ads
+          Name: event_summaries
+          Description: Event Summaries
           TableType: EXTERNAL_TABLE
           Parameters:
             classification: orc
           StorageDescriptor:
-            Location: !Sub "s3://${Bucket}/data/lake/ads/"
+            Location: !Sub "s3://${Bucket}/data/lake/events/"
             StoredAsSubDirectories: true
             InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
             SerdeInfo:
@@ -1300,7 +1115,7 @@ Resources:
               - Name: id
                 Type: string
 
-  UsersTable:
+  UserSummariesTable:
     Type: AWS::Glue::Table
     DependsOn:
       - Database
@@ -1308,8 +1123,8 @@ Resources:
       CatalogId: !Ref AWS::AccountId
       DatabaseName: !Ref Database
       TableInput:
-          Name: users
-          Description: Users
+          Name: user_summaries
+          Description: User Summaries
           TableType: EXTERNAL_TABLE
           Parameters:
             classification: orc
@@ -1324,7 +1139,7 @@ Resources:
               - Name: id
                 Type: string
 
-  AdInfoTable:
+  EventsInfoTable:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
@@ -1423,13 +1238,13 @@ Resources:
       Roles:
         - !Ref PipelineResourceRole
 
-  AdsPipeline:
+  EventsPipeline:
     Type: AWS::DataPipeline::Pipeline
     DependsOn: !
       - PipelineProfile
       - PipelineResourceProfile
     Properties:
-      Name: Ads Pipeline
+      Name: Events Pipeline
       Activate: false
       ParameterObjects:
         - Id: myRegion
@@ -1524,13 +1339,13 @@ Resources:
               RefValue: GlueCatalogAsHiveMetastore
             - Key: configuration
               RefValue: GlueCatalogAsSparkMetastore
-        - Id: AdsJob
-          Name: Ads Job
+        - Id: EventsJob
+          Name: Events Job
           Fields:
             - Key: type
               StringValue: HiveActivity
             - Key: scriptUri
-              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/ads.hql"
+              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/events.hql"
             - !If
                 - EMREnabled
                 - Key: workerGroup
@@ -1565,13 +1380,12 @@ Resources:
                   - firehose:PutRecordBatch
                 Effect: Allow
                 Resource:
-                  - !GetAtt AdImpressionsDeliveryStream.Arn
-                  - !GetAtt AdClicksDeliveryStream.Arn
+                  - !GetAtt EventsDeliveryStream.Arn
               - Action:
                   - dynamodb:Query
                 Effect: Allow
                 Resource:
-                  - !GetAtt AdInfoTable.Arn
+                  - !GetAtt EventsInfoTable.Arn
 
   API:
     Type: AWS::Serverless::Api
@@ -1589,17 +1403,17 @@ Resources:
           version: 0.1.0
           title: !Ref APIName
         paths:
-          /data/ad/impressions:
+          /data/events:
             post:
-              summary: Record a batch of ad impressions
-              operationId: data-ad-impressions
+              summary: Record a batch of events
+              operationId: data-events
               requestBody:
-                description: A batch of ad impressions
+                description: A batch of ad events
                 required: true
                 content:
                   application/json:
                     schema:
-                      $ref: "#/components/schemas/DataAdImpressions"
+                      $ref: "#/components/schemas/DataEvents"
               x-amazon-apigateway-integration:
                 type: AWS
                 httpMethod: POST
@@ -1610,10 +1424,10 @@ Resources:
                     #set($newline = "
                     ")
                     {
-                      "DeliveryStreamName": "${AdImpressionsDeliveryStream}",
+                      "DeliveryStreamName": "${EventsDeliveryStream}",
                       "Records": [
-                        #foreach($elem in $input.path('$.impressions'))
-                        #set($val = $input.json("$.impressions[$foreach.index]"))
+                        #foreach($elem in $input.path('$.events'))
+                        #set($val = $input.json("$.events[$foreach.index]"))
                         #set($rec = "${!val}${!newline}")
                         { "Data": "$util.base64Encode($rec)" }#if($foreach.hasNext),#end
                         #end
@@ -1645,118 +1459,18 @@ Resources:
               responses:
                 '200':
                   description: |
-                    The batch was processed.  Some impressions may not have
-                    been processed.  The response contains a list of
-                    impressions in the same order submitted, indicating which
-                    succeeded and which failed.
+                    The batch was processed.  Some events may not have been
+                    processed.  The response contains a list of events in the
+                    same order submitted, indicating which succeeded and which
+                    failed.
                   content:
                     application/json:
                       schema:
                         $ref: "#/components/schemas/BatchWriteResponse"
-          /data/ad/clicks:
-            post:
-              summary: Record a batch of ad clicks
-              operationId: data-ad-clicks
-              requestBody:
-                description: A batch of ad clicks
-                required: true
-                content:
-                  application/json:
-                    schema:
-                      $ref: "#/components/schemas/DataAdClicks"
-              x-amazon-apigateway-integration:
-                type: AWS
-                httpMethod: POST
-                uri: !Sub "arn:aws:apigateway:${AWS::Region}:firehose:action/PutRecordBatch"
-                credentials: !GetAtt APIRole.Arn
-                requestTemplates:
-                  application/json: !Sub |
-                    #set($newline = "
-                    ")
-                    {
-                      "DeliveryStreamName": "${AdClicksDeliveryStream}",
-                      "Records": [
-                        #foreach($elem in $input.path('$.clicks'))
-                        #set($val = $input.json("$.clicks[$foreach.index]"))
-                        #set($rec = "${!val}${!newline}")
-                        { "Data": "$util.base64Encode($rec)" }#if($foreach.hasNext),#end
-                        #end
-                      ]
-                    }
-                requestParameters:
-                  integration.request.header.Content-Type: "'x-amz-json-1.1'"
-                responses:
-                  '200':
-                    statusCode: 200
-                    responseTemplates:
-                      application/json: |
-                        {
-                          "failed_count": $input.path("$.FailedPutCount"),
-                          "records": [
-                            #foreach($record in $input.path("$.RequestResponses"))
-                            {
-                              #if($record.keySet().contains("ErrorCode"))
-                              "failed": true,
-                              "error_code": "$record.ErrorCode",
-                              "error_message": "$record.ErrorMessage"
-                              #else
-                              "failed": false
-                              #end
-                            }#if($foreach.hasNext),#end
-                            #end
-                          ]
-                        }
-              responses:
-                '200':
-                  description: |
-                    The batch was processed.  Some clicks may not have been
-                    processed.  The response contains a list of clicks in the same
-                    order submitted, indicating which succeeded and which failed.
-                  content:
-                    application/json:
-                      schema:
-                        $ref: "#/components/schemas/BatchWriteResponse"
-          /info/ads/{id}:
+          /info/events:
             get:
-              summary: Get info about an ad over time
-              operationId: info-ads
-              parameters:
-                - name: id
-                  in: path
-                  description: The ad to query
-                  required: true
-                  schema:
-                    type: string
-                    format: uuid
-                - name: start
-                  in: query
-                  description: The start date
-                  required: true
-                  schema:
-                    type:
-                      $ref: "#/components/schemas/Date"
-                - name: end
-                  in: query
-                  description: The end date
-                  required: false
-                  schema:
-                    type:
-                      $ref: "#/components/schemas/Date"
-                - name: page
-                  in: query
-                  description: The page of results to fetch
-                  required: false
-                  schema:
-                    type:
-                      $ref: "#/components/schemas/Base64"
-                - name: limit
-                  in: query
-                  description: The maximum number of results to fetch
-                  required: false
-                  schema:
-                    type: integer
-                    minimum: 1
-                    default: 100
+              summary: Get info about events
+              operationId: info-events
               x-amazon-apigateway-integration:
                 type: AWS
                 httpMethod: POST
@@ -1779,7 +1493,7 @@ Resources:
                       },
                       "KeyConditionExpression": "#ID = :id AND #Date BETWEEN #start AND #end",
                       "Limit": $input.params('limit'),
-                      "TableName": "${AdInfoTable}"
+                      "TableName": "${EventsInfoTable}"
                     }
                 requestParameters:
                   integration.request.header.Content-Type: "'x-amz-json-1.1'"
@@ -1793,7 +1507,7 @@ Resources:
                           "next": "$util.base64Encode($input.json('$.LastEvaluatedKey'))",
                           #end
                           "count": $input.path('$.Count'),
-                          "ads": [
+                          "events": [
                             #foreach($elem in $input.path('$.Items'))
                             {
                               "id": "$elem.ID"
@@ -1808,7 +1522,7 @@ Resources:
                   content:
                     application/json:
                       schema:
-                        $ref: "#/components/schemas/AdsInfo"
+                        $ref: "#/components/schemas/EventsInfo"
         x-amazon-apigateway-request-validators:
           all:
             validateRequestBody: true
@@ -1816,63 +1530,42 @@ Resources:
         x-amazon-apigateway-request-validator: all
         components:
           schemas:
-            DataAdImpressions:
+            DataEvents:
               type: object
               properties:
-                impressions:
+                events:
                   type: array
                   items:
-                    $ref: "#/components/schemas/DataAdImpression"
+                    $ref: "#/components/schemas/DataEvent"
                   minItems: 1
                   maxItems: 500
               required:
-                - impressions
+                - events
               additionalProperties: false
-            DataAdImpression:
+            DataEvent:
               type: object
               properties:
-                at:
+                user_id:
+                  type: string
+                  format: uuid
+                object_type:
+                  type:
+                    $ref: "#/components/schemas/ID"
+                object_id:
+                  type: string
+                  format: uuid
+                event:
+                  type:
+                    $ref: "#/components/schemas/ID"
+                occurred_at:
                   type:
                     $ref: "#/components/schemas/Timestamp"
-                user:
-                  type: string
-                  format: uuid
-                ad:
-                  type: string
-                  format: uuid
               required:
-                - at
-                - user
-                - ad
-              additionalProperties: false
-            DataAdClicks:
-              type: object
-              properties:
-                clicks:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/DataAdClick"
-                  minItems: 1
-                  maxItems: 500
-              required:
-                - clicks
-              additionalProperties: false
-            DataAdClick:
-              type: object
-              properties:
-                at:
-                  type:
-                    $ref: "#/components/schemas/Timestamp"
-                user:
-                  type: string
-                  format: uuid
-                ad:
-                  type: string
-                  format: uuid
-              required:
-                - at
-                - user
-                - ad
+                - user_id
+                - object_type
+                - object_id
+                - event
+                - occurred_at
               additionalProperties: false
             BatchWriteResponse:
               type: object
@@ -1898,7 +1591,7 @@ Resources:
               required:
                 - failed
               additionalProperties: false
-            AdsInfo:
+            EventsInfo:
               type: object
               properties:
                 next:
@@ -1907,15 +1600,15 @@ Resources:
                 count:
                   type: integer
                   minimum: 0
-                ads:
+                events:
                   type: array
                   items:
-                    $ref: "#/components/schemas/AdInfo"
+                    $ref: "#/components/schemas/EventInfo"
               required:
                 - count
-                - ads
+                - events
               additionalProperties: false
-            AdInfo:
+            EventInfo:
               type: object
               properties:
                 id:
@@ -1936,6 +1629,9 @@ Resources:
                 - code
                 - message
               additionalProperties: false
+            ID:
+              type: string
+              format: "^[a-z]+[-a-z0-9]*$"
             Date:
               type: string
               format: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
@@ -2016,12 +1712,12 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "Count", "ApiName", "${APIName}", "Resource", "/data/ad/impressions", "Method", "POST", "Stage", "${Stage}"]
+                  ["AWS/ApiGateway", "Count", "ApiName", "${APIName}", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Ad Impressions Request Rate"
+                "title": "Request Rate"
               }
             },
             {
@@ -2030,15 +1726,29 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "Latency", "ApiName", "${APIName}", "Resource", "/data/ad/impressions", "Method", "POST", "Stage", "${Stage}", { "stat": "p50" }],
-                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/impressions", ".",      "POST", ".",     "${Stage}", { "stat": "p75" }],
-                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/impressions", ".",      "POST", ".",     "${Stage}", { "stat": "p95" }],
-                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/impressions", ".",      "POST", ".",     "${Stage}", { "stat": "p98" }],
-                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/impressions", ".",      "POST", ".",     "${Stage}", { "stat": "p99" }]
+                  ["AWS/ApiGateway", "Latency", "ApiName", "${APIName}", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}"]
+                ],
+                "period": 60,
+                "stat": "p95",
+                "region": "${AWS::Region}",
+                "title": "Latency"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "${APIName}", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}", { "stat": "p50" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/events", ".",      "POST", ".",     "${Stage}", { "stat": "p75" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/events", ".",      "POST", ".",     "${Stage}", { "stat": "p95" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/events", ".",      "POST", ".",     "${Stage}", { "stat": "p98" }],
+                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/events", ".",      "POST", ".",     "${Stage}", { "stat": "p99" }]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
-                "title": "Ad Impressions Latency"
+                "title": "Integration Latency"
               }
             },
             {
@@ -2047,93 +1757,13 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "${APIName}", "Resource", "/data/ad/impressions", "Method", "POST", "Stage", "${Stage}", { "stat": "p50" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/ad/impressions", ".",      "POST", ".",     "${Stage}", { "stat": "p75" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/ad/impressions", ".",      "POST", ".",     "${Stage}", { "stat": "p95" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/ad/impressions", ".",      "POST", ".",     "${Stage}", { "stat": "p98" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/ad/impressions", ".",      "POST", ".",     "${Stage}", { "stat": "p99" }]
-                ],
-                "period": 60,
-                "region": "${AWS::Region}",
-                "title": "Ad Impressions Integration Latency"
-              }
-            },
-            {
-              "type": "metric",
-              "width": 6,
-              "height": 4,
-              "properties": {
-                "metrics": [
-                  ["AWS/ApiGateway", "4XXError", "ApiName", "${APIName}", "Resource", "/data/ad/impressions", "Method", "POST", "Stage", "${Stage}"],
-                  [".",              "5XXError", ".",       "${APIName}", ".",        "/data/ad/impressions", ".",      "POST", ".",     "${Stage}"]
+                  ["AWS/ApiGateway", "4XXError", "ApiName", "${APIName}", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}"],
+                  [".",              "5XXError", ".",       "${APIName}", ".",        "/data/events", ".",      "POST", ".",     "${Stage}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Ad Impressions Errors"
-              }
-            },
-            {
-              "type": "metric",
-              "width": 6,
-              "height": 4,
-              "properties": {
-                "metrics": [
-                  ["AWS/ApiGateway", "Count", "ApiName", "${APIName}", "Resource", "/data/ad/clicks", "Method", "POST", "Stage", "${Stage}"]
-                ],
-                "period": 60,
-                "stat": "Sum",
-                "region": "${AWS::Region}",
-                "title": "Ad Clicks Request Rate"
-              }
-            },
-            {
-              "type": "metric",
-              "width": 6,
-              "height": 4,
-              "properties": {
-                "metrics": [
-                  ["AWS/ApiGateway", "Latency", "ApiName", "${APIName}", "Resource", "/data/ad/clicks", "Method", "POST", "Stage", "${Stage}", { "stat": "p50" }],
-                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/clicks", ".",      "POST", ".",     "${Stage}", { "stat": "p75" }],
-                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/clicks", ".",      "POST", ".",     "${Stage}", { "stat": "p95" }],
-                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/clicks", ".",      "POST", ".",     "${Stage}", { "stat": "p98" }],
-                  [".",              ".",       ".",       "${APIName}", ".",        "/data/ad/clicks", ".",      "POST", ".",     "${Stage}", { "stat": "p99" }]
-                ],
-                "period": 60,
-                "region": "${AWS::Region}",
-                "title": "Ad Clicks Latency"
-              }
-            },
-            {
-              "type": "metric",
-              "width": 6,
-              "height": 4,
-              "properties": {
-                "metrics": [
-                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "${APIName}", "Resource", "/data/ad/clicks", "Method", "POST", "Stage", "${Stage}", { "stat": "p50" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/ad/clicks", ".",      "POST", ".",     "${Stage}", { "stat": "p75" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/ad/clicks", ".",      "POST", ".",     "${Stage}", { "stat": "p95" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/ad/clicks", ".",      "POST", ".",     "${Stage}", { "stat": "p98" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/ad/clicks", ".",      "POST", ".",     "${Stage}", { "stat": "p99" }]
-                ],
-                "period": 60,
-                "region": "${AWS::Region}",
-                "title": "Ad Clicks Integration Latency"
-              }
-            },
-            {
-              "type": "metric",
-              "width": 6,
-              "height": 4,
-              "properties": {
-                "metrics": [
-                  ["AWS/ApiGateway", "4XXError", "ApiName", "${APIName}", "Resource", "/data/ad/clicks", "Method", "POST", "Stage", "${Stage}"],
-                  [".",              "5XXError", ".",       "${APIName}", ".",        "/data/ad/clicks", ".",      "POST", ".",     "${Stage}"]
-                ],
-                "period": 60,
-                "stat": "Sum",
-                "region": "${AWS::Region}",
-                "title": "Ad Clicks Errors"
+                "title": "Errors"
               }
             },
             {
@@ -2148,8 +1778,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "IncomingRecords", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"],
-                  ["AWS/Firehose", "IncomingRecords", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
+                  ["AWS/Firehose", "IncomingRecords"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2163,8 +1792,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "IncomingBytes", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"],
-                  ["AWS/Firehose", "IncomingBytes", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
+                  ["AWS/Firehose", "IncomingBytes"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2178,8 +1806,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "DeliveryToS3.Success", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"],
-                  ["AWS/Firehose", "DeliveryToS3.Success", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
+                  ["AWS/Firehose", "DeliveryToS3.Success"]
                 ],
                 "period": 60,
                 "stat": "Average",
@@ -2193,8 +1820,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "DeliveryToS3.Records", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"],
-                  ["AWS/Firehose", "DeliveryToS3.Records", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
+                  ["AWS/Firehose", "DeliveryToS3.Records"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2208,8 +1834,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "DeliveryToS3.Bytes", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"],
-                  ["AWS/Firehose", "DeliveryToS3.Bytes", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
+                  ["AWS/Firehose", "DeliveryToS3.Bytes"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2223,8 +1848,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "DeliveryToS3.DataFreshness", "DeliveryStreamName", "${AdImpressionsDeliveryStream}"],
-                  ["AWS/Firehose", "DeliveryToS3.DataFreshness", "DeliveryStreamName", "${AdClicksDeliveryStream}"]
+                  ["AWS/Firehose", "DeliveryToS3.DataFreshness"]
                 ],
                 "period": 60,
                 "stat": "Maximum",
@@ -2244,8 +1868,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "Success", "Application", "${AdImpressionsApplication}"],
-                  ["AWS/KinesisAnalytics", "Success", "Application", "${AdClicksApplication}"]
+                  ["AWS/KinesisAnalytics", "Success"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -2258,8 +1881,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "KPUs", "Application", "${AdImpressionsApplication}"],
-                  ["AWS/KinesisAnalytics", "KPUs", "Application", "${AdClicksApplication}"]
+                  ["AWS/KinesisAnalytics", "KPUs"]
                 ],
                 "period": 60,
                 "stat": "Average",
@@ -2273,8 +1895,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "MillisBehindLatest", "Application", "${AdImpressionsApplication}"],
-                  ["AWS/KinesisAnalytics", "MillisBehindLatest", "Application", "${AdClicksApplication}"]
+                  ["AWS/KinesisAnalytics", "MillisBehindLatest"]
                 ],
                 "period": 60,
                 "stat": "Maximum",
@@ -2288,8 +1909,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "Records", "Application", "${AdImpressionsApplication}"],
-                  ["AWS/KinesisAnalytics", "Records", "Application", "${AdClicksApplication}"]
+                  ["AWS/KinesisAnalytics", "Records"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2303,8 +1923,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "Bytes", "Application", "${AdImpressionsApplication}"],
-                  ["AWS/KinesisAnalytics", "Bytes", "Application", "${AdClicksApplication}"]
+                  ["AWS/KinesisAnalytics", "Bytes"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2318,8 +1937,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.Success", "Application", "${AdImpressionsApplication}"],
-                  ["AWS/KinesisAnalytics", "InputProcessing.Success", "Application", "${AdClicksApplication}"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.Success"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2333,8 +1951,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.OkBytes", "Application", "${AdImpressionsApplication}"],
-                  ["AWS/KinesisAnalytics", "InputProcessing.OkBytes", "Application", "${AdClicksApplication}"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.OkBytes"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2348,8 +1965,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.Duration", "Application", "${AdImpressionsApplication}"],
-                  ["AWS/KinesisAnalytics", "InputProcessing.Duration", "Application", "${AdClicksApplication}"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.Duration"]
                 ],
                 "period": 60,
                 "stat": "Average",
@@ -2363,8 +1979,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.OkRecords", "Application", "${AdImpressionsApplication}"],
-                  ["AWS/KinesisAnalytics", "InputProcessing.OkRecords", "Application", "${AdClicksApplication}"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.OkRecords"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2378,8 +1993,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.DroppedRecords", "Application", "${AdImpressionsApplication}"],
-                  ["AWS/KinesisAnalytics", "InputProcessing.DroppedRecords", "Application", "${AdClicksApplication}"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.DroppedRecords"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2393,8 +2007,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.ProcessingFailedRecords", "Application", "${AdImpressionsApplication}"],
-                  ["AWS/KinesisAnalytics", "InputProcessing.ProcessingFailedRecords", "Application", "${AdClicksApplication}"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.ProcessingFailedRecords"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2408,8 +2021,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.OkRecords", "Application", "${AdImpressionsApplication}"],
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.OkRecords", "Application", "${AdClicksApplication}"]
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.OkRecords"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2423,8 +2035,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.DeliveryFailedRecords", "Application", "${AdImpressionsApplication}"],
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.DeliveryFailedRecords", "Application", "${AdClicksApplication}"]
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.DeliveryFailedRecords"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2438,8 +2049,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.Duration", "Application", "${AdImpressionsApplication}"],
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.Duration", "Application", "${AdClicksApplication}"]
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.Duration"]
                 ],
                 "period": 60,
                 "stat": "Average",
@@ -2459,13 +2069,12 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Invocations", "FunctionName", "${AdImpressionsLambda}"],
-                  ["AWS/Lambda", "Invocations", "FunctionName", "${AdClicksLambda}"]
+                  ["AWS/Lambda", "Invocations"]
                 ],
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Lambda Invocations"
+                "title": "Invocations"
               }
             },
             {
@@ -2474,20 +2083,12 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Duration", "FunctionName", "${AdImpressionsLambda}", { "stat": "p50" }],
-                  ["AWS/Lambda", "Duration", "FunctionName", "${AdImpressionsLambda}", { "stat": "p75" }],
-                  ["AWS/Lambda", "Duration", "FunctionName", "${AdImpressionsLambda}", { "stat": "p95" }],
-                  ["AWS/Lambda", "Duration", "FunctionName", "${AdImpressionsLambda}", { "stat": "p98" }],
-                  ["AWS/Lambda", "Duration", "FunctionName", "${AdImpressionsLambda}", { "stat": "p99" }],
-                  ["AWS/Lambda", "Duration", "FunctionName", "${AdClicksLambda}", { "stat": "p50" }],
-                  ["AWS/Lambda", "Duration", "FunctionName", "${AdClicksLambda}", { "stat": "p75" }],
-                  ["AWS/Lambda", "Duration", "FunctionName", "${AdClicksLambda}", { "stat": "p95" }],
-                  ["AWS/Lambda", "Duration", "FunctionName", "${AdClicksLambda}", { "stat": "p98" }],
-                  ["AWS/Lambda", "Duration", "FunctionName", "${AdClicksLambda}", { "stat": "p99" }]
+                  ["AWS/Lambda", "Duration"]
                 ],
                 "period": 60,
+                "stat": "p95",
                 "region": "${AWS::Region}",
-                "title": "Lambda Duration"
+                "title": "Duration"
               }
             },
             {
@@ -2496,13 +2097,12 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Errors", "FunctionName", "${AdImpressionsLambda}"],
-                  ["AWS/Lambda", "Errors", "FunctionName", "${AdClicksLambda}"]
+                  ["AWS/Lambda", "Errors"]
                 ],
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Lambda Errors"
+                "title": "Errors"
               }
             },
             {
@@ -2511,13 +2111,12 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "DeadLetterErrors", "FunctionName", "${AdImpressionsLambda}"],
-                  ["AWS/Lambda", "DeadLetterErrors", "FunctionName", "${AdClicksLambda}"]
+                  ["AWS/Lambda", "DeadLetterErrors"]
                 ],
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Lambda Dead Letter Errors"
+                "title": "Dead Letter Errors"
               }
             },
             {
@@ -2526,13 +2125,12 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${AdImpressionsLambda}"],
-                  ["AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${AdClicksLambda}"]
+                  ["AWS/Lambda", "ConcurrentExecutions"]
                 ],
                 "period": 60,
                 "stat": "Maximum",
                 "region": "${AWS::Region}",
-                "title": "Lambda Concurrent Executions"
+                "title": "Concurrent Executions"
               }
             },
             {
@@ -2541,13 +2139,12 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "UnreservedConcurrentExecutions", "FunctionName", "${AdImpressionsLambda}"],
-                  ["AWS/Lambda", "UnreservedConcurrentExecutions", "FunctionName", "${AdClicksLambda}"]
+                  ["AWS/Lambda", "UnreservedConcurrentExecutions"]
                 ],
                 "period": 60,
                 "stat": "Average",
                 "region": "${AWS::Region}",
-                "title": "Lambda Unreserved Concurrent Executions"
+                "title": "Unreserved Concurrent Executions"
               }
             },
             {
@@ -2556,13 +2153,12 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Throttles", "FunctionName", "${AdImpressionsLambda}"],
-                  ["AWS/Lambda", "Throttles", "FunctionName", "${AdClicksLambda}"]
+                  ["AWS/Lambda", "Throttles"]
                 ],
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Lambda Throttles"
+                "title": "Throttles"
               }
             },
             {
@@ -2571,13 +2167,12 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "IteratorAge", "FunctionName", "${AdImpressionsLambda}"],
-                  ["AWS/Lambda", "IteratorAge", "FunctionName", "${AdClicksLambda}"]
+                  ["AWS/Lambda", "IteratorAge"]
                 ],
                 "period": 60,
                 "stat": "Maximum",
                 "region": "${AWS::Region}",
-                "title": "Lambda Iterator Age"
+                "title": "Iterator Age"
               }
             },
             {
@@ -2592,7 +2187,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/S3", "BucketSizeBytes", "BucketName", "${Bucket}"]
+                  ["AWS/S3", "BucketSizeBytes"]
                 ],
                 "period": 86400,
                 "stat": "Maximum",
@@ -2606,7 +2201,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/S3", "NumberOfObject", "BucketName", "${Bucket}"]
+                  ["AWS/S3", "NumberOfObject"]
                 ],
                 "period": 86400,
                 "stat": "Maximum",
@@ -2620,7 +2215,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/S3", "AllRequests", "BucketName", "${Bucket}"]
+                  ["AWS/S3", "AllRequests"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2634,7 +2229,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/S3", "GetRequests", "BucketName", "${Bucket}"]
+                  ["AWS/S3", "GetRequests"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2648,7 +2243,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/S3", "PutRequests", "BucketName", "${Bucket}"]
+                  ["AWS/S3", "PutRequests"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2662,7 +2257,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/S3", "SelectRequests", "BucketName", "${Bucket}"]
+                  ["AWS/S3", "SelectRequests"]
                 ],
                 "period": 60,
                 "stat": "Sum",

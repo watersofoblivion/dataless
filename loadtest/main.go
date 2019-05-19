@@ -49,39 +49,25 @@ type VariableDuration struct {
 	Variance time.Duration `yaml:"Variance"`
 }
 
-type AdImpressions struct {
-	Impressions []*AdImpression `json:"impressions"`
+type Events struct {
+	Events []*Event `json:"events"`
 }
 
-type AdImpression struct {
-	Ad   uuid.UUID
-	User uuid.UUID
-	At   time.Time
+type Event struct {
+	User       uuid.UUID
+	ObjectType string
+	Object     uuid.UUID
+	Event      string
+	OccurredAt time.Time
 }
 
-func (datum *AdImpression) MarshalJSON() ([]byte, error) {
+func (event *Event) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
-		"ad":   datum.Ad.String(),
-		"user": datum.User.String(),
-		"at":   datum.At.Format("2006-01-02 15:04:05.000"),
-	})
-}
-
-type AdClicks struct {
-	Clicks []*AdClick `json:"clicks"`
-}
-
-type AdClick struct {
-	Ad   uuid.UUID
-	User uuid.UUID
-	At   time.Time
-}
-
-func (datum *AdClick) MarshalJSON() ([]byte, error) {
-	return json.Marshal(map[string]interface{}{
-		"ad":   datum.Ad.String(),
-		"user": datum.User.String(),
-		"at":   datum.At.Format("2006-01-02 15:04:05.000"),
+		"user_id":     event.User.String(),
+		"object_type": event.ObjectType,
+		"object_id":   event.User.String(),
+		"event":       event.Event,
+		"occurred_at": event.OccurredAt.Format("2006-01-02 15:04:05.000"),
 	})
 }
 
@@ -185,7 +171,7 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), config.Duration)
 
-	impressionBatches := make(chan *AdImpressions)
+	eventBatches := make(chan *Events)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -193,100 +179,47 @@ func main() {
 		buf := new(bytes.Buffer)
 		encoder := json.NewEncoder(buf)
 		earl := baseURL.ResolveReference(&url.URL{
-			Path: filepath.Join(baseURL.Path, "/data/ad/impressions"),
+			Path: filepath.Join(baseURL.Path, "/data/events"),
 		}).String()
 
-		for batch := range impressionBatches {
+		for batch := range eventBatches {
 			buf.Reset()
 			if err := encoder.Encode(batch); err != nil {
-				log.Printf("could not encode impressions batch: %s", err)
+				log.Printf("could not encode events batch: %s", err)
 			}
 
 			resp, err := http.Post(earl, "application/json", buf)
 			if err != nil {
-				log.Printf("error publishing impressions batch: %s", err)
+				log.Printf("error publishing events batch: %s", err)
 			}
 
 			if resp.StatusCode != http.StatusOK {
-				log.Printf("non-%d status code publishing impressions batch: %d", http.StatusOK, resp.StatusCode)
+				log.Printf("non-%d status code publishing events batch: %d", http.StatusOK, resp.StatusCode)
 				defer resp.Body.Close()
 				io.Copy(os.Stderr, resp.Body)
 			}
 		}
 	}()
 
-	clickBatches := make(chan *AdClicks)
+	events := make(chan *Event)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-
-		buf := new(bytes.Buffer)
-		encoder := json.NewEncoder(buf)
-		earl := baseURL.ResolveReference(&url.URL{
-			Path: filepath.Join(baseURL.Path, "/data/ad/clicks"),
-		}).String()
-
-		for batch := range clickBatches {
-			buf.Reset()
-			if err := encoder.Encode(batch); err != nil {
-				log.Printf("could not encode impressions batch: %s", err)
-			}
-
-			resp, err := http.Post(earl, "application/json", buf)
-			if err != nil {
-				log.Printf("error publishing impressions batch: %s", err)
-			}
-
-			if resp.StatusCode != http.StatusOK {
-				log.Printf("non-%d status code publishing impressions batch: %d", http.StatusOK, resp.StatusCode)
-				defer resp.Body.Close()
-				io.Copy(os.Stderr, resp.Body)
-			}
-		}
-	}()
-
-	impressions := make(chan *AdImpression)
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		batch := new(AdImpressions)
+		batch := new(Events)
 
 		defer func() {
-			if len(batch.Impressions) > 0 {
-				impressionBatches <- batch
+			if len(batch.Events) > 0 {
+				eventBatches <- batch
 			}
 
-			close(impressionBatches)
+			close(eventBatches)
 		}()
 
-		for impression := range impressions {
-			batch.Impressions = append(batch.Impressions, impression)
-			if len(batch.Impressions) == 500 {
-				impressionBatches <- batch
-				batch = new(AdImpressions)
-			}
-		}
-	}()
-
-	clicks := make(chan *AdClick)
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		batch := new(AdClicks)
-
-		defer func() {
-			if len(batch.Clicks) > 0 {
-				clickBatches <- batch
-			}
-
-			close(clickBatches)
-		}()
-
-		for click := range clicks {
-			batch.Clicks = append(batch.Clicks, click)
-			if len(batch.Clicks) == 500 {
-				clickBatches <- batch
-				batch = new(AdClicks)
+		for impression := range events {
+			batch.Events = append(batch.Events, impression)
+			if len(batch.Events) == 500 {
+				eventBatches <- batch
+				batch = new(Events)
 			}
 		}
 	}()
@@ -294,11 +227,10 @@ func main() {
 	usersWg := new(sync.WaitGroup)
 	go func() {
 		usersWg.Wait()
-		close(impressions)
-		close(clicks)
+		close(events)
 	}()
 
-	events := make(chan *Ad)
+	adStream := make(chan *Ad)
 	wg.Add(config.Users.Number)
 	usersWg.Add(config.Users.Number)
 	for i := 0; i < config.Users.Number; i++ {
@@ -307,8 +239,14 @@ func main() {
 			defer wg.Done()
 			defer usersWg.Done()
 
-			for ad := range events {
-				impressions <- &AdImpression{Ad: ad.ID, User: users.Users[i].ID, At: time.Now()}
+			for ad := range adStream {
+				events <- &Event{
+					User:       users.Users[i].ID,
+					ObjectType: "ad",
+					Object:     ad.ID,
+					Event:      "impression",
+					OccurredAt: time.Now(),
+				}
 
 				considerTime := users.Users[i].ConsiderDuration + (rand.Int63n(users.Users[i].ConsiderVariance) - (users.Users[i].ConsiderVariance / 2))
 				select {
@@ -330,7 +268,13 @@ func main() {
 				}
 				clickthroughProbability := float64(common) / float64(len(m)) * config.Users.MaximumClickThroughRate
 				if rand.Float64() < clickthroughProbability {
-					clicks <- &AdClick{Ad: ad.ID, User: users.Users[i].ID, At: time.Now()}
+					events <- &Event{
+						User:       users.Users[i].ID,
+						ObjectType: "ad",
+						Object:     ad.ID,
+						Event:      "click",
+						OccurredAt: time.Now(),
+					}
 				}
 
 				sleepTime := users.Users[i].ViewFrequency + (rand.Int63n(users.Users[i].ViewVariance) - (users.Users[i].ViewVariance / 2))
@@ -356,7 +300,7 @@ outer:
 		case <-ctx.Done():
 			close(events)
 			break outer
-		case events <- ads.Random():
+		case adStream <- ads.Random():
 		}
 	}
 

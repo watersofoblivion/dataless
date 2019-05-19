@@ -16,7 +16,7 @@ func main() {
 }
 
 func handler(ctx context.Context, v interface{}) error {
-	log.Printf("Ad Impressions Output")
+	log.Printf("Events Output")
 	if err := encoder.Encode(v); err != nil {
 		log.Printf("Error encoding request: %s", err)
 	}
