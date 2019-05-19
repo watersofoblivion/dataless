@@ -1423,9 +1423,13 @@ Resources:
 
   AdsPipeline:
     Type: AWS::DataPipeline::Pipeline
-    DependsOn:
-      - PipelineProfile
-      - PipelineResourceProfile
+    DependsOn: !If
+      - EMREnabled
+      - - PipelineProfile
+        - PipelineResourceProfile
+        - EMR
+      - - PipelineProfile
+        - PipelineResourceProfile
     Properties:
       Name: Ads Pipeline
       Activate: false
@@ -1503,11 +1507,11 @@ Resources:
             - Key: keyPair
               StringValue: temp
             - Key: masterInstanceType
-              StringValue: m1.medium
+              StringValue: !Ref EMRMasterInstanceType
             - Key: coreInstanceType
-              StringValue: m1.medium
+              StringValue: !Ref EMRCoreInstanceType
             - Key: coreInstanceCount
-              StringValue: 1
+              StringValue: !Ref EMRCoreInstanceCount
             - Key: releaseLabel
               StringValue: !Ref EMRRelease
             - Key: applications
