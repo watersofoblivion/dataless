@@ -1712,6 +1712,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
+                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"Count\"', 'Sum', 60)" } ],
                   ["AWS/ApiGateway", "Count", "ApiName", "${APIName}", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}"]
                 ],
                 "period": 60,
@@ -1802,7 +1803,7 @@ Resources:
                   [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Success\"', 'Average', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
-                "title": "Delivery To S3 Success"
+                "title": "Successful Delivery To S3"
               }
             },
             {
@@ -1811,10 +1812,10 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Recors\"', 'Sum', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Records\"', 'Sum', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
-                "title": "Delivery To S3 Records"
+                "title": "Records Delivered To S3"
               }
             },
             {
@@ -1826,7 +1827,7 @@ Resources:
                   [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Bytes\"', 'Sum', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
-                "title": "Delivery To S3 Bytes"
+                "title": "Bytes Delivered To S3"
               }
             },
             {
