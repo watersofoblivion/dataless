@@ -1740,13 +1740,10 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "${APIName}", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}", { "stat": "p50" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/events", ".",      "POST", ".",     "${Stage}", { "stat": "p75" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/events", ".",      "POST", ".",     "${Stage}", { "stat": "p95" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/events", ".",      "POST", ".",     "${Stage}", { "stat": "p98" }],
-                  [".",              ".",                  ".",       "${APIName}", ".",        "/data/events", ".",      "POST", ".",     "${Stage}", { "stat": "p99" }]
+                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "${APIName}", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}"]
                 ],
                 "period": 60,
+                "stat": "p95",
                 "region": "${AWS::Region}",
                 "title": "Integration Latency"
               }
