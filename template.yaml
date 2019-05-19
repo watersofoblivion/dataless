@@ -1777,6 +1777,8 @@ Resources:
                 "metrics": [
                   ["AWS/Firehose", "IncomingRecords", "DeliveryStreamName", "${EventsDeliveryStream}"]
                 ],
+                "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Incoming Records"
               }
@@ -1789,6 +1791,8 @@ Resources:
                 "metrics": [
                   ["AWS/Firehose", "IncomingBytes", "DeliveryStreamName", "${EventsDeliveryStream}"]
                 ],
+                "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Incoming Bytes"
               }
@@ -1801,6 +1805,8 @@ Resources:
                 "metrics": [
                   ["AWS/Firehose", "DeliveryToS3.Success", "DeliveryStreamName", "${EventsDeliveryStream}"]
                 ],
+                "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Successful Delivery To S3"
               }
@@ -1813,6 +1819,8 @@ Resources:
                 "metrics": [
                   ["AWS/Firehose", "DeliveryToS3.Records", "DeliveryStreamName", "${EventsDeliveryStream}"]
                 ],
+                "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Records Delivered To S3"
               }
@@ -1825,6 +1833,8 @@ Resources:
                 "metrics": [
                   ["AWS/Firehose", "DeliveryToS3.Bytes", "DeliveryStreamName", "${EventsDeliveryStream}"]
                 ],
+                "period": 60,
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Bytes Delivered To S3"
               }
@@ -1837,6 +1847,8 @@ Resources:
                 "metrics": [
                   ["AWS/Firehose", "DeliveryToS3.DataFreshness", "DeliveryStreamName", "${EventsDeliveryStream}"]
                 ],
+                "period": 60,
+                "stat": "Maximum",
                 "region": "${AWS::Region}",
                 "title": "Delivery To S3 Data Freshness"
               }

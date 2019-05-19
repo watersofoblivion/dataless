@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -69,6 +70,24 @@ func (event *Event) MarshalJSON() ([]byte, error) {
 		"event":       event.Event,
 		"occurred_at": event.OccurredAt.Format("2006-01-02 15:04:05.000"),
 	})
+}
+
+type BatchWriteResponse struct {
+	Records []*BatchWriteRecord `json:"records"`
+}
+
+type BatchWriteRecord struct {
+	Failed       bool   `json:"failed"`
+	ErrorCode    string `json:"error_code"`
+	ErrorMessage string `json:"error_message"`
+}
+
+func (record *BatchWriteRecord) Error() string {
+	if record.Failed {
+		return fmt.Sprintf("%s: %s", record.ErrorCode, record.ErrorMessage)
+	}
+
+	return ""
 }
 
 type Ads struct {
@@ -186,17 +205,32 @@ func main() {
 			buf.Reset()
 			if err := encoder.Encode(batch); err != nil {
 				log.Printf("could not encode events batch: %s", err)
+				continue
 			}
 
 			resp, err := http.Post(earl, "application/json", buf)
 			if err != nil {
 				log.Printf("error publishing events batch: %s", err)
+				continue
 			}
+			defer resp.Body.Close()
 
 			if resp.StatusCode != http.StatusOK {
 				log.Printf("non-%d status code publishing events batch: %d", http.StatusOK, resp.StatusCode)
-				defer resp.Body.Close()
 				io.Copy(os.Stderr, resp.Body)
+				continue
+			}
+
+			batchWriteResponse := new(BatchWriteResponse)
+			if err := json.NewDecoder(resp.Body).Decode(batchWriteResponse); err != nil {
+				log.Printf("error decoding batch write response: %s", err)
+				continue
+			}
+
+			for _, record := range batchWriteResponse.Records {
+				if record.Failed {
+					log.Printf("failed write: %s", record)
+				}
 			}
 		}
 	}()
