@@ -1775,7 +1775,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "Expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"IncomingRecords\"', 'Sum', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"IncomingRecords\"', 'Sum', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Incoming Records"
@@ -1787,7 +1787,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "Expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"IncomingBytes\"', 'Sum', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"IncomingBytes\"', 'Sum', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Incoming Bytes"
@@ -1799,7 +1799,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "Expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Success\"', 'Average', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Success\"', 'Average', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Delivery To S3 Success"
@@ -1811,7 +1811,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "Expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Recors\"', 'Sum', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Recors\"', 'Sum', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Delivery To S3 Records"
@@ -1823,7 +1823,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "Expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Bytes\"', 'Sum', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Bytes\"', 'Sum', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Delivery To S3 Bytes"
@@ -1835,7 +1835,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "Expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.DataFreshness\"', 'Maximum', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.DataFreshness\"', 'Maximum', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Delivery To S3 Data Freshness"
