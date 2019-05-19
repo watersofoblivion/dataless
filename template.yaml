@@ -652,7 +652,7 @@ Resources:
       BootstrapActions:
         - Name: Install Task Runner
           ScriptBootstrapAction:
-            Path: "s3://elasticmapreduce/bootstrap-actions/run-if"
+            Path: /usr/share/aws/emr/scripts/run-if
             Args:
               - instance.isMaster=true
               - !Sub "s3n://${CodeBucket}/${CodePrefix}/scripts/emr/install_task_runner.sh"
