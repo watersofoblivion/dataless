@@ -1425,13 +1425,9 @@ Resources:
 
   AdsPipeline:
     Type: AWS::DataPipeline::Pipeline
-    DependsOn: !If
-      - EMREnabled
-      - - PipelineProfile
-        - PipelineResourceProfile
-        - EMR
-      - - PipelineProfile
-        - PipelineResourceProfile
+    DependsOn: !
+      - PipelineProfile
+      - PipelineResourceProfile
     Properties:
       Name: Ads Pipeline
       Activate: false
