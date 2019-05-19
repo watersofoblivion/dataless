@@ -2306,7 +2306,7 @@ Resources:
               "properties": {
                 "metrics": [
                   ["AWS/S3", "TotalRequestLatency", "BucketName", "${Bucket}", "FilterId", "raw-events"],
-                  ["AWS/S3", "TotalRequestLatency", "BucketName", "${Bucket}", "FilterId", "events"],
+                  ["AWS/S3", "TotalRequestLatency", "BucketName", "${Bucket}", "FilterId", "events"]
                 ],
                 "period": 60,
                 "stat": "p95",
