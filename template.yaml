@@ -1712,7 +1712,6 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"Count\"', 'Sum', 60)" } ],
                   ["AWS/ApiGateway", "Count", "ApiName", "${APIName}", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}"]
                 ],
                 "period": 60,
@@ -1776,7 +1775,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"IncomingRecords\"', 'Sum', 60)" } ]
+                  ["AWS/Firehose", "IncomingRecords", "DeliveryStreamName", "${EventsDeliveryStream}"]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Incoming Records"
@@ -1788,7 +1787,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"IncomingBytes\"', 'Sum', 60)" } ]
+                  ["AWS/Firehose", "IncomingBytes", "DeliveryStreamName", "${EventsDeliveryStream}"]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Incoming Bytes"
@@ -1800,7 +1799,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Success\"', 'Average', 60)" } ]
+                  ["AWS/Firehose", "DeliveryToS3.Success", "DeliveryStreamName", "${EventsDeliveryStream}"]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Successful Delivery To S3"
@@ -1812,7 +1811,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Records\"', 'Sum', 60)" } ]
+                  ["AWS/Firehose", "DeliveryToS3.Records", "DeliveryStreamName", "${EventsDeliveryStream}"]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Records Delivered To S3"
@@ -1824,7 +1823,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Bytes\"', 'Sum', 60)" } ]
+                  ["AWS/Firehose", "DeliveryToS3.Bytes", "DeliveryStreamName", "${EventsDeliveryStream}"]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Bytes Delivered To S3"
@@ -1836,7 +1835,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.DataFreshness\"', 'Maximum', 60)" } ]
+                  ["AWS/Firehose", "DeliveryToS3.DataFreshness", "DeliveryStreamName", "${EventsDeliveryStream}"]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Delivery To S3 Data Freshness"
@@ -1854,7 +1853,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "Success"]
+                  ["AWS/KinesisAnalytics", "Success", "Application", "${RealTimeEventsApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -1867,7 +1866,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "KPUs"]
+                  ["AWS/KinesisAnalytics", "KPUs", "Application", "${RealTimeEventsApplication}"]
                 ],
                 "period": 60,
                 "stat": "Average",
@@ -1881,7 +1880,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "MillisBehindLatest"]
+                  ["AWS/KinesisAnalytics", "MillisBehindLatest", "Application", "${RealTimeEventsApplication}"]
                 ],
                 "period": 60,
                 "stat": "Maximum",
@@ -1895,7 +1894,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "Records"]
+                  ["AWS/KinesisAnalytics", "Records", "Application", "${RealTimeEventsApplication}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1909,7 +1908,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "Bytes"]
+                  ["AWS/KinesisAnalytics", "Bytes", "Application", "${RealTimeEventsApplication}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1923,7 +1922,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.Success"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.Success", "Application", "${RealTimeEventsApplication}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1937,7 +1936,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.OkBytes"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.OkBytes", "Application", "${RealTimeEventsApplication}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1951,7 +1950,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.Duration"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.Duration", "Application", "${RealTimeEventsApplication}"]
                 ],
                 "period": 60,
                 "stat": "Average",
@@ -1965,7 +1964,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.OkRecords"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.OkRecords", "Application", "${RealTimeEventsApplication}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1979,7 +1978,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.DroppedRecords"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.DroppedRecords", "Application", "${RealTimeEventsApplication}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1993,7 +1992,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.ProcessingFailedRecords"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.ProcessingFailedRecords", "Application", "${RealTimeEventsApplication}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2007,7 +2006,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.OkRecords"]
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.OkRecords", "Application", "${RealTimeEventsApplication}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2021,7 +2020,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.DeliveryFailedRecords"]
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.DeliveryFailedRecords", "Application", "${RealTimeEventsApplication}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2035,7 +2034,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.Duration"]
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.Duration", "Application", "${RealTimeEventsApplication}"]
                 ],
                 "period": 60,
                 "stat": "Average",
@@ -2055,7 +2054,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Invocations"]
+                  ["AWS/Lambda", "Invocations", "FunctionName", "${RealTimeEventsLambda}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2069,7 +2068,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Duration"]
+                  ["AWS/Lambda", "Duration", "FunctionName", "${RealTimeEventsLambda}"]
                 ],
                 "period": 60,
                 "stat": "p95",
@@ -2083,7 +2082,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Errors"]
+                  ["AWS/Lambda", "Errors", "FunctionName", "${RealTimeEventsLambda}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2097,7 +2096,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "DeadLetterErrors"]
+                  ["AWS/Lambda", "DeadLetterErrors", "FunctionName", "${RealTimeEventsLambda}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2111,7 +2110,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "ConcurrentExecutions"]
+                  ["AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${RealTimeEventsLambda}"]
                 ],
                 "period": 60,
                 "stat": "Maximum",
@@ -2125,7 +2124,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "UnreservedConcurrentExecutions"]
+                  ["AWS/Lambda", "UnreservedConcurrentExecutions", "FunctionName", "${RealTimeEventsLambda}"]
                 ],
                 "period": 60,
                 "stat": "Average",
@@ -2139,7 +2138,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Throttles"]
+                  ["AWS/Lambda", "Throttles", "FunctionName", "${RealTimeEventsLambda}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2153,7 +2152,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "IteratorAge"]
+                  ["AWS/Lambda", "IteratorAge", "FunctionName", "${RealTimeEventsLambda}"]
                 ],
                 "period": 60,
                 "stat": "Maximum",
@@ -2173,7 +2172,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/S3", "BucketSizeBytes"]
+                  ["AWS/S3", "BucketSizeBytes", "StorageType", "AllStorageTypes"]
                 ],
                 "period": 86400,
                 "stat": "Maximum",
@@ -2187,7 +2186,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/S3", "NumberOfObject"]
+                  ["AWS/S3", "NumberOfObject", "StorageType", "AllStorageTypes"]
                 ],
                 "period": 86400,
                 "stat": "Maximum",
@@ -2201,7 +2200,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/S3", "AllRequests"]
+                  ["AWS/S3", "AllRequests", "BucketName", "${Bucket}", "FilterId", "raw-events"],
+                  ["AWS/S3", "AllRequests", "BucketName", "${Bucket}", "FilterId", "events"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2215,7 +2215,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/S3", "GetRequests"]
+                  ["AWS/S3", "GetRequests", "BucketName", "${Bucket}", "FilterId", "raw-events"],
+                  ["AWS/S3", "GetRequests", "BucketName", "${Bucket}", "FilterId", "events"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2229,7 +2230,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/S3", "PutRequests"]
+                  ["AWS/S3", "PutRequests", "BucketName", "${Bucket}", "FilterId", "raw-events"],
+                  ["AWS/S3", "PutRequests", "BucketName", "${Bucket}", "FilterId", "events"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2243,10 +2245,71 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/S3", "SelectRequests"]
+                  ["AWS/S3", "SelectRequests", "BucketName", "${Bucket}", "FilterId", "raw-events"],
+                  ["AWS/S3", "SelectRequests", "BucketName", "${Bucket}", "FilterId", "events"],
                 ],
                 "period": 60,
                 "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Select Requests"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/S3", "BytesUploaded", "BucketName", "${Bucket}", "FilterId", "raw-events"],
+                  ["AWS/S3", "BytesUploaded", "BucketName", "${Bucket}", "FilterId", "events"]
+                ],
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Bytes Uploaded"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/S3", "BytesDownloaded", "BucketName", "${Bucket}", "FilterId", "raw-events"],
+                  ["AWS/S3", "BytesDownloaded", "BucketName", "${Bucket}", "FilterId", "events"]
+                ],
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Get Requests"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/S3", "FirstByteLatency", "BucketName", "${Bucket}", "FilterId", "raw-events"],
+                  ["AWS/S3", "FirstByteLatency", "BucketName", "${Bucket}", "FilterId", "events"]
+                ],
+                "period": 60,
+                "stat": "p95",
+                "region": "${AWS::Region}",
+                "title": "Put Requests"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/S3", "TotalRequestLatency", "BucketName", "${Bucket}", "FilterId", "raw-events"],
+                  ["AWS/S3", "TotalRequestLatency", "BucketName", "${Bucket}", "FilterId", "events"],
+                ],
+                "period": 60,
+                "stat": "p95",
                 "region": "${AWS::Region}",
                 "title": "Select Requests"
               }
