@@ -33,8 +33,8 @@ phases:
       - zip -r lambdas.zip bin/
 
       # Copy lambdas, scripts, and static assets to S3
-      - aws s3 cp lambdas.zip s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/lambda/lambdas.zip
-      - aws s3 cp --recursive scripts/ s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/scripts/
+      - aws s3 cp --acl private lambdas.zip s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/lambda/lambdas.zip
+      - aws s3 cp --recursive --acl private scripts/ s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/scripts/
       - aws s3 cp --recursive public/ "s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/public/" --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
 
       # Package application with AWS CloudFormation/SAM
