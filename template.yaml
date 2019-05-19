@@ -1775,7 +1775,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "IncomingRecords"]
+                  [ { "Expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"IncomingRecords\"', 'Sum', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1789,7 +1789,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "IncomingBytes"]
+                  [ { "Expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"IncomingBytes\"', 'Sum', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1803,7 +1803,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "DeliveryToS3.Success"]
+                  [ { "Expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Success\"', 'Average', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Average",
@@ -1817,7 +1817,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "DeliveryToS3.Records"]
+                  [ { "Expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Recors\"', 'Sum', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1831,7 +1831,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "DeliveryToS3.Bytes"]
+                  [ { "Expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Bytes\"', 'Sum', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1845,7 +1845,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "DeliveryToS3.DataFreshness"]
+                  [ { "Expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.DataFreshness\"', 'Maximum', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Maximum",
