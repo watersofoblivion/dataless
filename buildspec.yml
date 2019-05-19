@@ -33,12 +33,12 @@ phases:
       - zip -r lambdas.zip bin/
 
       # Copy lambdas, scripts, and static assets to S3
-      - aws s3 cp lambdas.zip s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/lambda/lambdas.zip
-      - aws s3 cp --recursive scripts/ s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/scripts/
+      - aws s3 cp lambdas.zip "s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/lambda/lambdas.zip"
+      - aws s3 cp --recursive scripts/ "s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/scripts/"
       - aws s3 cp --recursive public/ "s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/public/" --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
 
       # Make the install_task_runner script public
-      - aws s3api put-object-acl --acl authenticated-read --bucket ${S3_BUCKET} --key build/${CODEBUILD_BUILD_ID}/scripts/emr/install_task_runner.sh
+      - aws s3api put-object-acl --acl authenticated-read --bucket "${S3_BUCKET}" --key "build/${CODEBUILD_BUILD_ID}/scripts/emr/install_task_runner.sh"
 
       # Package application with AWS CloudFormation/SAM
       - aws cloudformation package --template template.yaml --s3-bucket "${S3_BUCKET}" --s3-prefix "build/${CODEBUILD_BUILD_ID}/" --output-template cloudformation.yaml
