@@ -17,7 +17,7 @@
     "EMRCoreInstanceCount": ${EMR_CORE_INSTANCE_COUNT},
     "EnableRedshift": "${ENABLE_REDSHIFT}",
     "RedshiftNodeType": "${REDSHIFT_NODE_TYPE}",
-    "RedshiftNumberOfNodes": "${REDSHIFT_NUMBER_OF_NODES}",
+    "RedshiftNumberOfNodes": ${REDSHIFT_NUMBER_OF_NODES},
     "APIName": "${API_NAME}"
   }
 }

@@ -27,7 +27,6 @@ Metadata:
       - Label: EMR Cluster
         Parameters:
           - EnableEMRCluster
-          # - EMRVersion
           - EMRMasterInstanceType
           - EMRMasterInstanceCount
           - EMRCoreInstanceType
@@ -61,8 +60,6 @@ Metadata:
         default: Type of EC2 instance
       EnableEMRCluster:
         default: Create an EMR cluster for Data Pipeline
-      # EMRVersion:
-      #   default: EMR version
       EMRMasterInstanceType:
         default: Type of EMR master instances
       EMRMasterInstanceCount:
@@ -123,10 +120,6 @@ Parameters:
     Type: String
     Description: If non-empty, create an EMR cluster.
     Default: ''
-  # EMRVersion:
-  #   Type: String
-  #   Description: The EMR version to use.
-  #   Default: emr-5.23.0
   EMRMasterInstanceType:
     Type: String
     Description: The instance type of the master instances in the EMR cluster.
@@ -685,7 +678,6 @@ Resources:
         TerminationProtected: false
       JobFlowRole: !Ref EMRProfile
       Name: !Sub "${AWS::StackName}-${AWS::Region}-warehouse-emr-cluster"
-      # ReleaseLabel: !Ref EMRVersion
       ReleaseLabel: emr-5.23.0
       ServiceRole: !Ref EMRServiceRole
       LogUri: !Sub "s3://${Bucket}/logs/emr"
@@ -1511,7 +1503,6 @@ Resources:
             - Key: coreInstanceCount
               StringValue: 1
             - Key: releaseLabel
-              # StringValue: !Ref EMRVersion
               StringValue: emr-5.23.0
             - Key: applications
               StringValue: hive
