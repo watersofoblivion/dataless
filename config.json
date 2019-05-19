@@ -11,6 +11,7 @@
     "EnableEC2Instance": "${ENABLE_EC2_INSTANCE}",
     "EC2InstanceSize": "${EC2_INSTANCE_TYPE}",
     "EnableEMRCluster": "${ENABLE_EMR_CLUSTER}",
+    "EMRRelease": "${EMR_RELEASE}",
     "EMRMasterInstanceType": "${EMR_MASTER_INSTANCE_TYPE}",
     "EMRMasterInstanceCount": "${EMR_MASTER_INSTANCE_COUNT}",
     "EMRCoreInstanceType": "${EMR_CORE_INSTANCE_TYPE}",
