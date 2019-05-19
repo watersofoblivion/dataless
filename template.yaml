@@ -1777,8 +1777,6 @@ Resources:
                 "metrics": [
                   [ { "Expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"IncomingRecords\"', 'Sum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Incoming Records"
               }
@@ -1791,8 +1789,6 @@ Resources:
                 "metrics": [
                   [ { "Expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"IncomingBytes\"', 'Sum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Incoming Bytes"
               }
@@ -1805,8 +1801,6 @@ Resources:
                 "metrics": [
                   [ { "Expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Success\"', 'Average', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Average",
                 "region": "${AWS::Region}",
                 "title": "Delivery To S3 Success"
               }
@@ -1819,8 +1813,6 @@ Resources:
                 "metrics": [
                   [ { "Expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Recors\"', 'Sum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Delivery To S3 Records"
               }
@@ -1833,8 +1825,6 @@ Resources:
                 "metrics": [
                   [ { "Expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Bytes\"', 'Sum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Delivery To S3 Bytes"
               }
@@ -1847,8 +1837,6 @@ Resources:
                 "metrics": [
                   [ { "Expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.DataFreshness\"', 'Maximum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Maximum",
                 "region": "${AWS::Region}",
                 "title": "Delivery To S3 Data Freshness"
               }
