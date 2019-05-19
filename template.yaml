@@ -224,7 +224,6 @@ Globals:
     DeploymentPreference:
       Enabled: true
       Type: Canary10Percent5Minutes
-      # Role: !Ref CodeDeployRole
   Api:
     TracingEnabled: true
     EndpointConfiguration: EDGE
@@ -288,7 +287,7 @@ Resources:
     Condition: VPCEnabled
     Properties:
       VpcId: !Ref VPC
-      AvailabilityZone: !Sub "${AWS::Region}a"
+      AvailabilityZone: !Select [0, !GetAZs [!Ref AWS::Region]]
       CidrBlock: 172.31.0.0/16
       MapPublicIpOnLaunch: true
 
