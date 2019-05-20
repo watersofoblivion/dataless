@@ -29,7 +29,7 @@ phases:
       # Build the Go lambdas
       - mkdir -p bin/
       - |
-        for LAMBDA in $(find ./lambda/bin -type d); do
+        for LAMBDA in $(find ./lambda/bin -type d | egrep -v "^\./lambda/bin$"); do
           go build -o $(realpath --relative-to=./lambda ${LAMBDA}) ${LAMBDA}
         done
       - zip -r lambdas.zip bin/

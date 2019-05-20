@@ -1513,7 +1513,7 @@ Resources:
                   StringValue: !Ref Redshift
                 - Key: username
                   StringValue: warehouse
-                - Key: *password
+                - Key: "*password"
                   StringValue: "War340u5e!"
                 - Key: databaseName
                   StringValue: warehouse
