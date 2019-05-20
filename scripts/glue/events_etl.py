@@ -16,10 +16,15 @@ database_name = args["database_name"]
 raw_table_name = args["raw_table_name"]
 table_name = args["table_name"]
 
-mappings = [("user_id",     "string", "user_id",     "string"),
+mappings = [("session_id",  "string", "session_id",  "string"),
+            ("context_id",  "string", "context_id",  "string"),
+            ("parent_id",   "string", "parent_id",   "string"),
+            ("actor_type",  "string", "actor_type",  "string"),
+            ("actor_id",    "string", "actor_id",    "string"),
+            ("event_type",  "string", "event_type",  "string"),
+            ("event_id",    "string", "event_id",    "string"),
             ("object_type", "string", "object_type", "string"),
             ("object_id",   "string", "object_id",   "string"),
-            ("event",       "string", "event",       "string"),
             ("occurred_at", "string", "occurred_at", "timestamp"),
             ("partition_0", "string", "year",        "int"),
             ("partition_1", "string", "month",       "int")]

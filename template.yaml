@@ -251,6 +251,8 @@ Resources:
           Prefix: data/raw/events/
         - Id: events
           Prefix: data/lake/events/
+        - Id: advertising
+          Prefix: data/lake/advertising/
 
   #######
   # VPC #
@@ -365,6 +367,32 @@ Resources:
       SubnetIds:
         - !Ref Subnet
 
+  RedshiftRole:
+    Type: AWS::IAM::Role
+    Condition: RedshiftEnabled
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "redshift.${AWS::URLSuffix}"
+      Policies:
+        - PolicyName: Spectrum
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - s3:Get*
+                  - s3:List*
+                Effect: Allow
+                Resource:
+                  - !Sub "${Bucket.Arn}/data/lake/events/*"
+                  - !Sub "${Bucket.Arn}/data/lake/advertising/*"
+
   Redshift:
     Type: AWS::Redshift::Cluster
     Condition: RedshiftEnabled
@@ -381,6 +409,8 @@ Resources:
       VpcSecurityGroupIds:
         - !Ref SecurityGroup
         - !GetAtt VPC.DefaultSecurityGroup
+      IamRoles:
+        - !GetAtt RedshiftRole.Arn
       PubliclyAccessible: true
       AvailabilityZone: !GetAtt Subnet.AvailabilityZone
 
@@ -864,18 +894,16 @@ Resources:
     Type: AWS::KinesisAnalytics::Application
     Properties:
       ApplicationCode: |
-        CREATE OR REPLACE STREAM IMPRESSIONS_OUTPUT (
-          AD_ID VARCHAR(64),
-          USER_ID VARCHAR(64),
-          VIEWED_AT TIMESTAMP
+        CREATE OR REPLACE STREAM CLICKTHROUGH (
+          AD_ID VARCHAR(64)
         );
 
-        CREATE OR REPLACE PUMP IMPRESSIONS_OUTPUT_PUMP AS
-        INSERT INTO IMPRESSIONS_OUTPUT
-        SELECT AD_ID, USER_ID, VIEWED_AT
-        FROM AD_IMPRESSIONS_001
+        CREATE OR REPLACE PUMP CLICKTHROUGH_PUMP AS
+        INSERT INTO CLICKTHROUGH
+        SELECT AD_ID
+        FROM EVENTS_001
         WINDOWED BY STAGGER (
-          PARTITION BY AD_ID, USER_ID, VIEWED_AT
+          PARTITION BY AD_ID
           RANGE INTERVAL '1' MINUTE
         );
       Inputs:
@@ -891,18 +919,33 @@ Resources:
                 JSONMappingParameters:
                   RecordRowPath: "$"
             RecordColumns:
-              - Name: USER_ID
+              - Name: SESSION_ID
+                SqlType: VARCHAR(64)
+                Mapping: "$.session_id"
+              - Name: CONTEXT_ID
+                SqlType: VARCHAR(64)
+                Mapping: "$.context_id"
+              - Name: PARENT_ID
+                SqlType: VARCHAR(64)
+                Mapping: "$.parent_id"
+              - Name: ACTOR_TYPE
+                SqlType: VARCHAR(255)
+                Mapping: "$.object_type"
+              - Name: ACTOR_ID
                 SqlType: VARCHAR(64)
                 Mapping: "$.user_id"
+              - Name: EVENT_TYPE
+                SqlType: VARCHAR(255)
+                Mapping: "$.event"
+              - Name: EVENT_ID
+                SqlType: VARCHAR(64)
+                Mapping: "$.event"
               - Name: OBJECT_TYPE
                 SqlType: VARCHAR(255)
                 Mapping: "$.object_type"
               - Name: OBJECT_ID
                 SqlType: VARCHAR(64)
                 Mapping: "$.object_id"
-              - Name: EVENT
-                SqlType: VARCHAR(255)
-                Mapping: "$.event"
               - Name: OCCURRED_AT
                 SqlType: TIMESTAMP
                 Mapping: "$.occurred_at"
@@ -912,7 +955,7 @@ Resources:
     Properties:
       ApplicationName: !Ref RealTimeEventsApplication
       Output:
-        Name: EVENTS_OUTPUT
+        Name: CLICKTHROUGH
         DestinationSchema:
           RecordFormatType: JSON
         LambdaOutput:
@@ -1019,13 +1062,22 @@ Resources:
               SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
             OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
             Columns:
-              - Name: user_id
+              - Name: session_id
                 Type: string
+              - Name: context_id
+                Type: string
+              - Name: parent_id
+                Type: string
+              - Name: actor_type
+                Type: string
+              - Name: actor_id
+                Type: string
+              - Name: event_type
+                Type: string
+              - Name: event_id
               - Name: object_type
                 Type: string
               - Name: object_id
-                Type: string
-              - Name: event
                 Type: string
               - Name: occurred_at
                 Type: timestamp
@@ -1091,7 +1143,7 @@ Resources:
   # Batch #
   #########
 
-  EventSummariesTable:
+  AdvertisingTable:
     Type: AWS::Glue::Table
     DependsOn:
       - Database
@@ -1099,47 +1151,31 @@ Resources:
       CatalogId: !Ref AWS::AccountId
       DatabaseName: !Ref Database
       TableInput:
-          Name: event_summaries
-          Description: Event Summaries
+          Name: advertising
+          Description: Online Advertising
           TableType: EXTERNAL_TABLE
           Parameters:
             classification: orc
           StorageDescriptor:
-            Location: !Sub "s3://${Bucket}/data/lake/events/"
+            Location: !Sub "s3://${Bucket}/data/lake/advertising/"
             StoredAsSubDirectories: true
             InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
             SerdeInfo:
               SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
             OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
             Columns:
-              - Name: id
+              - Name: session_id
                 Type: string
-
-  UserSummariesTable:
-    Type: AWS::Glue::Table
-    DependsOn:
-      - Database
-    Properties:
-      CatalogId: !Ref AWS::AccountId
-      DatabaseName: !Ref Database
-      TableInput:
-          Name: user_summaries
-          Description: User Summaries
-          TableType: EXTERNAL_TABLE
-          Parameters:
-            classification: orc
-          StorageDescriptor:
-            Location: !Sub "s3://${Bucket}/data/lake/users/"
-            StoredAsSubDirectories: true
-            InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
-            SerdeInfo:
-              SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
-            OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
-            Columns:
-              - Name: id
+              - Name: user_id
                 Type: string
+              - Name: ad_id
+                Type: string
+              - Name: impression_at
+                Type: timestamp
+              - Name: click_at
+                Type: timestamp
 
-  EventsInfoTable:
+  AdvertisingInfoTable:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
@@ -1339,13 +1375,54 @@ Resources:
               RefValue: GlueCatalogAsHiveMetastore
             - Key: configuration
               RefValue: GlueCatalogAsSparkMetastore
-        - Id: EventsJob
-          Name: Events Job
+        - Id: AdvertisingInfoTableExists
+          Name: Advertising Info Table Exists
+          Fields:
+            - Key: type
+              StringValue: DynamoDBTableExists
+            - Key: tableName
+              StringValue: !Ref AdvertisingInfoTable
+        - Id: AdvertisingInfoTableFormat
+          Name: Advertising Info Table Format
+          Fields:
+            - Key: type
+              StringValue: DynamoDBExportDataFormat
+            - Key: column
+              StringValue:
+        - Id: AdvertisingInfoTable
+          Name: Advertising Info Table
+          Fields:
+            - Key: type
+              StringValue: DynamoDBDataNode
+            - Key: tableName
+              StringValue: !Ref AdvertisingInfoTable
+            - Key: dataFormat
+              RefValue: AdvertisingInfoTableFormat
+            - Key: precondition
+              RefValue: AdvertisingInfoTableExists
+        - Id: AdvertisingInfoStagingTableFormat
+          Name: Advertising Info Staging Table Format
+          Fields:
+            - Key: type
+              StringValue: CSV
+            - Key: column
+              StringValue:
+        - Id: AdvertisingInfoStagingTable
+          Name: Advertising Info Staging Table
+          Fields:
+            - Key: type
+              StringValue: S3DataNode
+            - Key: directoryPath
+              StringValue: !Sub "s3://${Bucket}/data/tmp/advertising-info-staging-table/"
+            - Key: dataFormat
+              RefValue: AdvertisingInfoStagingTableFormat
+        - Id: ExtractAdvertisingData
+          Name: Extract Advertising Data
           Fields:
             - Key: type
               StringValue: HiveActivity
             - Key: scriptUri
-              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/events.hql"
+              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/extract_advertising_data.hql"
             - !If
                 - EMREnabled
                 - Key: workerGroup
@@ -1354,6 +1431,423 @@ Resources:
                   RefValue: EMRCluster
             - Key: stage
               StringValue: false
+            - Key: scriptVariable
+              StringValue: PARTITION_YEAR=#{year(@scheduleStartTime)}
+            - Key: scriptVariable
+              StringValue: PARTITION_MONTH=#{month(@scheduleStartTime)}
+            - Key: scriptVariable
+              StringValue: TIME_START=#{@scheduleStartTime}
+            - Key: scriptVariable
+              StringValue: TIME_END=#{@scheduleEndTime}
+        - Id: StageDataForAdvertisingInfo
+          Name: Stage Data for Advertising Info
+          Fields:
+            - Key: type
+              StringValue: HiveActivity
+            - Key: dependsOn
+              RefValue: ExtractAdvertisingData
+            - Key: scriptUri
+              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/extract_advertising_info.hql"
+            - !If
+                - EMREnabled
+                - Key: workerGroup
+                  StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+                - Key: runsOn
+                  RefValue: EMRCluster
+            - Key: stage
+              StringValue: false
+            - Key: output
+              RefValue: AdvertisingInfoStagingTable
+            - Key: scriptVariable
+              StringValue: PARTITION_YEAR=#{year(@scheduleStartTime)}
+            - Key: scriptVariable
+              StringValue: PARTITION_MONTH=#{month(@scheduleStartTime)}
+            - Key: scriptVariable
+              StringValue: TIME_START=#{@scheduleStartTime}
+            - Key: scriptVariable
+              StringValue: TIME_END=#{@scheduleEndTime}
+        - Id: LoadAdvertisingInfoIntoDynamoDB
+          Name: Load Advertising Info Into DynamoDB
+          Fields:
+            - Key: type
+              StringValue: HiveCopyActivity
+            - Key: dependsOn
+              RefValue: ExtractAdvertisingData
+            - Key: input
+              RefValue: AdvertisingInfoStagingTable
+            - Key: output
+              RefValue: AdvertisingInfoTable
+            - !If
+                - EMREnabled
+                - Key: workerGroup
+                  StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+                - Key: runsOn
+                  RefValue: EMRCluster
+        - Id: TruncateAdvertisingInfoStagingTable
+          Name: Truncate Advertising Info Staging Table
+          Fields:
+            - Key: type
+              StringValue: HiveActivity
+            - Key: dependsOn
+              RefValue: LoadAdvertisingInfoIntoDynamoDB
+            - Key: script
+              StringValue: TRUNCATE TABLE ${input1}
+            - !If
+                - EMREnabled
+                - Key: workerGroup
+                  StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+                - Key: runsOn
+                  RefValue: EMRCluster
+            - Key: stage
+              StringValue: false
+            - Key: input
+              RefValue: AdvertisingInfoStagingTable
+        - !If
+          - RedshiftEnabled
+          - - Id: RedshiftCluster
+              Name: Redshift Cluster
+              Fields:
+                - Key: type
+                  StringValue: RedshiftDatabase
+                - Key: clusterId
+                  StringValue: !Ref Redshift
+                - Key: username
+                  StringValue: warehouse
+                - Key: *password
+                  StringValue: "War340u5e!"
+                - Key: databaseName
+                  StringValue: warehouse
+                - Key: region
+                  StringValue: !Ref AWS::Region
+          - - Id: RedshiftCluster
+              Name: Redshift Cluster (Disabled)
+              Fields:
+                - Key: type
+                  StringValue: Schedule
+                - Key: period
+                  StringValue: ONDEMAND_PERIOD
+                - Key: startAt
+                  StringValue: ONDEMAND_ACTIVATION_TIME
+        - !If
+          - RedshiftEnabled
+          - - Id: RedshiftAdvertisingAdTable
+              Name: Redshift Advertising by Ad Table
+              Fields:
+                - Key: type
+                  StringValue: RedshiftDataNode
+                - Key: database
+                  RefValue: RedshiftCluster
+                - Key: tableName
+                  StringValue: advertising
+                - Key: createTableSql
+                  StringValue: |
+                    CREATE TABLE advertising_ad (
+                      session_id    VARCHAR(64) NOT NULL,
+                      user_id       VARCHAR(64) NOT NULL,
+                      ad_id         VARCHAR(64) NOT NULL,
+                      impression_at TIMESTAMP   NOT NULL,
+                      click_at      TIMESTAMP
+                    )
+                    PRIMARY KEY (session_id, user_id, ad_id, impression_at)
+                    DISTSTYLE KEY
+                    DISTKEY (ad_id)
+                    ;
+          - - Id: RedshiftAdvertisingAdTable
+              Name: Redshift Advertising by Ad Table (Disabled)
+              Fields:
+                - Key: type
+                  StringValue: Schedule
+                - Key: period
+                  StringValue: ONDEMAND_PERIOD
+                - Key: startAt
+                  StringValue: ONDEMAND_ACTIVATION_TIME
+        - !If
+          - RedshiftEnabled
+          - - Id: RedshiftAdvertisingUserTable
+              Name: Redshift Advertising by User Table
+              Fields:
+                - Key: type
+                  StringValue: RedshiftDataNode
+                - Key: database
+                  RefValue: RedshiftCluster
+                - Key: tableName
+                  StringValue: advertising
+                - Key: createTableSql
+                  StringValue: |
+                    CREATE TABLE advertising_user (
+                      session_id    VARCHAR(64) NOT NULL,
+                      user_id       VARCHAR(64) NOT NULL,
+                      ad_id         VARCHAR(64) NOT NULL,
+                      impression_at TIMESTAMP   NOT NULL,
+                      click_at      TIMESTAMP
+                    )
+                    PRIMARY KEY (session_id, user_id, ad_id, impression_at)
+                    DISTSTYLE KEY
+                    DISTKEY (user_id)
+                    ;
+          - - Id: RedshiftAdvertisingUserTable
+              Name: Redshift Advertising by User Table (Disabled)
+              Fields:
+                - Key: type
+                  StringValue: Schedule
+                - Key: period
+                  StringValue: ONDEMAND_PERIOD
+                - Key: startAt
+                  StringValue: ONDEMAND_ACTIVATION_TIME
+        - !If
+          - RedshiftEnabled
+          - - Id: RedshiftStagingTableFormat
+              Name: Redshift Staging Table Format
+              Fields:
+                - Key: type
+                  StringValue: CSV
+                - Key: column
+                  StringValue: session_id VARCHAR(64)
+                - Key: column
+                  StringValue: user_id VARCHAR(64)
+                - Key: column
+                  StringValue: ad_id VARCHAR(64)
+                - Key: column
+                  StringValue: impression_at TIMESTAMP
+                - Key: column
+                  StringValue: click_at TIMESTAMP
+            - Id: RedshiftStagingTableFormat
+              Name: Redshift Staging Table Format (Disabled)
+              Fields:
+                - Key: type
+                  StringValue: Schedule
+                - Key: period
+                  StringValue: ONDEMAND_PERIOD
+                - Key: startAt
+                  StringValue: ONDEMAND_ACTIVATION_TIME
+        - !If
+          - RedshiftEnabled
+          - - Id: RedshiftStagingTable
+              Name: Redshift Staging Table
+              Fields:
+                - Key: type
+                  StringValue: S3DataNode
+                - Key: directoryPath
+                  StringValue: !Sub "s3://${Bucket}/data/temp/#{@pipelineId}/#{@version}/#{@scheduledStartTime}/redshift-staging-table/"
+                - Key: dataFormat
+                  RefValue: RedshiftStagingTableFormat
+            - Id: RedshiftStagingTable
+              Name: Redshift Staging Table (Disabled)
+              Fields:
+                - Key: type
+                  StringValue: Schedule
+                - Key: period
+                  StringValue: ONDEMAND_PERIOD
+                - Key: startAt
+                  StringValue: ONDEMAND_ACTIVATION_TIME
+        - !If
+          - RedshiftEnabled
+          - - Id: StageDataForRedshift
+              Name: Stage Data for Redshift
+              Fields:
+                - Key: type
+                  StringValue: HiveActivity
+                - Key: dependsOn
+                  RefValue: ExtractAdvertisingData
+                - Key: scriptUri
+                  StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/stage_data_for_redshift.hql"
+                - !If
+                    - EMREnabled
+                    - Key: workerGroup
+                      StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+                    - Key: runsOn
+                      RefValue: EMRCluster
+                - Key: stage
+                  StringValue: false
+                - Key: output
+                  RefValue: RedshiftStagingTable
+                - Key: scriptVariable
+                  StringValue: PARTITION_YEAR=#{year(@scheduleStartTime)}
+                - Key: scriptVariable
+                  StringValue: PARTITION_MONTH=#{month(@scheduleStartTime)}
+                - Key: scriptVariable
+                  StringValue: TIME_START=#{@scheduleStartTime}
+                - Key: scriptVariable
+                  StringValue: TIME_END=#{@scheduleEndTime}
+            - Id: StageDataForRedshift
+              Name: Redshift Staging Table (Disabled)
+              Fields:
+                - Key: type
+                  StringValue: Schedule
+                - Key: period
+                  StringValue: ONDEMAND_PERIOD
+                - Key: startAt
+                  StringValue: ONDEMAND_ACTIVATION_TIME
+        - !If
+          - RedshiftEnabled
+          - - Id: LoadAdvertisingAdIntoRedshift
+              Name: Load Advertising by Ad Into Redshift
+              Fields:
+                - Key: type
+                  StringValue: RedshiftCopyActivity
+                - Key: dependsOn
+                  RefValue: StageDataForRedshift
+                - Key: input
+                  RefValue: RedshiftStagingTable
+                - Key: output
+                  RefValue: RedshiftAdvertisingAdTable
+                - Key: insertMode
+                  StringValue: OVERWRITE_EXISTING
+                - Key: runsOn
+                  RefValue: RedshiftCluster
+                - Key: scriptArgument
+                  StringValue: "#{year(@scheduleStartTime)}"
+                - Key: scriptArgument
+                  StringValue: "#{month(@scheduleStartTime)}"
+                - Key: scriptArgument
+                  StringValue: "#{@scheduleStartTime}"
+                - Key: scriptArgument
+                  StringValue: "#{@scheduleEndTime}"
+          - - Id: LoadAdvertisingAdIntoRedshift
+              Name: Load Advertising by Ad Into Redshift (Disabled)
+              Fields:
+                - Key: type
+                  StringValue: Schedule
+                - Key: period
+                  StringValue: ONDEMAND_PERIOD
+                - Key: startAt
+                  StringValue: ONDEMAND_ACTIVATION_TIME
+        - !If
+          - RedshiftEnabled
+          - - Id: LoadAdvertisingUserIntoRedshift
+              Name: Load Advertising by User Into Redshift
+              Fields:
+                - Key: type
+                  StringValue: RedshiftCopyActivity
+                - Key: dependsOn
+                  RefValue: StageDataForRedshift
+                - Key: input
+                  RefValue: RedshiftStagingTable
+                - Key: output
+                  RefValue: RedshiftAdvertisingUserTable
+                - Key: insertMode
+                  StringValue: OVERWRITE_EXISTING
+                - Key: runsOn
+                  RefValue: RedshiftCluster
+                - Key: scriptArgument
+                  StringValue: "#{year(@scheduleStartTime)}"
+                - Key: scriptArgument
+                  StringValue: "#{month(@scheduleStartTime)}"
+                - Key: scriptArgument
+                  StringValue: "#{@scheduleStartTime}"
+                - Key: scriptArgument
+                  StringValue: "#{@scheduleEndTime}"
+          - - Id: LoadAdvertisingUserIntoRedshift
+              Name: Load Advertising by User Into Redshift (Disabled)
+              Fields:
+                - Key: type
+                  StringValue: Schedule
+                - Key: period
+                  StringValue: ONDEMAND_PERIOD
+                - Key: startAt
+                  StringValue: ONDEMAND_ACTIVATION_TIME
+        - !If
+          - RedshiftEnabled
+          - - Id: TruncateRedshiftStagingTable
+              Name: Truncate Redshift Staging Table
+              Fields:
+                - Key: type
+                  StringValue: HiveActivity
+                - Key: dependsOn
+                  RefValue: LoadAdvertisingAdIntoRedshift
+                - Key: dependsOn
+                  RefValue: LoadAdvertisingUserIntoRedshift
+                - Key: script
+                  StringValue: TRUNCATE TABLE ${input1}
+                - !If
+                    - EMREnabled
+                    - Key: workerGroup
+                      StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+                    - Key: runsOn
+                      RefValue: EMRCluster
+                - Key: stage
+                  StringValue: false
+                - Key: input
+                  RefValue: RedshiftStagingTable
+          - - Id: TruncateRedshiftStagingTable
+              Name: Truncate Redshift Staging Table (Disabled)
+              Fields:
+                - Key: type
+                  StringValue: Schedule
+                - Key: period
+                  StringValue: ONDEMAND_PERIOD
+                - Key: startAt
+                  StringValue: ONDEMAND_ACTIVATION_TIME
+        - !If
+          - RedshiftEnabled
+          - - Id: UseSpectrumDataLake
+              Name: Use Spectrum Data Lake
+              Fields:
+                - Key: type
+                  StringValue: SqlActivity
+                - Key: runsOn
+                  RefValue: RedshiftCluster
+                - Key: database
+                  RefValue: RedshiftCluster
+                - Key: scriptUri
+                  StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/use_spectrum_data_lake.sql"
+          - - Id: UseSpectrumDataLake
+              Name: Use Spectrum Data Lake (Disabled)
+              Fields:
+                - Key: type
+                  StringValue: Schedule
+                - Key: period
+                  StringValue: ONDEMAND_PERIOD
+                - Key: startAt
+                  StringValue: ONDEMAND_ACTIVATION_TIME
+        - !If
+          - RedshiftEnabled
+          - - Id: SpectrumLoadAdvertisingAd
+              Name: Spectrum Load Advertising by Ad
+              Fields:
+                - Key: type
+                  StringValue: SqlActivity
+                - Key: dependsOn
+                  RefValue: ExtractAdvertisingData
+                - Key: database
+                  RefValue: RedshiftCluster
+                - Key: runsOn
+                  RefValue: RedshiftCluster
+                - Key: scriptUri
+                  StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/load_advertising_ad_from_spectrum.sql"
+            - Id: SpectrumLoadAdvertisingAd
+              Name: Spectrum Load Advertising by Ad (Disabled)
+              Fields:
+                - Key: type
+                  StringValue: Schedule
+                - Key: period
+                  StringValue: ONDEMAND_PERIOD
+                - Key: startAt
+                  StringValue: ONDEMAND_ACTIVATION_TIME
+        - !If
+          - RedshiftEnabled
+          - - Id: SpectrumLoadAdvertisingUser
+              Name: Spectrum Load Advertising by User
+              Fields:
+                - Key: type
+                  StringValue: SqlActivity
+                - Key: dependsOn
+                  RefValue: ExtractAdvertisingData
+                - Key: database
+                  RefValue: RedshiftCluster
+                - Key: runsOn
+                  RefValue: RedshiftCluster
+                - Key: scriptUri
+                  StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/load_advertising_user_from_spectrum.sql"
+            - Id: SpectrumLoadAdvertisingUser
+              Name: Spectrum Load Advertising by User (Disabled)
+              Fields:
+                - Key: type
+                  StringValue: Schedule
+                - Key: period
+                  StringValue: ONDEMAND_PERIOD
+                - Key: startAt
+                  StringValue: ONDEMAND_ACTIVATION_TIME
 
   #######
   # API #
@@ -1385,7 +1879,7 @@ Resources:
                   - dynamodb:Query
                 Effect: Allow
                 Resource:
-                  - !GetAtt EventsInfoTable.Arn
+                  - !GetAtt AdvertisingInfoTable.Arn
 
   API:
     Type: AWS::Serverless::Api
@@ -1493,7 +1987,7 @@ Resources:
                       },
                       "KeyConditionExpression": "#ID = :id AND #Date BETWEEN #start AND #end",
                       "Limit": $input.params('limit'),
-                      "TableName": "${EventsInfoTable}"
+                      "TableName": "${AdvertisingInfoTable}"
                     }
                 requestParameters:
                   integration.request.header.Content-Type: "'x-amz-json-1.1'"
@@ -1545,26 +2039,45 @@ Resources:
             DataEvent:
               type: object
               properties:
-                user_id:
+                session_id:
+                  type: string
+                  format: uuid
+                context_id:
+                  type: string
+                  format: uuid
+                parent_id:
+                  type: string
+                  format: uuid
+                actor_type:
+                  type:
+                    $ref: "#/components/schemas/Type"
+                actor_id:
+                  type: string
+                  format: uuid
+                event_type:
+                  type:
+                    $ref: "#/components/schemas/Type"
+                event_id:
                   type: string
                   format: uuid
                 object_type:
                   type:
-                    $ref: "#/components/schemas/ID"
+                    $ref: "#/components/schemas/Type"
                 object_id:
                   type: string
                   format: uuid
-                event:
-                  type:
-                    $ref: "#/components/schemas/ID"
                 occurred_at:
                   type:
                     $ref: "#/components/schemas/Timestamp"
               required:
-                - user_id
+                - session_id
+                - context_id
+                - actor_type
+                - actor_id
+                - event_type
+                - event_id
                 - object_type
                 - object_id
-                - event
                 - occurred_at
               additionalProperties: false
             BatchWriteResponse:
@@ -1629,7 +2142,7 @@ Resources:
                 - code
                 - message
               additionalProperties: false
-            ID:
+            Type:
               type: string
               format: "^[a-z]+[-a-z0-9]*$"
             Date:

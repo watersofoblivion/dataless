@@ -28,7 +28,10 @@ phases:
     commands:
       # Build the Go lambdas
       - mkdir -p bin/
-      - go build -o bin/events ./lambdas/events
+      - |
+        for LAMBDA in $(find ./lambda/bin -type d); do
+          go build -o $(realpath --relative-to=./lambda ${LAMBDA}) ${LAMBDA}
+        done
       - zip -r lambdas.zip bin/
 
       # Copy lambdas, scripts, and static assets to S3

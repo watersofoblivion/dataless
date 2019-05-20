@@ -55,21 +55,36 @@ type Events struct {
 }
 
 type Event struct {
-	User       uuid.UUID
+	Session    uuid.UUID
+	Context    uuid.UUID
+	Parent     uuid.UUID
+	ActorType  string
+	Actor      uuid.UUID
+	EventType  string
+	Event      uuid.UUID
 	ObjectType string
 	Object     uuid.UUID
-	Event      string
 	OccurredAt time.Time
 }
 
 func (event *Event) MarshalJSON() ([]byte, error) {
-	return json.Marshal(map[string]interface{}{
-		"user_id":     event.User.String(),
+	evt := map[string]interface{}{
+		"session_id":  event.Session.String(),
+		"context_id":  event.Context.String(),
+		"actor_type":  event.ActorType,
+		"actor_id":    event.Actor.String(),
+		"event_type":  event.EventType,
+		"event_id":    event.Event.String(),
 		"object_type": event.ObjectType,
-		"object_id":   event.User.String(),
-		"event":       event.Event,
+		"object_id":   event.Object.String(),
 		"occurred_at": event.OccurredAt.Format("2006-01-02 15:04:05.000"),
-	})
+	}
+
+	if event.Parent != uuid.Nil {
+		evt["parent_id"] = event.Parent.String()
+	}
+
+	return json.Marshal(evt)
 }
 
 type BatchWriteResponse struct {
@@ -273,12 +288,21 @@ func main() {
 			defer wg.Done()
 			defer usersWg.Done()
 
+			sessionID := uuid.New()
+
 			for ad := range adStream {
+				contextID := uuid.New()
+
+				impressionID := uuid.New()
 				events <- &Event{
-					User:       users.Users[i].ID,
+					Session:    sessionID,
+					Context:    contextID,
+					ActorType:  "customer",
+					Actor:      users.Users[i].ID,
+					EventType:  "impression",
+					Event:      impressionID,
 					ObjectType: "ad",
 					Object:     ad.ID,
-					Event:      "impression",
 					OccurredAt: time.Now(),
 				}
 
@@ -297,16 +321,22 @@ func main() {
 				for tag := range ad.Tags {
 					if _, found := m[tag]; found {
 						common++
+					} else {
+						m[tag] = struct{}{}
 					}
-					m[tag] = struct{}{}
 				}
 				clickthroughProbability := float64(common) / float64(len(m)) * config.Users.MaximumClickThroughRate
 				if rand.Float64() < clickthroughProbability {
 					events <- &Event{
-						User:       users.Users[i].ID,
+						Session:    sessionID,
+						Context:    contextID,
+						Parent:     impressionID,
+						ActorType:  "customer",
+						Actor:      users.Users[i].ID,
+						EventType:  "click",
+						Event:      uuid.New(),
 						ObjectType: "ad",
 						Object:     ad.ID,
-						Event:      "click",
 						OccurredAt: time.Now(),
 					}
 				}
