@@ -1412,6 +1412,15 @@ Resources:
               StringValue: DynamoDBExportDataFormat
             - Key: column
               StringValue: foo VARCHAR(255)
+        - Id: AdvertisingInfoStagingTable
+          Name: Advertising Info Staging Table
+          Fields:
+            - Key: type
+              StringValue: S3DataNode
+            - Key: directoryPath
+              StringValue: !Sub "s3://${Bucket}/data/tmp/advertising-info-staging-table/"
+            - Key: dataFormat
+              RefValue: AdvertisingInfoTableFormat
         - Id: AdvertisingInfoTable
           Name: Advertising Info Table
           Fields:
@@ -1423,15 +1432,6 @@ Resources:
               RefValue: AdvertisingInfoTableFormat
             - Key: precondition
               RefValue: AdvertisingInfoTableExists
-        - Id: AdvertisingInfoStagingTable
-          Name: Advertising Info Staging Table
-          Fields:
-            - Key: type
-              StringValue: S3DataNode
-            - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/tmp/advertising-info-staging-table/"
-            - Key: dataFormat
-              RefValue: AdvertisingInfoTableFormat
         - Id: StageDataForAdvertisingInfo
           Name: Stage Data for Advertising Info
           Fields:
