@@ -1490,7 +1490,7 @@ Resources:
               StringValue: HiveActivity
             - Key: dependsOn
               RefValue: LoadAdvertisingInfoIntoDynamoDB
-            - Key: script
+            - Key: hiveScript
               StringValue: TRUNCATE TABLE ${input1}
             - !If
                 - EMREnabled
@@ -1770,7 +1770,7 @@ Resources:
               RefValue: LoadAdvertisingAdIntoRedshift
             - Key: dependsOn
               RefValue: LoadAdvertisingUserIntoRedshift
-            - Key: script
+            - Key: hiveScript
               StringValue: TRUNCATE TABLE ${input1}
             - !If
                 - EMREnabled
