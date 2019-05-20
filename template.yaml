@@ -1406,7 +1406,7 @@ Resources:
             - Key: type
               StringValue: CSV
             - Key: column
-              StringValue:
+              StringValue: foo VARCHAR(255)
         - Id: AdvertisingInfoStagingTable
           Name: Advertising Info Staging Table
           Fields:
