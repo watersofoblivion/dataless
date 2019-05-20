@@ -1276,7 +1276,7 @@ Resources:
 
   EventsPipeline:
     Type: AWS::DataPipeline::Pipeline
-    DependsOn: !
+    DependsOn:
       - PipelineProfile
       - PipelineResourceProfile
     Properties:
@@ -1631,7 +1631,7 @@ Resources:
                   StringValue: !Sub "s3://${Bucket}/data/temp/#{@pipelineId}/#{@version}/#{@scheduledStartTime}/redshift-staging-table/"
                 - Key: dataFormat
                   RefValue: RedshiftStagingTableFormat
-            - Id: RedshiftStagingTable
+          - - Id: RedshiftStagingTable
               Name: Redshift Staging Table (Disabled)
               Fields:
                 - Key: type
