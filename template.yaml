@@ -1611,7 +1611,7 @@ Resources:
                   StringValue: impression_at TIMESTAMP
                 - Key: column
                   StringValue: click_at TIMESTAMP
-            - Id: RedshiftStagingTableFormat
+          - - Id: RedshiftStagingTableFormat
               Name: Redshift Staging Table Format (Disabled)
               Fields:
                 - Key: type
@@ -1669,7 +1669,7 @@ Resources:
                   StringValue: TIME_START=#{@scheduleStartTime}
                 - Key: scriptVariable
                   StringValue: TIME_END=#{@scheduleEndTime}
-            - Id: StageDataForRedshift
+          - - Id: StageDataForRedshift
               Name: Redshift Staging Table (Disabled)
               Fields:
                 - Key: type
@@ -1815,7 +1815,7 @@ Resources:
                   RefValue: RedshiftCluster
                 - Key: scriptUri
                   StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/load_advertising_ad_from_spectrum.sql"
-            - Id: SpectrumLoadAdvertisingAd
+          - - Id: SpectrumLoadAdvertisingAd
               Name: Spectrum Load Advertising by Ad (Disabled)
               Fields:
                 - Key: type
@@ -1839,7 +1839,7 @@ Resources:
                   RefValue: RedshiftCluster
                 - Key: scriptUri
                   StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/load_advertising_user_from_spectrum.sql"
-            - Id: SpectrumLoadAdvertisingUser
+          - - Id: SpectrumLoadAdvertisingUser
               Name: Spectrum Load Advertising by User (Disabled)
               Fields:
                 - Key: type
