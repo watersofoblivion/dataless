@@ -1388,7 +1388,7 @@ Resources:
             - Key: type
               StringValue: DynamoDBExportDataFormat
             - Key: column
-              StringValue:
+              StringValue: foo VARCHAR(255)
         - Id: AdvertisingInfoTable
           Name: Advertising Info Table
           Fields:
