@@ -1432,13 +1432,13 @@ Resources:
             - Key: stage
               StringValue: false
             - Key: scriptVariable
-              StringValue: PARTITION_YEAR=#{year(@scheduleStartTime)}
+              StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
             - Key: scriptVariable
-              StringValue: PARTITION_MONTH=#{month(@scheduleStartTime)}
+              StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
             - Key: scriptVariable
-              StringValue: TIME_START=#{@scheduleStartTime}
+              StringValue: TIME_START=#{@scheduledStartTime}
             - Key: scriptVariable
-              StringValue: TIME_END=#{@scheduleEndTime}
+              StringValue: TIME_END=#{@scheduledEndTime}
         - Id: StageDataForAdvertisingInfo
           Name: Stage Data for Advertising Info
           Fields:
@@ -1459,13 +1459,13 @@ Resources:
             - Key: output
               RefValue: AdvertisingInfoStagingTable
             - Key: scriptVariable
-              StringValue: PARTITION_YEAR=#{year(@scheduleStartTime)}
+              StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
             - Key: scriptVariable
-              StringValue: PARTITION_MONTH=#{month(@scheduleStartTime)}
+              StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
             - Key: scriptVariable
-              StringValue: TIME_START=#{@scheduleStartTime}
+              StringValue: TIME_START=#{@scheduledStartTime}
             - Key: scriptVariable
-              StringValue: TIME_END=#{@scheduleEndTime}
+              StringValue: TIME_END=#{@scheduledEndTime}
         - Id: LoadAdvertisingInfoIntoDynamoDB
           Name: Load Advertising Info Into DynamoDB
           Fields:
@@ -1708,13 +1708,13 @@ Resources:
             - Key: output
               RefValue: RedshiftStagingTable
             - Key: scriptVariable
-              StringValue: PARTITION_YEAR=#{year(@scheduleStartTime)}
+              StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
             - Key: scriptVariable
-              StringValue: PARTITION_MONTH=#{month(@scheduleStartTime)}
+              StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
             - Key: scriptVariable
-              StringValue: TIME_START=#{@scheduleStartTime}
+              StringValue: TIME_START=#{@scheduledStartTime}
             - Key: scriptVariable
-              StringValue: TIME_END=#{@scheduleEndTime}
+              StringValue: TIME_END=#{@scheduledEndTime}
         - Id: LoadAdvertisingAdIntoRedshift
           Name: Load Advertising by Ad Into Redshift
           Fields:
@@ -1731,13 +1731,13 @@ Resources:
             - Key: runsOn
               RefValue: RedshiftCluster
             - Key: scriptArgument
-              StringValue: "#{year(@scheduleStartTime)}"
+              StringValue: "#{year(@scheduledStartTime)}"
             - Key: scriptArgument
-              StringValue: "#{month(@scheduleStartTime)}"
+              StringValue: "#{month(@scheduledStartTime)}"
             - Key: scriptArgument
-              StringValue: "#{@scheduleStartTime}"
+              StringValue: "#{@scheduledStartTime}"
             - Key: scriptArgument
-              StringValue: "#{@scheduleEndTime}"
+              StringValue: "#{@scheduledEndTime}"
         - Id: LoadAdvertisingUserIntoRedshift
           Name: Load Advertising by User Into Redshift
           Fields:
@@ -1754,13 +1754,13 @@ Resources:
             - Key: runsOn
               RefValue: RedshiftCluster
             - Key: scriptArgument
-              StringValue: "#{year(@scheduleStartTime)}"
+              StringValue: "#{year(@scheduledStartTime)}"
             - Key: scriptArgument
-              StringValue: "#{month(@scheduleStartTime)}"
+              StringValue: "#{month(@scheduledStartTime)}"
             - Key: scriptArgument
-              StringValue: "#{@scheduleStartTime}"
+              StringValue: "#{@scheduledStartTime}"
             - Key: scriptArgument
-              StringValue: "#{@scheduleEndTime}"
+              StringValue: "#{@scheduledEndTime}"
         - Id: TruncateRedshiftStagingTable
           Name: Truncate Redshift Staging Table
           Fields:
