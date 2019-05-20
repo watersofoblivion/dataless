@@ -1375,6 +1375,29 @@ Resources:
               RefValue: GlueCatalogAsHiveMetastore
             - Key: configuration
               RefValue: GlueCatalogAsSparkMetastore
+        - Id: ExtractAdvertisingData
+          Name: Extract Advertising Data
+          Fields:
+            - Key: type
+              StringValue: HiveActivity
+            - Key: scriptUri
+              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/extract_advertising_data.hql"
+            - !If
+                - EMREnabled
+                - Key: workerGroup
+                  StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+                - Key: runsOn
+                  RefValue: EMRCluster
+            - Key: stage
+              StringValue: false
+            - Key: scriptVariable
+              StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
+            - Key: scriptVariable
+              StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
+            - Key: scriptVariable
+              StringValue: TIME_START=#{@scheduledStartTime}
+            - Key: scriptVariable
+              StringValue: TIME_END=#{@scheduledEndTime}
         - Id: AdvertisingInfoTableExists
           Name: Advertising Info Table Exists
           Fields:
@@ -1400,13 +1423,6 @@ Resources:
               RefValue: AdvertisingInfoTableFormat
             - Key: precondition
               RefValue: AdvertisingInfoTableExists
-        - Id: AdvertisingInfoStagingTableFormat
-          Name: Advertising Info Staging Table Format
-          Fields:
-            - Key: type
-              StringValue: CSV
-            - Key: column
-              StringValue: foo VARCHAR(255)
         - Id: AdvertisingInfoStagingTable
           Name: Advertising Info Staging Table
           Fields:
@@ -1415,30 +1431,7 @@ Resources:
             - Key: directoryPath
               StringValue: !Sub "s3://${Bucket}/data/tmp/advertising-info-staging-table/"
             - Key: dataFormat
-              RefValue: AdvertisingInfoStagingTableFormat
-        - Id: ExtractAdvertisingData
-          Name: Extract Advertising Data
-          Fields:
-            - Key: type
-              StringValue: HiveActivity
-            - Key: scriptUri
-              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/extract_advertising_data.hql"
-            - !If
-                - EMREnabled
-                - Key: workerGroup
-                  StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
-                - Key: runsOn
-                  RefValue: EMRCluster
-            - Key: stage
-              StringValue: false
-            - Key: scriptVariable
-              StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
-            - Key: scriptVariable
-              StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
-            - Key: scriptVariable
-              StringValue: TIME_START=#{@scheduledStartTime}
-            - Key: scriptVariable
-              StringValue: TIME_END=#{@scheduledEndTime}
+              RefValue: AdvertisingInfoTableFormat
         - Id: StageDataForAdvertisingInfo
           Name: Stage Data for Advertising Info
           Fields:
@@ -1466,8 +1459,8 @@ Resources:
               StringValue: TIME_START=#{@scheduledStartTime}
             - Key: scriptVariable
               StringValue: TIME_END=#{@scheduledEndTime}
-        - Id: LoadAdvertisingInfoIntoDynamoDB
-          Name: Load Advertising Info Into DynamoDB
+        - Id: LoadAdvertisingInfoTable
+          Name: Load Advertising Info Into DynamoDB Table
           Fields:
             - Key: type
               StringValue: HiveCopyActivity
@@ -1489,7 +1482,7 @@ Resources:
             - Key: type
               StringValue: HiveActivity
             - Key: dependsOn
-              RefValue: LoadAdvertisingInfoIntoDynamoDB
+              RefValue: LoadAdvertisingInfoTable
             - Key: hiveScript
               StringValue: TRUNCATE TABLE ${input1}
             - !If
