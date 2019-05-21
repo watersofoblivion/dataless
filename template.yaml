@@ -1514,7 +1514,7 @@ Resources:
             - Key: column
               StringValue: clicks BIGINT
             - Key: column
-              StringValue: clickthrough_rate FLOAT
+              StringValue: clickthrough_rate DOUBLE
         - Id: AdvertisingInfoStagingTable
           Name: Advertising Info Staging Table
           Fields:
