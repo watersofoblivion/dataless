@@ -10,41 +10,6 @@ Metadata:
           - Repo
           - AccessToken
           - Branch
-      - Label: EC2
-        Parameters:
-          - KeyPair
-      - Label: Deployment Configuration
-        Parameters:
-          - Stage
-      - Label: DNS
-        Parameters:
-          - DNSDomainName
-          - DNSName
-          - ValidationDomain
-          - HostedZoneID
-      - Label: VPC
-        Parameters:
-          - EnableVPC
-      - Label: EC2 Instance
-        Parameters:
-          - EnableEC2Instance
-          - EC2InstanceSize
-      - Label: EMR Cluster
-        Parameters:
-          - EnableEMRCluster
-          - EMRRelease
-          - EMRMasterInstanceType
-          - EMRMasterInstanceCount
-          - EMRCoreInstanceType
-          - EMRCoreInstanceCount
-      - Label: Redshift
-        Parameters:
-          - EnableRedshift
-          - RedshiftNodeType
-          - RedshiftNumberOfNodes
-      - Label: API Gateway
-        Parameters:
-          - APIName
     ParameterLabels:
       Owner:
         default: GitHub repository owner
@@ -54,42 +19,6 @@ Metadata:
         default: GitHub OAuth access token
       Branch:
         default: Branch to build
-      KeyPair:
-        default: EC2 KeyPair
-      Stage:
-        default: Stage to deploy
-      DNSDomainName:
-        default: Domain name in Route53
-      DNSName:
-        default: Base DNS name for APIs
-      ValidationDomain:
-        default: Domain name for ACM certificate validation
-      EnableVPC:
-        default: Creates a VPC
-      EnableEC2Instance:
-        default: Creates an EC2 instance for Data Pipeline
-      EC2InstanceSize:
-        default: Type of EC2 instance
-      EnableEMRCluster:
-        default: Create an EMR cluster for Data Pipeline
-      EMRRelease:
-        default: EMR release version
-      EMRMasterInstanceType:
-        default: Type of EMR master instances
-      EMRMasterInstanceCount:
-        default: Number of EMR master instances
-      EMRCoreInstanceType:
-        default: Type of EMR core instances
-      EMRCoreInstanceCount:
-        default: Number of EMR core instances
-      EnableRedshift:
-        default: Create a Redshift instance
-      RedshiftNodeType:
-        default: Type of Redshift instance nodes
-      RedshiftNumberOfNodes:
-        default: Number of Redshift nodes
-      APIName:
-        default: Displayed name of API gateway
 
 Parameters:
   Branch:
@@ -108,94 +37,6 @@ Parameters:
     Description: The GitHub token to use to fetch source code (if using GitHub.)
     Default: ''
     NoEcho: true
-  KeyPair:
-    Type: String
-    Description: The EC2 KeyPair to use
-  Stage:
-    Type: String
-    Description: The name for a project pipeline stage, such as Staging or Prod, for which resources are provisioned and deployed.
-    Default: ''
-  DNSDomainName:
-    Type: String
-    Description: The domain name in Route53, such as example.com, this warehouse is served from.
-    Default: ''
-  DNSName:
-    Type: String
-    Description: The base DNS name, such as warehouse.example.com, this warehouse is served from.  Must be a the DNSDomainName or a subdomain of it.
-    Default: ''
-  ValidationDomain:
-    Type: String
-    Description: The DNS domain to validate ACM certificates against, such as example.com.  Should be a the DNSDomainName.
-    Default: ''
-  HostedZoneID:
-    Type: String
-    Description: The existing Hosted Zone to use.  Creates a Hosted Zone if not provided.
-    Default: ''
-  EnableVPC:
-    Type: String
-    Description: If non-empty, create a VPC.  EnableEC2Instance, EnableEMRCluster, and EnableRedshift imply this option.
-    Default: ''
-  EnableEC2Instance:
-    Type: String
-    Description: If non-empty, create an EC2 instance for use by Data Pipeline.
-    Default: ''
-  EC2InstanceSize:
-    Type: String
-    Description: The instance size of the EC2 instance for use by Data Pipeline
-    Default: t2.nano
-  EnableEMRCluster:
-    Type: String
-    Description: If non-empty, create an EMR cluster.
-    Default: ''
-  EMRRelease:
-    Type: String
-    Description: The EMR release version to use.
-    Default: emr-5.23.0
-  EMRMasterInstanceType:
-    Type: String
-    Description: The instance type of the master instances in the EMR cluster.
-    AllowedPattern: "[\u0020-\uD7FF\uE000-\uFFFD\uD800\uDC00-\uDBFF\uDFFF\r\n\t]*"
-    Default: m1.medium
-  EMRMasterInstanceCount:
-    Type: Number
-    Description: The number of master instances in the EMR cluster.
-    MinValue: 1
-    MaxValue: 256
-    Default: 1
-  EMRCoreInstanceType:
-    Type: String
-    Description: The instance type of the core instances in the EMR cluster.
-    AllowedPattern: "[\u0020-\uD7FF\uE000-\uFFFD\uD800\uDC00-\uDBFF\uDFFF\r\n\t]*"
-    Default: m1.medium
-  EMRCoreInstanceCount:
-    Type: Number
-    Description: The number of core instances in the EMR cluster.
-    MinValue: 1
-    MaxValue: 256
-    Default: 1
-  EnableRedshift:
-    Type: String
-    Description: If non-empty, create a Redshift cluster.
-    Default: ''
-  RedshiftNodeType:
-    Type: String
-    Description: The type of instances in the Redshift cluster.
-    AllowedValues:
-      - dc2.large
-      - dc2.8xlarge
-      - ds2.xlarge
-      - ds2.8xlarge
-    Default: dc2.large
-  RedshiftNumberOfNodes:
-    Type: Number
-    Description: The number of nodes in the Redshift cluster.
-    MinValue: 1
-    MaxValue: 100
-    Default: 1
-  APIName:
-    Type: String
-    Description: The name of the API Gateway api.
-    Default: Warehouse Service
 
 Conditions:
   UseGitHub: !And
@@ -204,24 +45,6 @@ Conditions:
   UseCodeCommit: !Or
     - !Equals [!Ref Owner, ""]
     - !Equals [!Ref AccessToken, ""]
-  DNSEnabled: !And
-    - !Not [!Equals [!Ref DNSDomainName, ""]]
-    - !Not [!Equals [!Ref DNSName, ""]]
-    - !Not [!Equals [!Ref ValidationDomain, ""]]
-  InternalHostedZone: !And
-    - !Not [!Equals [!Ref DNSDomainName, ""]]
-    - !Not [!Equals [!Ref DNSName, ""]]
-    - !Not [!Equals [!Ref ValidationDomain, ""]]
-    - !Not [!Equals [!Ref HostedZoneID, ""]]
-  EC2InstanceEnabled: !Not [!Equals [!Ref EnableEC2Instance, ""]]
-  EMREnabled: !Not [!Equals [!Ref EnableEMRCluster, ""]]
-  RedshiftEnabled: !Not [!Equals [!Ref EnableRedshift, ""]]
-  RedshiftSingleNode: !Equals [!Ref RedshiftNumberOfNodes, 1]
-  VPCEnabled: !Or
-    - !Not [!Equals [!Ref EnableVPC, ""]]
-    - !Not [!Equals [!Ref EnableEC2Instance, ""]]
-    - !Not [!Equals [!Ref EnableEMRCluster, ""]]
-    - !Not [!Equals [!Ref EnableRedshift, ""]]
 
 Outputs:
   RepoURL:
@@ -346,71 +169,11 @@ Resources:
         Image: aws/codebuild/standard:2.0
         EnvironmentVariables:
           - Type: PLAINTEXT
-            Name: BUCKET
+            Name: BRANCH
+            Value: !Ref Branch
+          - Type: PLAINTEXT
+            Name: CODE_BUCKET
             Value: !Ref Bucket
-          - Type: PLAINTEXT
-            Name: USER
-            Value: build
-          - Type: PLAINTEXT
-            Name: S3_BUCKET
-            Value: !Ref Bucket
-          - Type: PLAINTEXT
-            Name: KEY_PAIR
-            Value: !Ref KeyPair
-          - Type: PLAINTEXT
-            Name: STAGE_NAME
-            Value: !Ref Stage
-          - Type: PLAINTEXT
-            Name: DNS_DOMAIN_NAME
-            Value: !Ref DNSDomainName
-          - Type: PLAINTEXT
-            Name: DNS_NAME
-            Value: !Ref DNSName
-          - Type: PLAINTEXT
-            Name: VALIDATION_DOMAIN
-            Value: !Ref ValidationDomain
-          - Type: PLAINTEXT
-            Name: HOSTED_ZONE_ID
-            Value: !Ref HostedZoneID
-          - Type: PLAINTEXT
-            Name: ENABLE_VPC
-            Value: !If [VPCEnabled, "enabled", ""]
-          - Type: PLAINTEXT
-            Name: ENABLE_EC2_INSTANCE
-            Value: !If [EC2InstanceEnabled, "enabled", ""]
-          - Type: PLAINTEXT
-            Name: EC2_INSTANCE_TYPE
-            Value: !Ref EC2InstanceSize
-          - Type: PLAINTEXT
-            Name: ENABLE_EMR_CLUSTER
-            Value: !If [EMREnabled, "enabled", ""]
-          - Type: PLAINTEXT
-            Name: EMR_RELEASE
-            Value: !Ref EMRRelease
-          - Type: PLAINTEXT
-            Name: EMR_MASTER_INSTANCE_TYPE
-            Value: !Ref EMRMasterInstanceType
-          - Type: PLAINTEXT
-            Name: EMR_MASTER_INSTANCE_COUNT
-            Value: !Ref EMRMasterInstanceCount
-          - Type: PLAINTEXT
-            Name: EMR_CORE_INSTANCE_TYPE
-            Value: !Ref EMRCoreInstanceType
-          - Type: PLAINTEXT
-            Name: EMR_CORE_INSTANCE_COUNT
-            Value: !Ref EMRCoreInstanceCount
-          - Type: PLAINTEXT
-            Name: ENABLE_REDSHIFT
-            Value: !If [RedshiftEnabled, "enabled", ""]
-          - Type: PLAINTEXT
-            Name: REDSHIFT_NODE_TYPE
-            Value: !Ref RedshiftNodeType
-          - Type: PLAINTEXT
-            Name: REDSHIFT_NUMBER_OF_NODES
-            Value: !Ref RedshiftNumberOfNodes
-          - Type: PLAINTEXT
-            Name: API_NAME
-            Value: !Ref APIName
       Source:
         Type: CODEPIPELINE
       Artifacts:
@@ -475,10 +238,10 @@ Resources:
               Configuration:
                 ActionMode: CHANGE_SET_REPLACE
                 RoleArn: !GetAtt Role.Arn
-                StackName: !Sub "${AWS::StackName}-prod"
-                ChangeSetName: !Sub "${AWS::StackName}-prod-change-set"
+                StackName: !Sub "${AWS::StackName}-${Branch}"
+                ChangeSetName: !Sub "${AWS::StackName}-${Branch}-change-set"
                 TemplatePath: Package::cloudformation.yaml
-                TemplateConfiguration: Package::prod.json
+                TemplateConfiguration: Package::config.json
                 Capabilities: CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
               InputArtifacts:
                 - Name: Package
@@ -492,8 +255,8 @@ Resources:
               Configuration:
                 ActionMode: CHANGE_SET_EXECUTE
                 RoleArn: !GetAtt Role.Arn
-                StackName: !Sub "${AWS::StackName}-prod"
-                ChangeSetName: !Sub "${AWS::StackName}-prod-change-set"
+                StackName: !Sub "${AWS::StackName}-${Branch}"
+                ChangeSetName: !Sub "${AWS::StackName}-${Branch}-change-set"
                 Capabilities: CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
 
   # TODO

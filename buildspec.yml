@@ -18,12 +18,12 @@ phases:
       - cd "/go/src/app"
 
       # Fetch dependencies
-      - go get ./lambda/...
+      - go get ./...
 
       # Lint, vet, and test
       - golint -set_exit_status
-      - go vet ./lambda/...
-      - go test ./lambda/...
+      - go vet ./...
+      - go test ./...
   build:
     commands:
       # Build the Go lambdas
@@ -35,21 +35,22 @@ phases:
       - zip -r lambdas.zip bin/
 
       # Copy lambdas, scripts, and static assets to S3
-      - aws s3 cp lambdas.zip "s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/lambda/lambdas.zip"
-      - aws s3 cp --recursive scripts/ "s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/scripts/"
-      - aws s3 cp --recursive public/ "s3://${S3_BUCKET}/build/${CODEBUILD_BUILD_ID}/public/" --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
+      - aws s3 cp lambdas.zip "s3://${CODE_BUCKET}/build/${CODEBUILD_BUILD_ID}/lambda/lambdas.zip"
+      - aws s3 cp --recursive scripts/ "s3://${CODE_BUCKET}/build/${CODEBUILD_BUILD_ID}/scripts/"
+      - aws s3 cp --recursive public/ "s3://${CODE_BUCKET}/build/${CODEBUILD_BUILD_ID}/public/" --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
 
       # Make the install_task_runner script public
-      - aws s3api put-object-acl --acl authenticated-read --bucket "${S3_BUCKET}" --key "build/${CODEBUILD_BUILD_ID}/scripts/emr/install_task_runner.sh"
+      - aws s3api put-object-acl --acl authenticated-read --bucket "${CODE_BUCKET}" --key "build/${CODEBUILD_BUILD_ID}/scripts/emr/install_task_runner.sh"
 
       # Package application with AWS CloudFormation/SAM
-      - aws cloudformation package --template template.yaml --s3-bucket "${S3_BUCKET}" --s3-prefix "build/${CODEBUILD_BUILD_ID}/" --output-template cloudformation.yaml
+      - aws cloudformation package --template template.yaml --s3-bucket "${CODE_BUCKET}" --s3-prefix "build/${CODEBUILD_BUILD_ID}/" --output-template cloudformation.yaml
   post_build:
     commands:
-      - envsubst < config.json > prod.json
+      - if [ ! -f ./config/${BRANCH}.json ]; then exit "No config file found"
+      - envsubst < ./config/${BRANCH}.json > config.json
 
 artifacts:
   type: zip
   files:
     - cloudformation.yaml
-    - prod.json
+    - config.json

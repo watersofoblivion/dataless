@@ -1,0 +1,9 @@
+{
+  "Parameters": {
+    "CodeBucket": "${S3_BUCKET}",
+    "CodePrefix": "build/${CODEBUILD_BUILD_ID}",
+    "KeyPair": "temp",
+    "Stage": "Prod",
+    "APIName": "Warehouse Service"
+  }
+}
