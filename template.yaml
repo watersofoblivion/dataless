@@ -1405,8 +1405,8 @@ Resources:
               StringValue: DynamoDBTableExists
             - Key: tableName
               StringValue: !Ref AdvertisingInfoTable
-        - Id: AdvertisingInfoTableFormat
-          Name: Advertising Info Table Format
+        - Id: AdvertisingInfoStagingTableFormat
+          Name: Advertising Info Staging Table Format
           Fields:
             - Key: type
               StringValue: DynamoDBExportDataFormat
@@ -1420,7 +1420,12 @@ Resources:
             - Key: directoryPath
               StringValue: !Sub "s3://${Bucket}/data/tmp/advertising-info-staging-table/"
             - Key: dataFormat
-              RefValue: AdvertisingInfoTableFormat
+              RefValue: AdvertisingInfoStagingTableFormat
+        - Id: AdvertisingInfogTableFormat
+          Name: Advertising Info Table Format
+          Fields:
+            - Key: type
+              StringValue: DynamoDBExportDataFormat
         - Id: AdvertisingInfoTable
           Name: Advertising Info Table
           Fields:
@@ -1428,6 +1433,8 @@ Resources:
               StringValue: DynamoDBDataNode
             - Key: tableName
               StringValue: !Ref AdvertisingInfoTable
+            - Key: dataFormat
+              RefValue: AdvertisingInfoTableFormat
             - Key: precondition
               RefValue: AdvertisingInfoTableExists
         - Id: StageDataForAdvertisingInfo
