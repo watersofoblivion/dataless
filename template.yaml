@@ -1379,7 +1379,7 @@ Resources:
             - Key: period
               StringValue: 1 days
             - Key: startDateTime
-              StringValue: 2019-05-21T01:00:00Z
+              StringValue: 2019-05-21T01:00:00
         - Id: Default
           Name: Default
           Fields:
@@ -1626,7 +1626,7 @@ Resources:
             - Key: period
               StringValue: 1 days
             - Key: startDateTime
-              StringValue: 2019-05-21T01:00:00Z
+              StringValue: 2019-05-21T01:00:00
         - Id: Default
           Name: Default
           Fields:
