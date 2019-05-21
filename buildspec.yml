@@ -46,7 +46,7 @@ phases:
       - aws cloudformation package --template template.yaml --s3-bucket "${CODE_BUCKET}" --s3-prefix "build/${CODEBUILD_BUILD_ID}/" --output-template cloudformation.yaml
   post_build:
     commands:
-      - if [ ! -f ./config/${BRANCH}.json ]; then exit "No config file found"
+      - if [ ! -f ./config/${BRANCH}.json ]; then exit "No config file found"; fi
       - envsubst < ./config/${BRANCH}.json > config.json
 
 artifacts:
