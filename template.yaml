@@ -1008,16 +1008,16 @@ Resources:
                 Mapping: "$.parent_id"
               - Name: actor_type
                 SqlType: VARCHAR(255)
-                Mapping: "$.object_type"
+                Mapping: "$.actor_type"
               - Name: actor_id
                 SqlType: VARCHAR(64)
-                Mapping: "$.user_id"
+                Mapping: "$.actor_id"
               - Name: event_type
                 SqlType: VARCHAR(255)
-                Mapping: "$.event"
+                Mapping: "$.event_type"
               - Name: event_id
                 SqlType: VARCHAR(64)
-                Mapping: "$.event"
+                Mapping: "$.event_id"
               - Name: object_type
                 SqlType: VARCHAR(255)
                 Mapping: "$.object_type"
