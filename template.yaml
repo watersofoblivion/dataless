@@ -906,7 +906,7 @@ Resources:
                   - lambda:GetFunctionConfiguration
                 Effect: Allow
                 Resource:
-                  - !Ref RealTimeAdvertisingLambda
+                  - !GetAtt RealTimeAdvertisingLambda.Arn
               - Action:
                   - firehose:DescribeDeliveryStream
                   - firehose:Get*
