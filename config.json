@@ -1,6 +1,6 @@
 {
   "Parameters": {
-    "CodeBucket": "${S3_BUCKET}",
+    "CodeBucket": "${CODE_BUCKET}",
     "CodePrefix": "build/${CODEBUILD_BUILD_ID}",
     "KeyPair": "${KEY_PAIR}",
     "Stage": "${STAGE_NAME}",
