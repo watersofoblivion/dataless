@@ -1707,8 +1707,6 @@ Resources:
           Fields:
             - Key: type
               StringValue: HiveActivity
-            - Key: dependsOn
-              RefValue: ExtractAdvertisingData
             - Key: scriptUri
               StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/stage_data_for_redshift.hql"
             - !If
@@ -1812,8 +1810,6 @@ Resources:
           Fields:
             - Key: type
               StringValue: SqlActivity
-            - Key: dependsOn
-              RefValue: ExtractAdvertisingData
             - Key: database
               RefValue: RedshiftCluster
             - Key: runsOn
@@ -1825,8 +1821,6 @@ Resources:
           Fields:
             - Key: type
               StringValue: SqlActivity
-            - Key: dependsOn
-              RefValue: ExtractAdvertisingData
             - Key: database
               RefValue: RedshiftCluster
             - Key: runsOn
