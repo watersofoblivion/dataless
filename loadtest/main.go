@@ -362,7 +362,7 @@ outer:
 	for i := int64(0); i < config.Events; i++ {
 		select {
 		case <-ctx.Done():
-			close(events)
+			close(adStream)
 			break outer
 		case adStream <- ads.Random():
 		}
