@@ -831,7 +831,7 @@ Resources:
   # Real Time #
   #############
 
-  RealTimeDashboard:
+  RealTimeAdvertisingDashboard:
     Type: AWS::CloudWatch::Dashboard
     Properties:
       DashboardBody: !Sub |
@@ -862,7 +862,7 @@ Resources:
           ]
         }
 
-  RealTimeEventsLambdaRole:
+  RealTimeAdvertisingLambdaRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -876,13 +876,13 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
 
-  RealTimeEventsLambda:
+  RealTimeAdvertisingLambda:
     Type: AWS::Serverless::Function
     Properties:
       Handler: bin/events
-      Role: !GetAtt RealTimeEventsLambdaRole.Arn
+      Role: !GetAtt RealTimeAdvertisingLambdaRole.Arn
 
-  RealTimeEventsApplicationRole:
+  RealTimeAdvertisingApplicationRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -906,7 +906,7 @@ Resources:
                   - lambda:GetFunctionConfiguration
                 Effect: Allow
                 Resource:
-                  - !Ref RealTimeEventsLambda.Alias
+                  - !Ref RealTimeAdvertisingLambda.Alias
               - Action:
                   - firehose:DescribeDeliveryStream
                   - firehose:Get*
@@ -914,16 +914,18 @@ Resources:
                 Resource:
                   - !GetAtt EventsDeliveryStream.Arn
 
-  RealTimeEventsApplication:
+  RealTimeAdvertisingApplication:
     Type: AWS::KinesisAnalytics::Application
     Properties:
       ApplicationCode: |
-        CREATE OR REPLACE STREAM CLICKTHROUGH (
-          AD_ID VARCHAR(64)
+        CREATE OR REPLACE STREAM ADVERTISING (
+          AD_ID         VARCHAR(64),
+          IMPRESSION_AT TIMESTAMP,
+          CLICK_AT      TIMESTAMP
         );
 
-        CREATE OR REPLACE PUMP CLICKTHROUGH_PUMP AS
-        INSERT INTO CLICKTHROUGH
+        CREATE OR REPLACE PUMP ADVERTISING_PUMP AS
+        INSERT INTO ADVERTISING
         SELECT AD_ID
         FROM EVENTS_001
         WINDOWED BY STAGGER (
@@ -934,7 +936,7 @@ Resources:
         - NamePrefix: EVENTS
           KinesisFirehoseInput:
             ResourceARN: !GetAtt EventsDeliveryStream.Arn
-            RoleARN: !GetAtt RealTimeEventsApplicationRole.Arn
+            RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
           InputSchema:
             RecordEncoding: UTF-8
             RecordFormat:
@@ -977,14 +979,14 @@ Resources:
   RealTimeEventsOutputs:
     Type: AWS::KinesisAnalytics::ApplicationOutput
     Properties:
-      ApplicationName: !Ref RealTimeEventsApplication
+      ApplicationName: !Ref RealTimeAdvertisingApplication
       Output:
-        Name: CLICKTHROUGH
+        Name: ADVERTISING
         DestinationSchema:
           RecordFormatType: JSON
         LambdaOutput:
-          ResourceARN: !Ref RealTimeEventsLambda.Alias
-          RoleARN: !GetAtt RealTimeEventsApplicationRole.Arn
+          ResourceARN: !Ref RealTimeAdvertisingLambda.Alias
+          RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
 
   #############
   # Data Lake #
@@ -2026,7 +2028,7 @@ Resources:
                       },
                       "KeyConditionExpression": "#ID = :id AND #Date BETWEEN #start AND #end",
                       "Limit": $input.params('limit'),
-                      "TableName": "${AdvertisingInfoTable}"
+                      "TableName": "${TempAdvertisingInfoTable}"
                     }
                 requestParameters:
                   integration.request.header.Content-Type: "'x-amz-json-1.1'"
@@ -2417,7 +2419,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "Success", "Application", "${RealTimeEventsApplication}"]
+                  ["AWS/KinesisAnalytics", "Success", "Application", "${RealTimeAdvertisingApplication}"]
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
@@ -2430,7 +2432,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "KPUs", "Application", "${RealTimeEventsApplication}"]
+                  ["AWS/KinesisAnalytics", "KPUs", "Application", "${RealTimeAdvertisingApplication}"]
                 ],
                 "period": 60,
                 "stat": "Average",
@@ -2444,7 +2446,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "MillisBehindLatest", "Application", "${RealTimeEventsApplication}"]
+                  ["AWS/KinesisAnalytics", "MillisBehindLatest", "Application", "${RealTimeAdvertisingApplication}"]
                 ],
                 "period": 60,
                 "stat": "Maximum",
@@ -2458,7 +2460,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "Records", "Application", "${RealTimeEventsApplication}"]
+                  ["AWS/KinesisAnalytics", "Records", "Application", "${RealTimeAdvertisingApplication}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2472,7 +2474,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "Bytes", "Application", "${RealTimeEventsApplication}"]
+                  ["AWS/KinesisAnalytics", "Bytes", "Application", "${RealTimeAdvertisingApplication}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2486,7 +2488,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.Success", "Application", "${RealTimeEventsApplication}"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.Success", "Application", "${RealTimeAdvertisingApplication}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2500,7 +2502,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.OkBytes", "Application", "${RealTimeEventsApplication}"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.OkBytes", "Application", "${RealTimeAdvertisingApplication}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2514,7 +2516,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.Duration", "Application", "${RealTimeEventsApplication}"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.Duration", "Application", "${RealTimeAdvertisingApplication}"]
                 ],
                 "period": 60,
                 "stat": "Average",
@@ -2528,7 +2530,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.OkRecords", "Application", "${RealTimeEventsApplication}"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.OkRecords", "Application", "${RealTimeAdvertisingApplication}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2542,7 +2544,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.DroppedRecords", "Application", "${RealTimeEventsApplication}"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.DroppedRecords", "Application", "${RealTimeAdvertisingApplication}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2556,7 +2558,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.ProcessingFailedRecords", "Application", "${RealTimeEventsApplication}"]
+                  ["AWS/KinesisAnalytics", "InputProcessing.ProcessingFailedRecords", "Application", "${RealTimeAdvertisingApplication}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2570,7 +2572,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.OkRecords", "Application", "${RealTimeEventsApplication}"]
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.OkRecords", "Application", "${RealTimeAdvertisingApplication}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2584,7 +2586,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.DeliveryFailedRecords", "Application", "${RealTimeEventsApplication}"]
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.DeliveryFailedRecords", "Application", "${RealTimeAdvertisingApplication}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2598,7 +2600,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.Duration", "Application", "${RealTimeEventsApplication}"]
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.Duration", "Application", "${RealTimeAdvertisingApplication}"]
                 ],
                 "period": 60,
                 "stat": "Average",
@@ -2618,7 +2620,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Invocations", "FunctionName", "${RealTimeEventsLambda}"]
+                  ["AWS/Lambda", "Invocations", "FunctionName", "${RealTimeAdvertisingLambda}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2632,7 +2634,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Duration", "FunctionName", "${RealTimeEventsLambda}"]
+                  ["AWS/Lambda", "Duration", "FunctionName", "${RealTimeAdvertisingLambda}"]
                 ],
                 "period": 60,
                 "stat": "p95",
@@ -2646,7 +2648,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Errors", "FunctionName", "${RealTimeEventsLambda}"]
+                  ["AWS/Lambda", "Errors", "FunctionName", "${RealTimeAdvertisingLambda}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2660,7 +2662,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "DeadLetterErrors", "FunctionName", "${RealTimeEventsLambda}"]
+                  ["AWS/Lambda", "DeadLetterErrors", "FunctionName", "${RealTimeAdvertisingLambda}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2674,7 +2676,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${RealTimeEventsLambda}"]
+                  ["AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${RealTimeAdvertisingLambda}"]
                 ],
                 "period": 60,
                 "stat": "Maximum",
@@ -2688,7 +2690,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "UnreservedConcurrentExecutions", "FunctionName", "${RealTimeEventsLambda}"]
+                  ["AWS/Lambda", "UnreservedConcurrentExecutions", "FunctionName", "${RealTimeAdvertisingLambda}"]
                 ],
                 "period": 60,
                 "stat": "Average",
@@ -2702,7 +2704,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Throttles", "FunctionName", "${RealTimeEventsLambda}"]
+                  ["AWS/Lambda", "Throttles", "FunctionName", "${RealTimeAdvertisingLambda}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2716,7 +2718,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "IteratorAge", "FunctionName", "${RealTimeEventsLambda}"]
+                  ["AWS/Lambda", "IteratorAge", "FunctionName", "${RealTimeAdvertisingLambda}"]
                 ],
                 "period": 60,
                 "stat": "Maximum",
