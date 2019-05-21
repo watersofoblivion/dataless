@@ -971,7 +971,7 @@ Resources:
         DestinationSchema:
           RecordFormatType: JSON
         LambdaOutput:
-          ResourceARN: !Ref RealTimeAdvertisingLambda
+          ResourceARN: !GetAtt RealTimeAdvertisingLambda.Arn
           RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
 
   #############
