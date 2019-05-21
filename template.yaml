@@ -1411,7 +1411,7 @@ Resources:
             - Key: type
               StringValue: DynamoDBExportDataFormat
             - Key: column
-              StringValue: foo VARCHAR(255)
+              StringValue: foo STRING
         - Id: AdvertisingInfoStagingTable
           Name: Advertising Info Staging Table
           Fields:
@@ -1663,11 +1663,11 @@ Resources:
             - Key: type
               StringValue: CSV
             - Key: column
-              StringValue: session_id VARCHAR(64)
+              StringValue: session_id STRING
             - Key: column
-              StringValue: user_id VARCHAR(64)
+              StringValue: user_id STRING
             - Key: column
-              StringValue: ad_id VARCHAR(64)
+              StringValue: ad_id STRING
             - Key: column
               StringValue: impression_at TIMESTAMP
             - Key: column
