@@ -1371,13 +1371,24 @@ Resources:
         - Id: myRegion
           StringValue: !Ref AWS::Region
       PipelineObjects:
+        - Id: DailySchedule
+          Name: Daily Schedule
+          Fields:
+            - Key: type
+              StringValue: Schedule
+            - Key: period
+              StringValue: 1 days
+            - Key: startAt
+              StringValue: 2019-05-21T01:00:00Z
         - Id: Default
           Name: Default
           Fields:
             - Key: type
               StringValue: Default
+            - Key: schedule
+              RefValue: DailySchedule
             - Key: scheduleType
-              StringValue: ondemand
+              StringValue: timeseries
             - Key: role
               StringValue: !Ref PipelineRole
             - Key: resourceRole
@@ -1607,13 +1618,24 @@ Resources:
         - Id: myRegion
           StringValue: !Ref AWS::Region
       PipelineObjects:
+        - Id: DailySchedule
+          Name: Daily Schedule
+          Fields:
+            - Key: type
+              StringValue: Schedule
+            - Key: period
+              StringValue: 1 days
+            - Key: startAt
+              StringValue: 2019-05-21T01:00:00Z
         - Id: Default
           Name: Default
           Fields:
             - Key: type
               StringValue: Default
+            - Key: schedule
+              RefValue: DailySchedule
             - Key: scheduleType
-              StringValue: ondemand
+              StringValue: timeseries
             - Key: role
               StringValue: !Ref PipelineRole
             - Key: resourceRole
