@@ -1199,18 +1199,35 @@ Resources:
               - Name: click_at
                 Type: timestamp
 
-  AdvertisingInfoTable:
+  # AdvertisingInfoTable:
+  #   Type: AWS::DynamoDB::Table
+  #   Properties:
+  #     AttributeDefinitions:
+  #       - AttributeName: ID
+  #         AttributeType: S
+  #       - AttributeName: Date
+  #         AttributeType: S
+  #     KeySchema:
+  #       - AttributeName: ID
+  #         KeyType: HASH
+  #       - AttributeName: Date
+  #         KeyType: RANGE
+  #     BillingMode: PAY_PER_REQUEST
+  #     SSESpecification:
+  #       SSEEnabled: true
+
+  TempAdvertisingInfoTable:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
-        - AttributeName: ID
+        - AttributeName: ad_id
           AttributeType: S
-        - AttributeName: Date
+        - AttributeName: day
           AttributeType: S
       KeySchema:
-        - AttributeName: ID
+        - AttributeName: ad_id
           KeyType: HASH
-        - AttributeName: Date
+        - AttributeName: day
           KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
@@ -1428,14 +1445,22 @@ Resources:
             - Key: type
               StringValue: DynamoDBTableExists
             - Key: tableName
-              StringValue: !Ref AdvertisingInfoTable
+              StringValue: !Ref TempAdvertisingInfoTable
         - Id: AdvertisingInfoStagingTableFormat
           Name: Advertising Info Staging Table Format
           Fields:
             - Key: type
               StringValue: DynamoDBExportDataFormat
             - Key: column
-              StringValue: foo STRING
+              StringValue: ad_id STRING
+            - Key: column
+              StringValue: day STRING
+            - Key: column
+              StringValue: impressions BIGINT
+            - Key: column
+              StringValue: clicks BIGINT
+            - Key: column
+              StringValue: clickthrough_rate FLOAT
         - Id: AdvertisingInfoStagingTable
           Name: Advertising Info Staging Table
           Fields:
@@ -1456,7 +1481,7 @@ Resources:
             - Key: type
               StringValue: DynamoDBDataNode
             - Key: tableName
-              StringValue: !Ref AdvertisingInfoTable
+              StringValue: !Ref TempAdvertisingInfoTable
             - Key: dataFormat
               RefValue: AdvertisingInfoTableFormat
             - Key: precondition
@@ -1893,7 +1918,7 @@ Resources:
                   - dynamodb:Query
                 Effect: Allow
                 Resource:
-                  - !GetAtt AdvertisingInfoTable.Arn
+                  - !GetAtt TempAdvertisingInfoTable.Arn
 
   API:
     Type: AWS::Serverless::Api
