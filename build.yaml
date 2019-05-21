@@ -32,6 +32,7 @@ Parameters:
   Repo:
     Type: String
     Description: The name of the repository.  If using CodeCommit, this is the name of the created repository.
+    Default: ''
   AccessToken:
     Type: String
     Description: The GitHub token to use to fetch source code (if using GitHub.)
@@ -39,11 +40,14 @@ Parameters:
     NoEcho: true
 
 Conditions:
+  RepoNameGiven: !Not [!Equals [!Ref Repo, ""]]
   UseGitHub: !And
     - !Not [!Equals [!Ref Owner, ""]]
+    - !Not [!Equals [!Ref Repo, ""]]
     - !Not [!Equals [!Ref AccessToken, ""]]
   UseCodeCommit: !Or
     - !Equals [!Ref Owner, ""]
+    - !Equals [!Ref Repo, ""]
     - !Equals [!Ref AccessToken, ""]
 
 Outputs:
@@ -148,7 +152,10 @@ Resources:
     Condition: UseCodeCommit
     DeletionPolicy: Retain
     Properties:
-      RepositoryName: !Ref AWS::StackName
+      RepositoryName: !If
+        - RepoNameGiven
+        - !Ref Repo
+        - !Ref AWS::StackName
 
   # A CodePipeline pipeline to build and deploy the data pipeline.
   #
