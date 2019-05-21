@@ -879,7 +879,7 @@ Resources:
   RealTimeAdvertisingLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: bin/events
+      Handler: bin/real-time-advertising
       Role: !GetAtt RealTimeAdvertisingLambdaRole.Arn
 
   RealTimeAdvertisingApplicationRole:
@@ -906,7 +906,7 @@ Resources:
                   - lambda:GetFunctionConfiguration
                 Effect: Allow
                 Resource:
-                  - !Ref RealTimeAdvertisingLambda.Alias
+                  - !Ref RealTimeAdvertisingLambda
               - Action:
                   - firehose:DescribeDeliveryStream
                   - firehose:Get*
@@ -1037,7 +1037,7 @@ Resources:
         DestinationSchema:
           RecordFormatType: JSON
         LambdaOutput:
-          ResourceARN: !Ref RealTimeAdvertisingLambda.Alias
+          ResourceARN: !Ref RealTimeAdvertisingLambda
           RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
 
   #############
