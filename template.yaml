@@ -1428,8 +1428,6 @@ Resources:
               StringValue: DynamoDBDataNode
             - Key: tableName
               StringValue: !Ref AdvertisingInfoTable
-            - Key: dataFormat
-              RefValue: AdvertisingInfoTableFormat
             - Key: precondition
               RefValue: AdvertisingInfoTableExists
         - Id: StageDataForAdvertisingInfo
