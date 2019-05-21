@@ -918,6 +918,52 @@ Resources:
     Type: AWS::KinesisAnalytics::Application
     Properties:
       ApplicationCode: |
+        CREATE OR REPLACE STREAM IMPRESSIONS (
+          SESSION_ID    VARCHAR(64),
+          CONTEXT_ID    VARCHAR(64),
+          EVENT_ID      VARCHAR(64),
+          AD_ID         VARCHAR(64),
+          IMPRESSION_AT TIMESTAMP
+        );
+
+        CREATE OR REPLACE PUMP IMPRESSIONS_PUMP AS
+        INSERT INTO IMPRESSIONS
+        SELECT
+          EVENTS.SESSION_ID  AS SESSION_ID,
+          EVENTS.CONTEXT_ID  AS CONTEXT_ID,
+          EVENTS.PARENT_ID   AS PARENT_ID,
+          EVENTS.OBJECT_ID   AS AD_ID,
+          EVENTS.OCCURRED_AT AS IMPRESSION_AT
+        FROM
+          EVENTS_001 AS EVENTS
+        WHERE
+              EVENTS.OBJECT_TYPE = 'ad'
+          AND EVENTS.EVENT_TYPE = 'impression'
+        ;
+
+        CREATE OR REPLACE STREAM CLICKS (
+          SESSION_ID VARCHAR(64),
+          CONTEXT_ID VARCHAR(64),
+          PARENT_ID  VARCHAR(64),
+          AD_ID      VARCHAR(64),
+          CLICK_AT   TIMESTAMP
+        );
+
+        CREATE OR REPLACE PUMP CLICKS_PUMP AS
+        INSERT INTO CLICKS
+        SELECT
+          EVENTS.SESSION_ID  AS SESSION_ID,
+          EVENTS.CONTEXT_ID  AS CONTEXT_ID,
+          EVENTS.PARENT_ID   AS PARENT_ID,
+          EVENTS.OBJECT_ID   AS AD_ID,
+          EVENTS.OCCURRED_AT AS CLICK_AT
+        FROM
+          EVENTS_001 AS EVENTS
+        WHERE
+              EVENTS.OBJECT_TYPE = 'ad'
+          AND EVENTS.EVENT_TYPE = 'click'
+        ;
+
         CREATE OR REPLACE STREAM ADVERTISING (
           AD_ID         VARCHAR(64),
           IMPRESSION_AT TIMESTAMP,
@@ -926,12 +972,18 @@ Resources:
 
         CREATE OR REPLACE PUMP ADVERTISING_PUMP AS
         INSERT INTO ADVERTISING
-        SELECT AD_ID
-        FROM EVENTS_001
-        WINDOWED BY STAGGER (
-          PARTITION BY AD_ID
-          RANGE INTERVAL '1' MINUTE
-        );
+        SELECT
+          IMPRESSIONS.AD_ID         AS AS_ID,
+          IMPRESSIONS.IMPRESSION_AT AS IMPRESSION_AT,
+          CLICKS.CLICK_AT           AS CLICK_AT
+        FROM IMPRESSIONS
+        OUTER JOIN CLICKS OVER LAST_5_MINUTES
+          ON  IMPRESSIONS.SESSION_ID = CLICKS.SESSION_ID
+          AND IMPRESSIONS.CONTEXT_ID = CLICKS.CONTEXT_ID
+          AND IMPRESSIONS.EVENT_ID   = CLICKS.PARENT_ID
+        WINDOW
+          LAST_5_MINUTES AS (RANGE INTERVAL '5' MINUTE PRECEDING)
+        ;
       Inputs:
         - NamePrefix: EVENTS
           KinesisFirehoseInput:
