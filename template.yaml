@@ -1421,7 +1421,7 @@ Resources:
               StringValue: !Sub "s3://${Bucket}/data/tmp/advertising-info-staging-table/"
             - Key: dataFormat
               RefValue: AdvertisingInfoStagingTableFormat
-        - Id: AdvertisingInfogTableFormat
+        - Id: AdvertisingInfoTableFormat
           Name: Advertising Info Table Format
           Fields:
             - Key: type
