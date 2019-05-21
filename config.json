@@ -2,6 +2,7 @@
   "Parameters": {
     "CodeBucket": "${S3_BUCKET}",
     "CodePrefix": "build/${CODEBUILD_BUILD_ID}",
+    "KeyPair": "${KEY_PAIR}",
     "Stage": "${STAGE_NAME}",
     "DNSDomainName": "${DNS_DOMAIN_NAME}",
     "DNSName": "${DNS_NAME}",

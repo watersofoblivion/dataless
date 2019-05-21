@@ -10,6 +10,9 @@ Metadata:
           - Repo
           - AccessToken
           - Branch
+      - Label: EC2
+        Parameters:
+          - KeyPair
       - Label: Deployment Configuration
         Parameters:
           - Stage
@@ -51,6 +54,8 @@ Metadata:
         default: GitHub OAuth access token
       Branch:
         default: Branch to build
+      KeyPair:
+        default: EC2 KeyPair
       Stage:
         default: Stage to deploy
       DNSDomainName:
@@ -103,6 +108,9 @@ Parameters:
     Description: The GitHub token to use to fetch source code (if using GitHub.)
     Default: ''
     NoEcho: true
+  KeyPair:
+    Type: String
+    Description: The EC2 KeyPair to use
   Stage:
     Type: String
     Description: The name for a project pipeline stage, such as Staging or Prod, for which resources are provisioned and deployed.
@@ -346,6 +354,9 @@ Resources:
           - Type: PLAINTEXT
             Name: S3_BUCKET
             Value: !Ref Bucket
+          - Type: PLAINTEXT
+            Name: KEY_PAIR
+            Value: !Ref KeyPair
           - Type: PLAINTEXT
             Name: STAGE_NAME
             Value: !Ref Stage
