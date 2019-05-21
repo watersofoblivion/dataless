@@ -1552,6 +1552,27 @@ Resources:
               StringValue: !Sub "s3://${Bucket}/logs/data-pipeline/"
             - Key: failureAndRerunMode
               StringValue: cascade
+        - Id: EC2Instance
+          Name: EC2 Instance
+          Fields:
+            - Key: type
+              StringValue: Ec2Resource
+            - Key: actionOnTaskFailure
+              StringValue: terminate
+            - Key: actionOnResourceFailure
+              StringValue: retryAll
+            - Key: maximumRetries
+              StringValue: 1
+            - Key: instanceType
+              StringValue: m1.medium
+            - Key: subnetId
+              StringValue: !Ref Subnet
+            - Key: securityGroupIds
+              StringValue: !Ref SecurityGroup
+            - Key: associatePublicIpAddress
+              StringValue: true
+            - Key: keyPair
+              StringValue: temp
         - Id: HiveMetastoreClientFactoryClass
           Name: Hive Metastore Client Factory Class
           Fields:
@@ -1740,8 +1761,12 @@ Resources:
               RefValue: RedshiftAdvertisingAdTable
             - Key: insertMode
               StringValue: OVERWRITE_EXISTING
-            - Key: runsOn
-              RefValue: RedshiftCluster
+            - !If
+              - EC2InstanceEnabled
+              - Key: workerGroup
+                StringValue: !Sub "${AWS::StackName}-${AWS::Region}-instance-worker-group"
+              - Key: runsOn
+                RefValue: EC2Instance
             - Key: scriptArgument
               StringValue: "#{year(@scheduledStartTime)}"
             - Key: scriptArgument
@@ -1763,8 +1788,12 @@ Resources:
               RefValue: RedshiftAdvertisingUserTable
             - Key: insertMode
               StringValue: OVERWRITE_EXISTING
-            - Key: runsOn
-              RefValue: RedshiftCluster
+            - !If
+              - EC2InstanceEnabled
+              - Key: workerGroup
+                StringValue: !Sub "${AWS::StackName}-${AWS::Region}-instance-worker-group"
+              - Key: runsOn
+                RefValue: EC2Instance
             - Key: scriptArgument
               StringValue: "#{year(@scheduledStartTime)}"
             - Key: scriptArgument
@@ -1799,8 +1828,12 @@ Resources:
           Fields:
             - Key: type
               StringValue: SqlActivity
-            - Key: runsOn
-              RefValue: RedshiftCluster
+            - !If
+              - EC2InstanceEnabled
+              - Key: workerGroup
+                StringValue: !Sub "${AWS::StackName}-${AWS::Region}-instance-worker-group"
+              - Key: runsOn
+                RefValue: EC2Instance
             - Key: database
               RefValue: RedshiftCluster
             - Key: scriptUri
@@ -1812,8 +1845,12 @@ Resources:
               StringValue: SqlActivity
             - Key: database
               RefValue: RedshiftCluster
-            - Key: runsOn
-              RefValue: RedshiftCluster
+            - !If
+              - EC2InstanceEnabled
+              - Key: workerGroup
+                StringValue: !Sub "${AWS::StackName}-${AWS::Region}-instance-worker-group"
+              - Key: runsOn
+                RefValue: EC2Instance
             - Key: scriptUri
               StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/load_advertising_ad_from_spectrum.sql"
         - Id: SpectrumLoadAdvertisingUser
@@ -1823,8 +1860,12 @@ Resources:
               StringValue: SqlActivity
             - Key: database
               RefValue: RedshiftCluster
-            - Key: runsOn
-              RefValue: RedshiftCluster
+            - !If
+              - EC2InstanceEnabled
+              - Key: workerGroup
+                StringValue: !Sub "${AWS::StackName}-${AWS::Region}-instance-worker-group"
+              - Key: runsOn
+                RefValue: EC2Instance
             - Key: scriptUri
               StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/load_advertising_user_from_spectrum.sql"
 
