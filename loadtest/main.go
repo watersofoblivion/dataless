@@ -24,30 +24,21 @@ import (
 type Config struct {
 	BaseURL  string        `yaml:"BaseURL"`
 	Duration time.Duration `yaml:"Duration"`
-	Events   int64         `yaml:"Events"`
-	Tags     int           `yaml:"Tags"`
 	Ads      *AdsConfig    `yaml:"Ads"`
 	Users    *UsersConfig  `yaml:"Users"`
 }
 
 type AdsConfig struct {
 	Number int `yaml:"Number"`
-	Tags   int `yaml:"Tags"`
 }
 
 type UsersConfig struct {
-	Number                  int               `yaml:"Number"`
-	Tags                    int               `yaml:"Tags"`
-	MaximumClickThroughRate float64           `yaml:"MaximumClickThroughRate"`
-	ViewFrequency           *VariableDuration `yaml:"ViewFrequency"`
-	ViewVariance            *VariableDuration `yaml:"ViewVariance"`
-	ConsiderDuration        *VariableDuration `yaml:"ConsiderDuration"`
-	ConsiderVariance        *VariableDuration `yaml:"ConsiderVariance"`
-}
-
-type VariableDuration struct {
-	Interval time.Duration `yaml:"Interval"`
-	Variance time.Duration `yaml:"Variance"`
+	Number                  int           `yaml:"Number"`
+	ClickthroughProbability float64       `yaml:"ClickthroughProbability"`
+	ViewFrequency           time.Duration `yaml:"ViewFrequency"`
+	ViewVariance            float64       `yaml:"ViewVariance"`
+	ConsiderDuration        time.Duration `yaml:"ConsiderDuration"`
+	ConsiderVariance        float64       `yaml:"ConsiderVariance"`
 }
 
 type Events struct {
@@ -106,68 +97,39 @@ func (record *BatchWriteRecord) Error() string {
 }
 
 type Ads struct {
-	Ads []*Ad
+	Ads []uuid.UUID
 }
 
-func NewAds(nAds, adTags, nTags int) *Ads {
-	ads := &Ads{Ads: make([]*Ad, nAds)}
-
-	for i := 0; i < nAds; i++ {
-		ad := &Ad{
-			ID:   uuid.New(),
-			Tags: make([]int, adTags),
-		}
-		ads.Ads[i] = ad
-
-		for j := 0; j < adTags; j++ {
-			ad.Tags[j] = rand.Intn(nTags)
-		}
+func NewAds(n int) *Ads {
+	ads := &Ads{Ads: make([]uuid.UUID, n)}
+	for i := 0; i < n; i++ {
+		ads.Ads[i] = uuid.New()
 	}
-
 	return ads
 }
 
-func (ads *Ads) Random() *Ad {
+func (ads *Ads) Random() uuid.UUID {
 	return ads.Ads[rand.Intn(len(ads.Ads))]
 }
 
-type Ad struct {
-	ID   uuid.UUID
-	Tags []int
-}
-
 type Users struct {
-	Users []*User
+	Users []uuid.UUID
 }
 
-func NewUsers(nUsers, userTags, nTags int, viewFrequency, viewVariance, considerDuration, considerVariance, viewFrequencyVariance, viewVarianceVariance, considerDurationVariance, considerVarianceVariance int64) *Users {
-	users := &Users{Users: make([]*User, nUsers)}
-
-	for i := 0; i < nUsers; i++ {
-		users.Users[i] = &User{
-			ID:               uuid.New(),
-			Tags:             make([]int, userTags),
-			ViewFrequency:    viewFrequency + (rand.Int63n(viewFrequencyVariance) - (viewFrequencyVariance / 2)),
-			ViewVariance:     viewVariance + (rand.Int63n(viewVarianceVariance) - (viewVarianceVariance / 2)),
-			ConsiderDuration: considerDuration + (rand.Int63n(considerDurationVariance) - (considerDurationVariance / 2)),
-			ConsiderVariance: considerVariance + (rand.Int63n(considerVarianceVariance) - (considerVarianceVariance / 2)),
-		}
-
-		for j := 0; j < userTags; j++ {
-			users.Users[i].Tags[j] = rand.Intn(nTags)
-		}
+func NewUsers(n int) *Users {
+	users := &Users{Users: make([]uuid.UUID, n)}
+	for i := 0; i < n; i++ {
+		users.Users[i] = uuid.New()
 	}
-
 	return users
 }
 
-type User struct {
-	ID               uuid.UUID
-	ViewFrequency    int64
-	ViewVariance     int64
-	ConsiderDuration int64
-	ConsiderVariance int64
-	Tags             []int
+func jitter(d time.Duration, variability float64) time.Duration {
+	dInt64 := int64(d)
+	fD := float64(dInt64)
+	r := rand.Float64() * fD * variability
+	slid := r - (r / 2.0)
+	return time.Duration(int64(fD + slid))
 }
 
 var (
@@ -194,15 +156,10 @@ func main() {
 		log.Panicf("could not parse base URL: %s", err)
 	}
 
-	ads := NewAds(config.Ads.Number, config.Ads.Tags, config.Tags)
-	users := NewUsers(
-		config.Users.Number, config.Users.Tags, config.Tags,
-		int64(config.Users.ViewFrequency.Interval), int64(config.Users.ViewVariance.Interval), int64(config.Users.ConsiderDuration.Interval), int64(config.Users.ConsiderVariance.Interval),
-		int64(config.Users.ViewFrequency.Variance), int64(config.Users.ViewVariance.Variance), int64(config.Users.ConsiderDuration.Variance), int64(config.Users.ConsiderVariance.Variance),
-	)
+	ads := NewAds(config.Ads.Number)
+	users := NewUsers(config.Users.Number)
 
 	wg := new(sync.WaitGroup)
-
 	ctx, cancel := context.WithTimeout(context.Background(), config.Duration)
 
 	eventBatches := make(chan *Events)
@@ -292,7 +249,7 @@ func main() {
 		close(events)
 	}()
 
-	adStream := make(chan *Ad)
+	adStream := make(chan uuid.UUID)
 	wg.Add(config.Users.Number)
 	usersWg.Add(config.Users.Number)
 	for i := 0; i < config.Users.Number; i++ {
@@ -305,60 +262,45 @@ func main() {
 
 			for ad := range adStream {
 				contextID := uuid.New()
-
 				impressionID := uuid.New()
+
 				events <- &Event{
 					Session:    sessionID,
 					Context:    contextID,
 					ActorType:  "customer",
-					Actor:      users.Users[i].ID,
+					Actor:      users.Users[i],
 					EventType:  "impression",
 					Event:      impressionID,
 					ObjectType: "ad",
-					Object:     ad.ID,
+					Object:     ad,
 					OccurredAt: time.Now(),
 				}
 
-				considerTime := users.Users[i].ConsiderDuration + (rand.Int63n(users.Users[i].ConsiderVariance) - (users.Users[i].ConsiderVariance / 2))
 				select {
 				case <-ctx.Done():
 					return
-				case <-time.After(time.Duration(considerTime)):
+				case <-time.After(config.Users.ConsiderDuration):
 				}
 
-				m := make(map[int]struct{})
-				common := 0
-				for tag := range users.Users[i].Tags {
-					m[tag] = struct{}{}
-				}
-				for tag := range ad.Tags {
-					if _, found := m[tag]; found {
-						common++
-					} else {
-						m[tag] = struct{}{}
-					}
-				}
-				clickthroughProbability := float64(common) / float64(len(m)) * config.Users.MaximumClickThroughRate
-				if rand.Float64() < clickthroughProbability {
+				if rand.Float64() < config.Users.ClickthroughProbability {
 					events <- &Event{
 						Session:    sessionID,
 						Context:    contextID,
 						Parent:     impressionID,
 						ActorType:  "customer",
-						Actor:      users.Users[i].ID,
+						Actor:      users.Users[i],
 						EventType:  "click",
 						Event:      uuid.New(),
 						ObjectType: "ad",
-						Object:     ad.ID,
+						Object:     ad,
 						OccurredAt: time.Now(),
 					}
 				}
 
-				sleepTime := users.Users[i].ViewFrequency + (rand.Int63n(users.Users[i].ViewVariance) - (users.Users[i].ViewVariance / 2))
 				select {
 				case <-ctx.Done():
 					return
-				case <-time.After(time.Duration(sleepTime)):
+				case <-time.After(config.Users.ViewFrequency):
 				}
 			}
 		}()
@@ -371,16 +313,15 @@ func main() {
 	}()
 	signal.Notify(signals, os.Interrupt)
 
-outer:
-	for i := int64(0); i < config.Events; i++ {
+	defer wg.Wait()
+	defer cancel()
+
+	for {
 		select {
 		case <-ctx.Done():
 			close(adStream)
-			break outer
+			return
 		case adStream <- ads.Random():
 		}
 	}
-
-	cancel()
-	wg.Wait()
 }

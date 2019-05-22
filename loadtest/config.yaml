@@ -1,23 +1,11 @@
 BaseURL: https://${API_ID}.execute-api.${REGION}.amazonaws.com/${STAGE}
-Events: 1000000000
-Tags: 10000
 Duration: 1h
 Ads:
   Number: 1000000
-  Tags: 5
 Users:
   Number: 10000
-  Tags: 5
-  MaximumClickThroughRate: 0.3
-  ViewFrequency:
-    Interval: 5s
-    Variance: 1s
-  ViewVariance:
-    Interval: 1s
-    Variance: 500ms
-  ConsiderDuration:
-    Interval: 1s
-    Variance: 500ms
-  ConsiderVariance:
-    Interval: 100ms
-    Variance: 10ms
+  ClickthroughProbability: 0.3
+  ViewFrequency: 5s
+  ViewVariance: 0.1
+  ConsiderDuration: 1s
+  ConsiderVariance: 0.1
