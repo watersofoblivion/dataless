@@ -217,6 +217,7 @@ func main() {
 		}).String()
 
 		for batch := range eventBatches {
+			eb := backoff.WithContext(backoff.NewExponentialBackOff(), ctx)
 			err := backoff.RetryNotify(func() error {
 				buf.Reset()
 				if err := encoder.Encode(batch); err != nil {
@@ -251,7 +252,7 @@ func main() {
 				}
 
 				return nil
-			}, backoff.NewExponentialBackOff(), func(err error, bo time.Duration) {
+			}, eb, func(err error, bo time.Duration) {
 				log.Printf("%s.  Backing off %s", err, bo)
 			})
 			if err != nil {
