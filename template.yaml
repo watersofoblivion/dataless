@@ -1493,9 +1493,9 @@ Resources:
             - Key: scriptVariable
               StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
             - Key: scriptVariable
-              StringValue: TIME_START=#{@scheduledStartTime}
+              StringValue: TIME_START=#{format(@scheduledStartTime, 'YYYY-MM-dd HH:mm:ss')}
             - Key: scriptVariable
-              StringValue: TIME_END=#{@scheduledEndTime}
+              StringValue: TIME_END=#{format(@scheduledEndTime, 'YYYY-MM-dd HH:mm:ss')}
         - Id: AdvertisingInfoTableExists
           Name: Advertising Info Table Exists
           Fields:
@@ -1567,9 +1567,9 @@ Resources:
             - Key: scriptVariable
               StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
             - Key: scriptVariable
-              StringValue: TIME_START=#{@scheduledStartTime}
+              StringValue: TIME_START=#{format(@scheduledStartTime, 'YYYY-MM-dd HH:mm:ss')}
             - Key: scriptVariable
-              StringValue: TIME_END=#{@scheduledEndTime}
+              StringValue: TIME_END=#{format(@scheduledEndTime, 'YYYY-MM-dd HH:mm:ss')}
         - Id: LoadAdvertisingInfoTable
           Name: Load Advertising Info Into DynamoDB Table
           Fields:
@@ -1850,9 +1850,9 @@ Resources:
             - Key: scriptVariable
               StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
             - Key: scriptVariable
-              StringValue: TIME_START=#{@scheduledStartTime}
+              StringValue: TIME_START=#{format(@scheduledStartTime, 'YYYY-MM-dd HH:mm:ss')}
             - Key: scriptVariable
-              StringValue: TIME_END=#{@scheduledEndTime}
+              StringValue: TIME_END=#{format(@scheduledEndTime, 'YYYY-MM-dd HH:mm:ss')}
         - Id: LoadAdvertisingAdIntoRedshift
           Name: Load Advertising by Ad Into Redshift
           Fields:
