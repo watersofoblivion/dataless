@@ -692,54 +692,54 @@ Resources:
                 Effect: Allow
                 Resource: "*"
 
-  # EMR:
-  #   Type: AWS::EMR::Cluster
-  #   Condition: EMREnabled
-  #   Properties:
-  #     Applications:
-  #       - Name: hive
-  #       - Name: pig
-  #       - Name: spark
-  #     # BootstrapActions:
-  #     #   - Name: Install Task Runner
-  #     #     ScriptBootstrapAction:
-  #     #       Path: s3://elasticmapreduce/bootstrap-actions/run-if
-  #     #       Args:
-  #     #         - instance.isMaster=true
-  #     #         - !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/emr/install_task_runner.sh"
-  #     #         - !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
-  #     #         - !Ref AWS::Region
-  #     #         - !Sub "s3://${Bucket}/logs/task-runner/emr/"
-  #     Configurations:
-  #       - Classification: hive-site
-  #         ConfigurationProperties:
-  #           hive.metastore.client.factory.class: com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory
-  #           hive.metastore.glue.catalogid: !Ref AWS::AccountId
-  #       - Classification: spark-hive-site
-  #         ConfigurationProperties:
-  #           hive.metastore.client.factory.class: com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory
-  #           hive.metastore.glue.catalogid: !Ref AWS::AccountId
-  #     Instances:
-  #       AdditionalMasterSecurityGroups:
-  #         - !Ref SecurityGroup
-  #         - !GetAtt VPC.DefaultSecurityGroup
-  #       AdditionalSlaveSecurityGroups:
-  #         - !Ref SecurityGroup
-  #         - !GetAtt VPC.DefaultSecurityGroup
-  #       Ec2KeyName: !Ref KeyPair
-  #       Ec2SubnetId: !Ref Subnet
-  #       MasterInstanceGroup:
-  #         InstanceCount: !Ref EMRMasterInstanceCount
-  #         InstanceType: !Ref EMRMasterInstanceType
-  #       CoreInstanceGroup:
-  #         InstanceCount: !Ref EMRCoreInstanceCount
-  #         InstanceType: !Ref EMRCoreInstanceType
-  #       TerminationProtected: false
-  #     JobFlowRole: !Ref EMRProfile
-  #     Name: !Sub "${AWS::StackName}-${AWS::Region}-warehouse-emr-cluster"
-  #     ReleaseLabel: !Ref EMRRelease
-  #     ServiceRole: !Ref EMRServiceRole
-  #     LogUri: !Sub "s3://${Bucket}/logs/emr"
+  EMR:
+    Type: AWS::EMR::Cluster
+    Condition: EMREnabled
+    Properties:
+      Applications:
+        - Name: hive
+        - Name: pig
+        - Name: spark
+      # BootstrapActions:
+      #   - Name: Install Task Runner
+      #     ScriptBootstrapAction:
+      #       Path: s3://elasticmapreduce/bootstrap-actions/run-if
+      #       Args:
+      #         - instance.isMaster=true
+      #         - !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/emr/install_task_runner.sh"
+      #         - !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+      #         - !Ref AWS::Region
+      #         - !Sub "s3://${Bucket}/logs/task-runner/emr/"
+      Configurations:
+        - Classification: hive-site
+          ConfigurationProperties:
+            hive.metastore.client.factory.class: com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory
+            hive.metastore.glue.catalogid: !Ref AWS::AccountId
+        - Classification: spark-hive-site
+          ConfigurationProperties:
+            hive.metastore.client.factory.class: com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory
+            hive.metastore.glue.catalogid: !Ref AWS::AccountId
+      Instances:
+        AdditionalMasterSecurityGroups:
+          - !Ref SecurityGroup
+          - !GetAtt VPC.DefaultSecurityGroup
+        AdditionalSlaveSecurityGroups:
+          - !Ref SecurityGroup
+          - !GetAtt VPC.DefaultSecurityGroup
+        Ec2KeyName: !Ref KeyPair
+        Ec2SubnetId: !Ref Subnet
+        MasterInstanceGroup:
+          InstanceCount: !Ref EMRMasterInstanceCount
+          InstanceType: !Ref EMRMasterInstanceType
+        CoreInstanceGroup:
+          InstanceCount: !Ref EMRCoreInstanceCount
+          InstanceType: !Ref EMRCoreInstanceType
+        TerminationProtected: false
+      JobFlowRole: !Ref EMRProfile
+      Name: !Sub "${AWS::StackName}-${AWS::Region}-warehouse-emr-cluster"
+      ReleaseLabel: !Ref EMRRelease
+      ServiceRole: !Ref EMRServiceRole
+      LogUri: !Sub "s3://${Bucket}/logs/emr"
 
   ####################
   # Delivery Streams #
