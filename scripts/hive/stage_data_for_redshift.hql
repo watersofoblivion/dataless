@@ -7,5 +7,6 @@ FROM
 WHERE
       advertising.year = ${PARTITION_YEAR}
   AND advertising.month = ${PARTITION_MONTH}
-  AND advertising.impression_at BETWEEN ${TIME_START} AND ${TIME_END}
+  AND advertising.impression_at >= '${TIME_START}'
+  AND advertising.impression_at < '${TIME_END}'
 ;

@@ -11,7 +11,7 @@ WITH
     WHERE
           events.year = ${PARTITION_YEAR}
       AND events.month = ${PARTITION_MONTH}
-      AND events.impression_at BETWEEN ${TIME_START} AND ${TIME_END}
+      AND events.impression_at BETWEEN '${TIME_START}' AND '${TIME_END}'
       AND object_type = 'ad'
       AND event IN ('impression', 'click')
   ),
