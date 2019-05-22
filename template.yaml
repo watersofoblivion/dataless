@@ -1378,7 +1378,7 @@ Resources:
             - Key: type
               StringValue: Schedule
             - Key: period
-              StringValue: 1 days
+              StringValue: 1 hours
             - Key: startDateTime
               StringValue: "2019-05-21T00:00:00"
             - Key: occurrences
@@ -1627,7 +1627,7 @@ Resources:
             - Key: type
               StringValue: Schedule
             - Key: period
-              StringValue: 1 days
+              StringValue: 1 hours
             - Key: startDateTime
               StringValue: "2019-05-21T00:00:00"
             - Key: occurrences

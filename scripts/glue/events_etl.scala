@@ -38,14 +38,14 @@ object GlueApp {
     val rawTableName = args("raw_table_name")
     val tableName = args("table_name")
 
-    val adClicks = glueContext.getCatalogSource(databaseName, rawTableName).
+    val events = glueContext.getCatalogSource(databaseName, rawTableName).
       getDynamicFrame().
       applyMapping(mappings, false).
       resolveChoice(Seq.empty[ResolveSpec], Some(ChoiceOption("MATCH_CATALOG")), Some(databaseName), Some(tableName))
 
     val partitioning = JsonOptions("""{"partitionKeys":["year","month"]}""")
     glueContext.getCatalogSink(databaseName, tableName, additionalOptions = partitioning).
-      writeDynamicFrame(adClicks)
+      writeDynamicFrame(events)
 
     Job.commit()
   }
