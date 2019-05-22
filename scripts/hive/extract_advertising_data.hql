@@ -1,24 +1,17 @@
 WITH
   events AS (
     SELECT
-      events.session_id  AS session_id,
-      events.context_id  AS context_id,
-      events.parent_id   AS parent_id,
-      events.actor_id    AS actor_id,
-      events.event_type  AS event_type,
-      events.event_id    AS event_id,
-      events.object_id   AS object_id,
-      events.occurred_at AS occurred_at
+      *
     FROM
-      warehouse.events AS events
+      warehouse.events
     WHERE
-          events.year = ${PARTITION_YEAR}
-      AND events.month = ${PARTITION_MONTH}
-      AND events.occurred_at >= '${TIME_START}'
-      AND events.occurred_at < '${TIME_END}'
-      AND events.actor_type = 'customer'
-      AND events.event_type IN ('impression', 'click')
-      AND events.object_type = 'ad'
+          year = ${PARTITION_YEAR}
+      AND month = ${PARTITION_MONTH}
+      AND occurred_at >= '${TIME_START}'
+      AND occurred_at < '${TIME_END}'
+      AND actor_type = 'customer'
+      AND event_type IN ('impression', 'click')
+      AND object_type = 'ad'
   ),
   impressions AS (SELECT * FROM events WHERE events.event_type = 'impression'),
   clicks      AS (SELECT * FROM events WHERE events.event_type = 'click')

@@ -3,10 +3,10 @@ INSERT OVERWRITE
 SELECT
   *
 FROM
-  warehouse.advertising AS advertising
+  warehouse.advertising
 WHERE
-      advertising.year = ${PARTITION_YEAR}
-  AND advertising.month = ${PARTITION_MONTH}
-  AND advertising.impression_at >= '${TIME_START}'
-  AND advertising.impression_at < '${TIME_END}'
+      year = ${PARTITION_YEAR}
+  AND month = ${PARTITION_MONTH}
+  AND impression_at >= '${TIME_START}'
+  AND impression_at < '${TIME_END}'
 ;

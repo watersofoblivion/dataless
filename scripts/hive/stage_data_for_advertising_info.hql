@@ -3,34 +3,34 @@ INSERT OVERWRITE
 WITH
   events (
     SELECT
-      advertising.ad_id                            AS ad_id,
-      DATE_TRUNC('day', advertising.impression_at) AS day,
-      click_at IS NOT NULL                         AS clicked
+      ad_id                            AS ad_id,
+      DATE_TRUNC('day', impression_at) AS day,
+      click_at IS NOT NULL             AS clicked
     FROM
-      warehouse.advertising AS advertising
+      warehouse.advertising
     WHERE
-          advertising.year = ${PARTITION_YEAR}
-      AND advertising.month = ${PARTITION_MONTH}
-      AND advertising.impression_at >= '${TIME_START}'
-      AND advertising.impression_at < '${TIME_END}'
+          year = ${PARTITION_YEAR}
+      AND month = ${PARTITION_MONTH}
+      AND impression_at >= '${TIME_START}'
+      AND impression_at < '${TIME_END}'
   ),
   impressions (
     SELECT
-      events.ad_id AS ad_id,
-      events.day   AS day,
-      COUNT(1)     AS count
+      ad_id    AS ad_id,
+      day      AS day,
+      COUNT(1) AS count
     FROM events
-    WHERE advertising.clicked
-    GROUP BY events.day
+    WHERE clicked
+    GROUP BY day
   ),
   clicks AS (
     SELECT
-      events.ad_id AS ad_id,
-      events.day   AS day,
-      COUNT(1)     AS count
+      ad_id    AS ad_id,
+      day      AS day,
+      COUNT(1) AS count
     FROM events
-    WHERE NOT advertising.clicked
-    GROUP BY events.day
+    WHERE NOT clicked
+    GROUP BY day
   )
 SELECT
   impressions.ad_id                                AS ad_id,
