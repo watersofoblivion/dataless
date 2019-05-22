@@ -1562,6 +1562,8 @@ Resources:
                   StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
                 - Key: runsOn
                   RefValue: EMRCluster
+            - Key: stage
+              StringValue: false
             - Key: output
               RefValue: AdvertisingInfoStagingTable
             - Key: scriptVariable
@@ -1610,6 +1612,8 @@ Resources:
                   StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
                 - Key: runsOn
                   RefValue: EMRCluster
+            - Key: stage
+              StringValue: false
             - Key: input
               RefValue: AdvertisingInfoStagingTable
 
