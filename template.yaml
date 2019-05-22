@@ -1541,7 +1541,7 @@ Resources:
             - Key: type
               StringValue: S3DataNode
             - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/tmp/#{@pipelineId}/#{@version}/#{@scheduledStartTime}/advertising-info-staging-table/"
+              StringValue: !Sub "s3://${Bucket}/data/tmp/advertising-info-staging-table/"
             - Key: dataFormat
               RefValue: AdvertisingInfoStagingTableFormat
         - Id: DummyInputTable
@@ -1550,7 +1550,7 @@ Resources:
             - Key: type
               StringValue: S3DataNode
             - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/tmp/#{@pipelineId}/#{@version}/#{@scheduledStartTime}/dummy/input/"
+              StringValue: !Sub "s3://${Bucket}/data/tmp/dummy/"
             - Key: dataFormat
               RefValue: AdvertisingInfoStagingTableFormat
         - Id: DummyOutputTable
@@ -1559,7 +1559,7 @@ Resources:
             - Key: type
               StringValue: S3DataNode
             - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/tmp/#{@pipelineId}/#{@version}/#{@scheduledStartTime}/dummy/output/"
+              StringValue: !Sub "s3://${Bucket}/data/tmp/dummy/"
             - Key: dataFormat
               RefValue: AdvertisingInfoStagingTableFormat
         - Id: AdvertisingInfoTableFormat
