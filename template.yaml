@@ -14,6 +14,7 @@ Metadata:
       - Label: Deployment Configuration
         Parameters:
           - Stage
+          - DeploymentPreference
       - Label: DNS
         Parameters:
           - DNSDomainName
@@ -52,6 +53,8 @@ Metadata:
         default: EC2 KeyPair
       Stage:
         default: Stage to deploy
+      DeploymentPreference:
+        default: CodeDeploy deployment preference
       DNSDomainName:
         default: Domain name in Route53
       DNSName:
@@ -99,6 +102,20 @@ Parameters:
     Type: String
     Description: The name for a project pipeline stage, such as Staging or Prod, for which resources are provisioned and deployed.
     Default: ''
+  DeploymentPreference:
+    Type: String
+    Description: The CodeDeploy deployment preference for safe Lambda deploys.
+    Default: Canary10Percent5Minutes
+    AllowedValues:
+      - Canary10Percent5Minutes
+      - Canary10Percent10Minutes
+      - Canary10Percent15Minutes
+      - Canary10Percent30Minutes
+      - Linear10PercentEvery1Minutes
+      - Linear10PercentEvery2Minutes
+      - Linear10PercentEvery3Minutes
+      - Linear10PercentEvery10Minutes
+      - AllAtOnce
   DNSDomainName:
     Type: String
     Description: The domain name in Route53, such as example.com, this warehouse is served from.
@@ -231,7 +248,7 @@ Globals:
     AutoPublishAlias: Live
     DeploymentPreference:
       Enabled: true
-      Type: Canary10Percent5Minutes
+      Type: !Ref DeploymentPreference
   Api:
     TracingEnabled: true
     EndpointConfiguration: EDGE
