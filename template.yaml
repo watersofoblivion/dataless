@@ -1304,6 +1304,12 @@ Resources:
                   - glue:*
                 Effect: Allow
                 Resource: "*"
+              - Action:
+                  - s3:*
+                Effect: Allow
+                Resource:
+                  - !GetAtt Bucket.Arn
+                  - !Sub "${Bucket.Arn}/data/*"
 
   PipelineProfile:
     Type: AWS::IAM::InstanceProfile
@@ -1345,6 +1351,12 @@ Resources:
                   - glue:*
                 Effect: Allow
                 Resource: "*"
+              - Action:
+                  - s3:*
+                Effect: Allow
+                Resource:
+                  - !GetAtt Bucket.Arn
+                  - !Sub "${Bucket.Arn}/data/*"
 
   PipelineResourceProfile:
     Type: AWS::IAM::InstanceProfile
