@@ -1550,7 +1550,7 @@ Resources:
             - Key: type
               StringValue: S3DataNode
             - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/tmp/dummy/"
+              StringValue: !Sub "s3://${Bucket}/data/raw/events/"
             - Key: dataFormat
               RefValue: AdvertisingInfoStagingTableFormat
         - Id: DummyOutputTable
