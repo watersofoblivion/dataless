@@ -1541,7 +1541,16 @@ Resources:
             - Key: type
               StringValue: S3DataNode
             - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/tmp/advertising-info-staging-table/"
+              StringValue: !Sub "s3://${Bucket}/data/tmp/#{@pipelineId}/#{@version}/#{@scheduledStartTime}/advertising-info-staging-table/"
+            - Key: dataFormat
+              RefValue: AdvertisingInfoStagingTableFormat
+        - Id: DummyTable
+          Name: Dummy Table
+          Fields:
+            - Key: type
+              StringValue: S3DataNode
+            - Key: directoryPath
+              StringValue: !Sub "s3://${Bucket}/data/tmp/#{@pipelineId}/#{@version}/#{@scheduledStartTime}/dummy/"
             - Key: dataFormat
               RefValue: AdvertisingInfoStagingTableFormat
         - Id: AdvertisingInfoTableFormat
@@ -1576,7 +1585,7 @@ Resources:
                 - Key: runsOn
                   RefValue: EMRCluster
             - Key: input
-              RefValue: AdvertisingInfoStagingTable
+              RefValue: DummyTable
             - Key: output
               RefValue: AdvertisingInfoStagingTable
             - Key: scriptVariable
@@ -1622,7 +1631,7 @@ Resources:
             - Key: input
               RefValue: AdvertisingInfoStagingTable
             - Key: output
-              RefValue: AdvertisingInfoStagingTable
+              RefValue: DummyTable
 
   RedshiftPipeline:
     Type: AWS::DataPipeline::Pipeline
