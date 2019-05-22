@@ -700,16 +700,16 @@ Resources:
         - Name: hive
         - Name: pig
         - Name: spark
-      BootstrapActions:
-        - Name: Install Task Runner
-          ScriptBootstrapAction:
-            Path: s3://elasticmapreduce/bootstrap-actions/run-if
-            Args:
-              - instance.isMaster=true
-              - !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/emr/install_task_runner.sh"
-              - !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
-              - !Ref AWS::Region
-              - !Sub "s3://${Bucket}/logs/task-runner/emr/"
+      # BootstrapActions:
+      #   - Name: Install Task Runner
+      #     ScriptBootstrapAction:
+      #       Path: s3://elasticmapreduce/bootstrap-actions/run-if
+      #       Args:
+      #         - instance.isMaster=true
+      #         - !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/emr/install_task_runner.sh"
+      #         - !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+      #         - !Ref AWS::Region
+      #         - !Sub "s3://${Bucket}/logs/task-runner/emr/"
       Configurations:
         - Classification: hive-site
           ConfigurationProperties:
