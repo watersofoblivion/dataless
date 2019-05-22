@@ -1558,8 +1558,8 @@ Resources:
                   StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
                 - Key: runsOn
                   RefValue: EMRCluster
-            - Key: stage
-              StringValue: false
+            - Key: input
+              RefValue: AdvertisingInfoStagingTable
             - Key: output
               RefValue: AdvertisingInfoStagingTable
             - Key: scriptVariable
@@ -1602,9 +1602,9 @@ Resources:
                   StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
                 - Key: runsOn
                   RefValue: EMRCluster
-            - Key: stage
-              StringValue: false
             - Key: input
+              RefValue: AdvertisingInfoStagingTable
+            - Key: output
               RefValue: AdvertisingInfoStagingTable
 
   RedshiftPipeline:
@@ -1841,8 +1841,8 @@ Resources:
                   StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
                 - Key: runsOn
                   RefValue: EMRCluster
-            - Key: stage
-              StringValue: false
+            - Key: input
+              StringValue: RedshiftStagingTable
             - Key: output
               RefValue: RedshiftStagingTable
             - Key: scriptVariable
