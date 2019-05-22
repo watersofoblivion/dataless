@@ -1153,6 +1153,7 @@ Resources:
               - Name: event_type
                 Type: string
               - Name: event_id
+                Type: string
               - Name: object_type
                 Type: string
               - Name: object_id
