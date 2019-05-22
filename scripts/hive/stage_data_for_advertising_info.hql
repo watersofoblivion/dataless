@@ -31,7 +31,7 @@ WITH
     GROUP BY ad_id, day
   )
 INSERT OVERWRITE
-  TABLE "${output1}"
+  TABLE ${output1}
 SELECT
   impressions.ad_id                                                AS ad_id,
   impressions.day                                                  AS day,
