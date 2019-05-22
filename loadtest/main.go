@@ -251,8 +251,10 @@ func main() {
 					return fmt.Errorf("Retrying %d events", numRetry)
 				}
 
+				fmt.Print(".")
 				return nil
 			}, eb, func(err error, bo time.Duration) {
+				fmt.Println()
 				log.Printf("%s.  Backing off %s", err, bo)
 			})
 			if err != nil {
