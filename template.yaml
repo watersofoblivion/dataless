@@ -1235,6 +1235,11 @@ Resources:
           TableType: EXTERNAL_TABLE
           Parameters:
             classification: orc
+          PartitionKeys:
+            - Name: year
+              Type: int
+            - Name: month
+              Type: int
           StorageDescriptor:
             Location: !Sub "s3://${Bucket}/data/lake/advertising/"
             StoredAsSubDirectories: true

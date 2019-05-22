@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -17,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff"
 	"github.com/google/uuid"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -217,35 +217,45 @@ func main() {
 		}).String()
 
 		for batch := range eventBatches {
-			buf.Reset()
-			if err := encoder.Encode(batch); err != nil {
-				log.Printf("could not encode events batch: %s", err)
-				continue
-			}
-
-			resp, err := http.Post(earl, "application/json", buf)
-			if err != nil {
-				log.Printf("error publishing events batch: %s", err)
-				continue
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != http.StatusOK {
-				log.Printf("non-%d status code publishing events batch: %d", http.StatusOK, resp.StatusCode)
-				io.Copy(os.Stderr, resp.Body)
-				continue
-			}
-
-			batchWriteResponse := new(BatchWriteResponse)
-			if err := json.NewDecoder(resp.Body).Decode(batchWriteResponse); err != nil {
-				log.Printf("error decoding batch write response: %s", err)
-				continue
-			}
-
-			for _, record := range batchWriteResponse.Records {
-				if record.Failed {
-					log.Printf("failed write: %s", record)
+			err := backoff.RetryNotify(func() error {
+				buf.Reset()
+				if err := encoder.Encode(batch); err != nil {
+					return fmt.Errorf("could not encode events batch: %s", err)
 				}
+
+				resp, err := http.Post(earl, "application/json", buf)
+				if err != nil {
+					return fmt.Errorf("error publishing events batch: %s", err)
+				}
+				defer resp.Body.Close()
+
+				if resp.StatusCode != http.StatusOK {
+					return fmt.Errorf("non-%d status code publishing events batch: %d", http.StatusOK, resp.StatusCode)
+				}
+
+				batchWriteResponse := new(BatchWriteResponse)
+				if err := json.NewDecoder(resp.Body).Decode(batchWriteResponse); err != nil {
+					return fmt.Errorf("error decoding batch write response: %s", err)
+				}
+
+				newBatch := new(Events)
+				for i, record := range batchWriteResponse.Records {
+					if record.Failed {
+						newBatch.Events = append(newBatch.Events, batch.Events[i])
+					}
+				}
+
+				if numRetry := len(newBatch.Events); numRetry > 0 {
+					batch = newBatch
+					return fmt.Errorf("Retrying %d events", numRetry)
+				}
+
+				return nil
+			}, backoff.NewExponentialBackOff(), func(err error, bo time.Duration) {
+				log.Printf("%s.  Backing off %s", err, bo)
+			})
+			if err != nil {
+				log.Printf("events dropped: %s", err)
 			}
 		}
 	}()
