@@ -726,6 +726,7 @@ Resources:
         AdditionalSlaveSecurityGroups:
           - !Ref SecurityGroup
           - !GetAtt VPC.DefaultSecurityGroup
+        Ec2KeyName: !Ref KeyPair
         Ec2SubnetId: !Ref Subnet
         MasterInstanceGroup:
           InstanceCount: !Ref EMRMasterInstanceCount
