@@ -2338,7 +2338,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Request Rate"
+                "title": "Request Rate",
+                "liveData": false
               }
             },
             {
@@ -2352,7 +2353,8 @@ Resources:
                 "period": 60,
                 "stat": "p95",
                 "region": "${AWS::Region}",
-                "title": "Latency"
+                "title": "Latency",
+                "liveData": false
               }
             },
             {
@@ -2366,7 +2368,8 @@ Resources:
                 "period": 60,
                 "stat": "p95",
                 "region": "${AWS::Region}",
-                "title": "Integration Latency"
+                "title": "Integration Latency",
+                "liveData": false
               }
             },
             {
@@ -2381,7 +2384,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Errors"
+                "title": "Errors",
+                "liveData": false
               }
             },
             {
@@ -2401,7 +2405,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Incoming Records"
+                "title": "Incoming Records",
+                "liveData": false
               }
             },
             {
@@ -2415,7 +2420,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Incoming Bytes"
+                "title": "Incoming Bytes",
+                "liveData": false
               }
             },
             {
@@ -2429,7 +2435,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Successful Delivery To S3"
+                "title": "Successful Delivery To S3",
+                "liveData": false
               }
             },
             {
@@ -2443,7 +2450,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Records Delivered To S3"
+                "title": "Records Delivered To S3",
+                "liveData": false
               }
             },
             {
@@ -2457,7 +2465,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Bytes Delivered To S3"
+                "title": "Bytes Delivered To S3",
+                "liveData": false
               }
             },
             {
@@ -2471,7 +2480,8 @@ Resources:
                 "period": 60,
                 "stat": "Maximum",
                 "region": "${AWS::Region}",
-                "title": "Delivery To S3 Data Freshness"
+                "title": "Delivery To S3 Data Freshness",
+                "liveData": false
               }
             },
             {
@@ -2490,7 +2500,8 @@ Resources:
                 ],
                 "period": 60,
                 "region": "${AWS::Region}",
-                "title": "Success"
+                "title": "Success",
+                "liveData": false
               }
             },
             {
@@ -2504,7 +2515,8 @@ Resources:
                 "period": 60,
                 "stat": "Average",
                 "region": "${AWS::Region}",
-                "title": "KPUs"
+                "title": "KPUs",
+                "liveData": false
               }
             },
             {
@@ -2518,7 +2530,8 @@ Resources:
                 "period": 60,
                 "stat": "Maximum",
                 "region": "${AWS::Region}",
-                "title": "Lag (ms)"
+                "title": "Lag (ms)",
+                "liveData": false
               }
             },
             {
@@ -2532,7 +2545,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Records Processed"
+                "title": "Records Processed",
+                "liveData": false
               }
             },
             {
@@ -2546,7 +2560,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Bytes Processed"
+                "title": "Bytes Processed",
+                "liveData": false
               }
             },
             {
@@ -2560,7 +2575,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Input Processing Success"
+                "title": "Input Processing Success",
+                "liveData": false
               }
             },
             {
@@ -2574,7 +2590,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Input Processing Bytes"
+                "title": "Input Processing Bytes",
+                "liveData": false
               }
             },
             {
@@ -2588,7 +2605,8 @@ Resources:
                 "period": 60,
                 "stat": "Average",
                 "region": "${AWS::Region}",
-                "title": "Input Processing Duration"
+                "title": "Input Processing Duration",
+                "liveData": false
               }
             },
             {
@@ -2602,7 +2620,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Input Processing Successful Records"
+                "title": "Input Processing Successful Records",
+                "liveData": false
               }
             },
             {
@@ -2616,7 +2635,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Input Processing Dropped Records"
+                "title": "Input Processing Dropped Records",
+                "liveData": false
               }
             },
             {
@@ -2630,7 +2650,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Input Processing Failed Records"
+                "title": "Input Processing Failed Records",
+                "liveData": false
               }
             },
             {
@@ -2644,7 +2665,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Lambda Delivery Success"
+                "title": "Lambda Delivery Success",
+                "liveData": false
               }
             },
             {
@@ -2658,7 +2680,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Lambda Delivery Failures"
+                "title": "Lambda Delivery Failures",
+                "liveData": false
               }
             },
             {
@@ -2672,7 +2695,8 @@ Resources:
                 "period": 60,
                 "stat": "Average",
                 "region": "${AWS::Region}",
-                "title": "Lambda Delivery Duration"
+                "title": "Lambda Delivery Duration",
+                "liveData": false
               }
             },
             {
@@ -2692,7 +2716,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Invocations"
+                "title": "Invocations",
+                "liveData": false
               }
             },
             {
@@ -2706,7 +2731,8 @@ Resources:
                 "period": 60,
                 "stat": "p95",
                 "region": "${AWS::Region}",
-                "title": "Duration"
+                "title": "Duration",
+                "liveData": false
               }
             },
             {
@@ -2720,7 +2746,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Errors"
+                "title": "Errors",
+                "liveData": false
               }
             },
             {
@@ -2734,7 +2761,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Dead Letter Errors"
+                "title": "Dead Letter Errors",
+                "liveData": false
               }
             },
             {
@@ -2748,7 +2776,8 @@ Resources:
                 "period": 60,
                 "stat": "Maximum",
                 "region": "${AWS::Region}",
-                "title": "Concurrent Executions"
+                "title": "Concurrent Executions",
+                "liveData": false
               }
             },
             {
@@ -2762,7 +2791,8 @@ Resources:
                 "period": 60,
                 "stat": "Average",
                 "region": "${AWS::Region}",
-                "title": "Unreserved Concurrent Executions"
+                "title": "Unreserved Concurrent Executions",
+                "liveData": false
               }
             },
             {
@@ -2776,7 +2806,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Throttles"
+                "title": "Throttles",
+                "liveData": false
               }
             },
             {
@@ -2790,7 +2821,8 @@ Resources:
                 "period": 60,
                 "stat": "Maximum",
                 "region": "${AWS::Region}",
-                "title": "Iterator Age"
+                "title": "Iterator Age",
+                "liveData": false
               }
             },
             {
@@ -2810,7 +2842,8 @@ Resources:
                 "period": 86400,
                 "stat": "Maximum",
                 "region": "${AWS::Region}",
-                "title": "Bucket Size (bytes)"
+                "title": "Bucket Size (bytes)",
+                "liveData": false
               }
             },
             {
@@ -2824,7 +2857,8 @@ Resources:
                 "period": 86400,
                 "stat": "Maximum",
                 "region": "${AWS::Region}",
-                "title": "Bucket Size (objects)"
+                "title": "Bucket Size (objects)",
+                "liveData": false
               }
             },
             {
@@ -2839,7 +2873,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "All Requests"
+                "title": "All Requests",
+                "liveData": false
               }
             },
             {
@@ -2854,7 +2889,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Get Requests"
+                "title": "Get Requests",
+                "liveData": false
               }
             },
             {
@@ -2869,7 +2905,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Put Requests"
+                "title": "Put Requests",
+                "liveData": false
               }
             },
             {
@@ -2884,7 +2921,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Select Requests"
+                "title": "Select Requests",
+                "liveData": false
               }
             },
             {
@@ -2899,7 +2937,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Bytes Uploaded"
+                "title": "Bytes Uploaded",
+                "liveData": false
               }
             },
             {
@@ -2914,7 +2953,8 @@ Resources:
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Get Requests"
+                "title": "Get Requests",
+                "liveData": false
               }
             },
             {
@@ -2929,7 +2969,8 @@ Resources:
                 "period": 60,
                 "stat": "p95",
                 "region": "${AWS::Region}",
-                "title": "Put Requests"
+                "title": "Put Requests",
+                "liveData": false
               }
             },
             {
@@ -2944,7 +2985,8 @@ Resources:
                 "period": 60,
                 "stat": "p95",
                 "region": "${AWS::Region}",
-                "title": "Select Requests"
+                "title": "Select Requests",
+                "liveData": false
               }
             },
             {
