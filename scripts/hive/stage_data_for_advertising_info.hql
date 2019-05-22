@@ -1,11 +1,9 @@
-INSERT OVERWRITE
-  TABLE ${output1}
 WITH
-  events (
+  events AS (
     SELECT
-      ad_id                            AS ad_id,
-      DATE_TRUNC('day', impression_at) AS day,
-      click_at IS NOT NULL             AS clicked
+      ad_id                  AS ad_id,
+      TO_DATE(impression_at) AS day,
+      click_at IS NOT NULL   AS clicked
     FROM
       warehouse.advertising
     WHERE
@@ -14,14 +12,14 @@ WITH
       AND impression_at >= '${TIME_START}'
       AND impression_at < '${TIME_END}'
   ),
-  impressions (
+  impressions AS (
     SELECT
       ad_id    AS ad_id,
       day      AS day,
       COUNT(1) AS count
     FROM events
-    WHERE clicked
-    GROUP BY day
+    WHERE NOT clicked
+    GROUP BY ad_id, day
   ),
   clicks AS (
     SELECT
@@ -29,15 +27,17 @@ WITH
       day      AS day,
       COUNT(1) AS count
     FROM events
-    WHERE NOT clicked
-    GROUP BY day
+    WHERE clicked
+    GROUP BY ad_id, day
   )
+INSERT OVERWRITE
+  TABLE ${output1}
 SELECT
-  impressions.ad_id                                AS ad_id,
-  impressions.day                                  AS day,
-  impressions.count                                AS impressions,
-  clicks.count                                     AS clicks,
-  (clicks.count::float / impressions.count::float) AS clickthrough_rate
+  impressions.ad_id                                                AS ad_id,
+  impressions.day                                                  AS day,
+  impressions.count                                                AS impressions,
+  clicks.count                                                     AS clicks,
+  (CAST(clicks.count AS float) / CAST(impressions.count AS float)) AS clickthrough_rate
 FROM
   impressions
 JOIN clicks
