@@ -27,8 +27,8 @@ WITH
     WHERE event = 'click'
   )
 INSERT INTO
-  TABLE    warehouse.advertising
-  PARTITON (year = ${PARTITION_YEAR}, month = ${PARTITION_MONTH})
+  TABLE     warehouse.advertising
+  PARTITION (year = ${PARTITION_YEAR}, month = ${PARTITION_MONTH})
 SELECT
   impressions.session_id    AS session_id,
   impressions.user_id       AS user_id,
