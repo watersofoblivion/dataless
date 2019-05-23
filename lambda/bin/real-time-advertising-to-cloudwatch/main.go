@@ -91,6 +91,8 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 			continue
 		}
 
+		log.Printf("Metric: %s = %0.2f @ %s", metric.Name, metric.Value, metric.At.Format(time.RFC3339Nano))
+
 		// Append the metric data and output record to the buffers
 		metricData = append(metricData, &cloudwatch.MetricDatum{
 			MetricName: aws.String(metric.Name),
@@ -129,6 +131,7 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 		putMetricDataInput.SetMetricData(metricData)
 
 		status := events.KinesisAnalyticsOutputDeliveryOK
+		json.NewEncoder(os.Stdout).Encode(putMetricDataInput)
 		if _, err := cw.PutMetricDataWithContext(ctx, putMetricDataInput); err != nil {
 			log.Printf("metric delivery failed for %d metrics: %s", numMetrics, err)
 			status = events.KinesisAnalyticsOutputDeliveryFailed
