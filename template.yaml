@@ -939,71 +939,58 @@ Resources:
     Type: AWS::KinesisAnalytics::Application
     Properties:
       ApplicationCode: |
-        CREATE OR REPLACE STREAM "impressions" (
-          "session_id"    VARCHAR(64),
-          "context_id"    VARCHAR(64),
-          "event_id"      VARCHAR(64),
-          "ad_id"         VARCHAR(64),
-          "impression_at" TIMESTAMP
+        CREATE OR REPLACE STREAM "impression_counts" (
+          "at"    TIMESTAMP,
+          "value" DOUBLE
         );
 
-        CREATE OR REPLACE PUMP "impressions_pump" AS
-        INSERT INTO "impressions"
+        CREATE OR REPLACE PUMP "impressions_counter" AS
+        INSERT INTO "impression_counts"
         SELECT STREAM
-          "events"."session_id"  AS "session_id",
-          "events"."context_id"  AS "context_id",
-          "events"."event_id"    AS "event_id",
-          "events"."object_id"   AS "ad_id",
-          "events"."occurred_at" AS "impression_at"
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "events".ROWTIME)) AS "at",
+          COUNT(1)                                                                                       AS "value"
         FROM
           "events_001" AS "events"
         WHERE
               "events"."object_type" = 'ad'
           AND "events"."event_type" = 'impression'
+        GROUP BY
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "events".ROWTIME)),
+          STEP("events".ROWTIME BY INTERVAL '60' SECOND)
         ;
 
-        CREATE OR REPLACE STREAM "clicks" (
-          "session_id" VARCHAR(64),
-          "context_id" VARCHAR(64),
-          "parent_id"  VARCHAR(64),
-          "ad_id"      VARCHAR(64),
-          "click_at"   TIMESTAMP
+        CREATE OR REPLACE STREAM "click_counts" (
+          "at"    TIMESTAMP,
+          "value" DOUBLE
         );
 
-        CREATE OR REPLACE PUMP "clicks_pump" AS
-        INSERT INTO "clicks"
+        CREATE OR REPLACE PUMP "clicks_counter" AS
+        INSERT INTO "click_counts"
         SELECT STREAM
-          "events"."session_id"  AS "session_id",
-          "events"."context_id"  AS "context_id",
-          "events"."parent_id"   AS "parent_id",
-          "events"."object_id"   AS "ad_id",
-          "events"."occurred_at" AS "click_at"
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "events".ROWTIME)) AS "at",
+          COUNT(1)                                                                                       AS "value"
         FROM
           "events_001" AS "events"
         WHERE
               "events"."object_type" = 'ad'
           AND "events"."event_type" = 'click'
+        GROUP BY
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "events".ROWTIME)),
+          STEP("events".ROWTIME BY INTERVAL '60' SECOND)
         ;
 
-        CREATE OR REPLACE STREAM "advertising" (
-          "ad_id"         VARCHAR(64),
-          "impression_at" TIMESTAMP,
-          "click_at"      TIMESTAMP
+        CREATE OR REPLACE STREAM "clickthrough_rates" (
+          "at"    TIMESTAMP,
+          "value" DOUBLE
         );
 
-        CREATE OR REPLACE PUMP "advertising_pump" AS
-        INSERT INTO "advertising"
+        CREATE OR REPLACE PUMP "clickthrough_rate_computer" AS
+        INSERT INTO "clickthrough_rates"
         SELECT STREAM
-          "impressions"."ad_id"         AS "ad_id",
-          "impressions"."impression_at" AS "impression_at",
-          "clicks"."click_at"           AS "click_at"
-        FROM "impressions" OVER "last_5_minutes"
-        LEFT OUTER JOIN "clicks" OVER "last_5_minutes"
-          ON  "impressions"."session_id" = "clicks"."session_id"
-          AND "impressions"."context_id" = "clicks"."context_id"
-          AND "impressions"."event_id"   = "clicks"."parent_id"
-        WINDOW
-          "last_5_minutes" AS (RANGE INTERVAL '5' MINUTE PRECEDING)
+          "impressions"."at"                                                       AS "at",
+          CAST("clicks"."value" AS DOUBLE) / CAST("impressions"."value" AS DOUBLE) AS "value"
+        FROM "impression_counts" OVER  (RANGE INTERVAL '2' MINUTE PRECEDING) AS "impressions"
+        JOIN "click_counts"      OVER  (RANGE INTERVAL '2' MINUTE PRECEDING) AS "clicks" ON "clicks"."at" = "impressions"."at"
         ;
 
         CREATE OR REPLACE STREAM "metrics" (
@@ -1012,25 +999,31 @@ Resources:
           "value" DOUBLE
         );
 
-        CREATE OR REPLACE PUMP "impressions_metric_pump" AS
+        CREATE OR REPLACE PUMP "impressions_dumper" AS
         INSERT INTO "metrics"
         SELECT STREAM
-          'Impressions'                                                                                               AS "name",
-          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "advertising"."impression_at")) AS "at",
-          COUNT(1)                                                                                                    AS "value"
-        FROM "advertising"
-        GROUP BY STEP("advertising".ROWTIME BY INTERVAL '60' SECOND)
+          'Impressions'               AS "name",
+          "impression_counts"."at"    AS "at",
+          "impression_counts"."value" AS "value"
+        FROM "impression_counts"
         ;
 
-        CREATE OR REPLACE PUMP "clicks_metric_pump" AS
+        CREATE OR REPLACE PUMP "clicks_dumper" AS
         INSERT INTO "metrics"
         SELECT STREAM
-          'Clicks'                                                                                                    AS "name",
-          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "advertising"."impression_at")) AS "at",
-          COUNT(1)                                                                                                    AS "value"
-        FROM "advertising"
-        WHERE "advertising"."clicked_at" IS NOT NULL
-        GROUP BY STEP("advertising".ROWTIME BY INTERVAL '60' SECOND)
+          'Clicks'               AS "name",
+          "click_counts"."at"    AS "at",
+          "click_counts"."value" AS "value"
+        FROM "click_counts"
+        ;
+
+        CREATE OR REPLACE PUMP "clickthrough_rate_dumper" AS
+        INSERT INTO "metrics"
+        SELECT STREAM
+          'ClickthroughRate'            AS "name",
+          "clickthrough_rates"."at"     AS "at",
+          "clickthrough_rates"."value"  AS "value"
+        FROM "clickthrough_rates"
         ;
       Inputs:
         - NamePrefix: events

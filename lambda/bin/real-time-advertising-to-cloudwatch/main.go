@@ -64,10 +64,13 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 		metric := new(AdvertisingMetric)
 		if err := json.Unmarshal(record.Data, metric); err != nil {
 			// Mark the input record as failed and move on
+			log.Printf("Error unmarshaling record %s: %s", outputRecord.RecordID, err)
 			outputRecord.Result = events.KinesisAnalyticsOutputDeliveryFailed
 			output.Records = append(output.Records, outputRecord)
 			continue
 		}
+
+		log.Printf("Adding metric: %s = %f @ %s", metric.Name, metric.Value, metric.At)
 
 		// Append the metric data and output record to the buffers
 		metricData = append(metricData, &cloudwatch.MetricDatum{
@@ -83,6 +86,7 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 			putMetricDataInput.SetMetricData(metricData)
 
 			// Publish the metrics and record the status for the output records
+			log.Printf("Publishing metrics")
 			status := events.KinesisAnalyticsOutputDeliveryOK
 			if _, err := cw.PutMetricDataWithContext(ctx, putMetricDataInput); err != nil {
 				log.Printf("metric delivery failed for %d metrics: %s", numMetrics, err)
@@ -91,6 +95,7 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 
 			// Set the status of the output records and add them to the response
 			for _, outputRecord := range outputRecords {
+				log.Printf("Marking record %s as %s", outputRecord.RecordID, status)
 				outputRecord.Result = status
 			}
 			output.Records = append(output.Records, outputRecords...)
@@ -104,6 +109,7 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 	// Flush any remaining metric data
 	numMetrics := len(metricData)
 	if numMetrics > 0 {
+		log.Printf("Publishing final metrics batch")
 		putMetricDataInput.SetMetricData(metricData)
 
 		status := events.KinesisAnalyticsOutputDeliveryOK
@@ -119,5 +125,6 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 	}
 
 	// Done!
+	log.Printf("Done!")
 	return output, nil
 }
