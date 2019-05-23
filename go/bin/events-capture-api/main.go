@@ -39,7 +39,7 @@ func handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.API
 		return api.ErrorResponse(http.StatusInternalServerError, err)
 	}
 
-	batch := NewBatchWriteResponse(len(evts.Events), resp)
+	batch := api.NewBatchWriteResponse(len(evts.Events), resp)
 	bs, err := json.Marshal(batch)
 	if err != nil {
 		return api.ErrorResponse(http.StatusInternalServerError, err)

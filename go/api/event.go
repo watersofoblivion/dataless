@@ -32,7 +32,7 @@ func (events *Events) Records() ([]*firehose.Record, error) {
 	return records, nil
 }
 
-func (events *Events) PutRecordBatchInput(deliveryStreamName string) (*firehose.PutRecordBatchInput, error) {
+func (events *Events) PutRecordsBatchInput(deliveryStreamName string) (*firehose.PutRecordBatchInput, error) {
 	records, err := events.Records()
 	if err != nil {
 		return nil, err
