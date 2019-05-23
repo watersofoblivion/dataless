@@ -7,6 +7,7 @@ phases:
     commands:
       # AWS Codebuild Go images use /go for the $GOPATH so let's symlink our
       # application source code into that directory structure.
+      - mkdir -p "/go/src/github.com/watersofoblivion/"
       - ln -s "${CODEBUILD_SRC_DIR}" "/go/src/github.com/watersofoblivion/dataless"
 
       # Install dependencies
