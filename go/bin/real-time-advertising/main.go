@@ -89,7 +89,6 @@ func handler(ctx context.Context, evt events.KinesisAnalyticsOutputDeliveryEvent
 		resp.Records[i] = respRecord
 
 		advertising := new(Advertising)
-
 		if err := json.Unmarshal(record.Data, advertising); err != nil {
 			respRecord.Result = events.KinesisAnalyticsOutputDeliveryFailed
 			continue
