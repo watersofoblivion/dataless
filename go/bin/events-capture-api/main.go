@@ -29,7 +29,7 @@ func handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.API
 		return api.ErrorResponse(http.StatusBadRequest, err)
 	}
 
-	input, err := evts.PutRecordsBatchInput()
+	input, err := evts.PutRecordsBatchInput(deliveryStreamName)
 	if err != nil {
 		return api.ErrorResponse(http.StatusInternalServerError, err)
 	}

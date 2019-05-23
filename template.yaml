@@ -2024,6 +2024,9 @@ Resources:
     Properties:
       Handler: bin/events-capture-api
       Role: !GetAtt APILambdaRole.Arn
+      Environment:
+        Variables:
+          DELIVERY_STREAM_NAME: !Ref EventsDeliveryStream
       Events:
         Api:
           Type: Api
@@ -2037,6 +2040,9 @@ Resources:
     Properties:
       Handler: bin/advertising-info-api
       Role: !GetAtt APILambdaRole.Arn
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref AdvertisingInfoTable
       Events:
         Api:
           Type: Api
