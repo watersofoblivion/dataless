@@ -2046,7 +2046,7 @@ Resources:
           Properties:
             Method: post
             Path: /data/events
-            RestApiId: !Ref API
+            # RestApiId: !Ref API
 
   AdvertisingInfoAPILambda:
     Type: AWS::Serverless::Function
@@ -2062,7 +2062,7 @@ Resources:
           Properties:
             Method: get
             Path: /info/ads/{id}
-            RestApiId: !Ref API
+            # RestApiId: !Ref API
 
   Certificate:
     Type: AWS::CertificateManager::Certificate
