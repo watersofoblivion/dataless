@@ -2041,7 +2041,7 @@ Resources:
           BATCH_KEY: events
           DELIVERY_STREAM_NAME: !Ref EventsDeliveryStream
       Events:
-        Api:
+        Beacon:
           Type: Api
           Properties:
             Method: post
@@ -2057,7 +2057,7 @@ Resources:
   #       Variables:
   #         TABLE_NAME: !Ref AdvertisingInfoTable
   #     Events:
-  #       Api:
+  #       Beacon:
   #         Type: Api
   #         Properties:
   #           Method: get

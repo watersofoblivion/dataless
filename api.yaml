@@ -6,14 +6,15 @@ paths:
   /data/events:
     post:
       summary: Record a batch of events
-      operationId: data-events
+      operationId: events-beacon
       requestBody:
-        description: A batch of ad events
+        description: A batch of events
         required: true
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/DataEvents"
+      x-amazon-apigateway-integration:
       responses:
         '200':
           description: |
