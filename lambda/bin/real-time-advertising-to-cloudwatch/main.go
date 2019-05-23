@@ -56,7 +56,7 @@ func (metric *AdvertisingMetric) UnmarshalJSON(bs []byte) error {
 	if err != nil {
 		return err
 	}
-	metric.Value = v["name"].(float64)
+	metric.Value = v["value"].(float64)
 
 	return nil
 }
