@@ -52,7 +52,7 @@ func (metric *AdvertisingMetric) UnmarshalJSON(bs []byte) error {
 	}
 
 	metric.Name = v["name"].(string)
-	metric.At, err = time.Parse("2006-01-02 15:04:05.678", v["at"].(string))
+	metric.At, err = time.Parse("2006-01-02 15:04:05.000", v["at"].(string))
 	if err != nil {
 		return err
 	}
