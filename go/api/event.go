@@ -1,14 +1,47 @@
 package api
 
 import (
+	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"time"
 
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/google/uuid"
 )
 
 type Events struct {
 	Events []*Event `json:"events"`
+}
+
+func NewEvents(req events.APIGatewayProxyRequest) (*Events, error) {
+	evts := new(Events)
+	return evts, json.Unmarshal([]byte(req.Body), evts)
+}
+
+func (events *Events) Records() ([]*firehose.Record, error) {
+	var err error
+
+	records := make([]*firehose.Record, len(events.Events))
+	for i, event := range events.Events {
+		if records[i], err = event.Record(); err != nil {
+			return nil, err
+		}
+	}
+	return records, nil
+}
+
+func (events *Events) PutRecordBatchInput(deliveryStreamName string) (*firehose.PutRecordBatchInput, error) {
+	records, err := events.Records()
+	if err != nil {
+		return nil, err
+	}
+
+	input := new(firehose.PutRecordBatchInput)
+	input.SetDeliveryStreamName(deliveryStreamName)
+	input.SetRecords(records)
+	return input, nil
 }
 
 type Event struct {
@@ -22,6 +55,18 @@ type Event struct {
 	ObjectType string
 	Object     uuid.UUID
 	OccurredAt time.Time
+}
+
+func (event *Event) Record() (*firehose.Record, error) {
+	buf := new(bytes.Buffer)
+
+	enc := base64.NewEncoder(base64.StdEncoding, buf)
+	if err := json.NewEncoder(enc).Encode(event); err != nil {
+		return nil, err
+	}
+	enc.Close()
+
+	return &firehose.Record{Data: buf.Bytes()}, nil
 }
 
 func (event *Event) MarshalJSON() ([]byte, error) {
