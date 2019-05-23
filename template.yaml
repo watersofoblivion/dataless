@@ -2373,8 +2373,7 @@ Resources:
     Condition: DNSEnabled
     Properties:
       DomainName: !Ref DomainName
-      # RestApiId: !Ref API
-      RestApiId: !Ref ServerlessRestApi
+      RestApiId: !Ref API
       Stage: !Ref API.Stage
 
   #######
@@ -2423,7 +2422,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "Count", "ApiName", "Warehouse", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}"]
+                  ["AWS/ApiGateway", "Count", "ApiName", "${APIName}", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2438,7 +2437,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "Latency", "ApiName", "Warehouse", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}"]
+                  ["AWS/ApiGateway", "Latency", "ApiName", "${APIName}", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}"]
                 ],
                 "period": 60,
                 "stat": "p95",
@@ -2453,7 +2452,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "Warehouse", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}"]
+                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "${APIName}", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}"]
                 ],
                 "period": 60,
                 "stat": "p95",
@@ -2468,8 +2467,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "4XXError", "ApiName", "Warehouse", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}"],
-                  [".",              "5XXError", ".",       "Warehouse", ".",        "/data/events", ".",      "POST", ".",     "${Stage}"]
+                  ["AWS/ApiGateway", "4XXError", "ApiName", "${APIName}", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}"],
+                  [".",              "5XXError", ".",       "${APIName}", ".",        "/data/events", ".",      "POST", ".",     "${Stage}"]
                 ],
                 "period": 60,
                 "stat": "Sum",
