@@ -2028,7 +2028,7 @@ Resources:
         Api:
           Type: Api
           Properties:
-            Method: POST
+            Method: post
             Path: /data/events
             RestApiId: !Ref API
 
@@ -2041,7 +2041,7 @@ Resources:
         Api:
           Type: Api
           Properties:
-            Method: GET
+            Method: get
             Path: /info/ads
             RestApiId: !Ref API
 
