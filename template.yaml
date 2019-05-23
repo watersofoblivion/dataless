@@ -1521,11 +1521,11 @@ Resources:
             - Key: column
               StringValue: day STRING
             - Key: column
-              StringValue: impressions INT
+              StringValue: impressions BIGINT
             - Key: column
-              StringValue: clicks INT
+              StringValue: clicks BIGINT
             - Key: column
-              StringValue: clickthrough_rate FLOAT
+              StringValue: clickthrough_rate DOUBLE
         - Id: AdvertisingInfoStagingTable
           Name: Advertising Info Staging Table
           Fields:
