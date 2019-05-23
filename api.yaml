@@ -25,47 +25,47 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/BatchWriteResponse"
-  /info/ads/{id}:
-    get:
-      summary: Get info about events
-      operationId: info-events
-      parameters:
-        - name: id
-          location: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: start
-          location: querystring
-          required: true
-          schema:
-            $ref: "#/components/schemas/Date"
-        - name: end
-          location: querystring
-          required: true
-          schema:
-            $ref: "#/components/schemas/Date"
-        - name: page
-          location: querystring
-          required: false
-          schema:
-            $ref: "#/components/schemas/Base64"
-        - name: limit
-          location: querystring
-          required: false
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-      responses:
-        '200':
-          description: |
-            The query was successful.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AdvertisingInfo"
+  # /info/ads/{id}:
+  #   get:
+  #     summary: Get info about events
+  #     operationId: info-events
+  #     parameters:
+  #       - name: id
+  #         location: path
+  #         required: true
+  #         schema:
+  #           type: string
+  #           format: uuid
+  #       - name: start
+  #         location: querystring
+  #         required: true
+  #         schema:
+  #           $ref: "#/components/schemas/Date"
+  #       - name: end
+  #         location: querystring
+  #         required: true
+  #         schema:
+  #           $ref: "#/components/schemas/Date"
+  #       - name: page
+  #         location: querystring
+  #         required: false
+  #         schema:
+  #           $ref: "#/components/schemas/Base64"
+  #       - name: limit
+  #         location: querystring
+  #         required: false
+  #         schema:
+  #           type: integer
+  #           minimum: 1
+  #           maximum: 100
+  #     responses:
+  #       '200':
+  #         description: |
+  #           The query was successful.
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/AdvertisingInfo"
 x-amazon-apigateway-request-validators:
   all:
     validateRequestBody: true

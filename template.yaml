@@ -2045,7 +2045,7 @@ Resources:
           Type: Api
           Properties:
             Method: post
-            Path: "/data/events"
+            Path: /data/events
             RestApiId: !Ref API
 
   # AdvertisingInfoAPILambda:
