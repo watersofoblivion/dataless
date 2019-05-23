@@ -2042,7 +2042,7 @@ Resources:
           Type: Api
           Properties:
             Method: get
-            Path: /info/ads
+            Path: /info/ads/{id}
             RestApiId: !Ref API
 
   API:
