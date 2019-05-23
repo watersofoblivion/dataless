@@ -56,15 +56,17 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 	outputRecords := make([]events.KinesisAnalyticsOutputDeliveryResponseRecord, 0, MetricDataLimit)
 
 	// Process all the input records
+	log.Printf("Processing %d records", len(input.Records))
 	for _, record := range input.Records {
 		// Create the output record
+		log.Printf("Processing record %s", record.RecordID)
 		outputRecord := events.KinesisAnalyticsOutputDeliveryResponseRecord{RecordID: record.RecordID}
 
 		// Parse the input record
 		metric := new(AdvertisingMetric)
 		if err := json.Unmarshal(record.Data, metric); err != nil {
 			// Mark the input record as failed and move on
-			log.Printf("Error unmarshaling record %s: %s", outputRecord.RecordID, err)
+			log.Printf("Error unmarshaling record %s: %s", record.RecordID, err)
 			outputRecord.Result = events.KinesisAnalyticsOutputDeliveryFailed
 			output.Records = append(output.Records, outputRecord)
 			continue
