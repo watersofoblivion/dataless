@@ -1,9 +1,9 @@
 BaseURL: https://${API_ID}.execute-api.${REGION}.amazonaws.com/${STAGE}
 Duration: 1h
 Ads:
-  Number: 1000000
+  Count: 1000000
 Users:
-  Number: 10000
+  Count: 10000
   ClickthroughProbability: 0.3
   ViewFrequency: 5s
   ViewVariance: 0.1

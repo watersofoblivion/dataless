@@ -42,6 +42,10 @@ func handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.API
 		return api.ErrorResponse(http.StatusBadRequest, err)
 	}
 
+	if numKeys := len(evts); numKeys > 1 {
+		return api.ErrorResponse(http.StatusBadRequest, fmt.Errorf("expected 1 key, found %d", numKeys))
+	}
+
 	inputRecords, found := evts[batchKey]
 	if !found {
 		return api.ErrorResponse(http.StatusBadRequest, fmt.Errorf("expected batch key %q", batchKey))

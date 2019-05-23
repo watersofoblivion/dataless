@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -19,9 +20,9 @@ import (
 	"github.com/cenkalti/backoff"
 	"github.com/google/uuid"
 	yaml "gopkg.in/yaml.v2"
-
-	"github.com/watersofoblivion/dataless/go/api"
 )
+
+const MaxBatchSize = 500
 
 type Config struct {
 	BaseURL  string        `yaml:"BaseURL"`
@@ -30,12 +31,23 @@ type Config struct {
 	Users    *UsersConfig  `yaml:"Users"`
 }
 
+func LoadConfig(path string) (*Config, error) {
+	bs, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		return nil, err
+	}
+	bs = []byte(os.ExpandEnv(string(bs)))
+
+	config := new(Config)
+	return config, yaml.Unmarshal(bs, config)
+}
+
 type AdsConfig struct {
-	Number int `yaml:"Number"`
+	Count int `yaml:"Number"`
 }
 
 type UsersConfig struct {
-	Number                  int           `yaml:"Number"`
+	Count                   int           `yaml:"Number"`
 	ClickthroughProbability float64       `yaml:"ClickthroughProbability"`
 	ViewFrequency           time.Duration `yaml:"ViewFrequency"`
 	ViewVariance            float64       `yaml:"ViewVariance"`
@@ -71,12 +83,150 @@ func NewUsers(n int) *Users {
 	return users
 }
 
+type Batch map[string]Records
+
+type Records []Record
+
+type Record map[string]interface{}
+
 func jitter(d time.Duration, variability float64) time.Duration {
 	dInt64 := int64(d)
 	fD := float64(dInt64)
 	r := rand.Float64() * fD * variability
 	slid := r - (r / 2.0)
 	return time.Duration(int64(fD + slid))
+}
+
+func batcher(wg *sync.WaitGroup, batchKey string, records <-chan Record, batches chan<- Batch) {
+	defer wg.Done()
+
+	rs := make(Records, 0, MaxBatchSize)
+	defer func() {
+		if len(records) > 0 {
+			batches <- Batch{batchKey: rs}
+		}
+	}()
+
+	for record := range records {
+		rs = append(rs, record)
+		if len(rs) == MaxBatchSize {
+			batches <- Batch{batchKey: rs}
+			rs = make(Records, 0, MaxBatchSize)
+		}
+	}
+}
+
+func publisher(ctx context.Context, wg *sync.WaitGroup, batches <-chan Batch, endpoint string) {
+	defer wg.Done()
+
+	for batch := range batches {
+		publish := publishBatch(endpoint, batch)
+		eb := backoff.WithContext(backoff.NewExponentialBackOff(), ctx)
+		if err := backoff.RetryNotify(publish, eb, notifyBackoff); err != nil {
+			log.Printf("events dropped: %s", err)
+		}
+	}
+}
+
+func publishBatch(endpoint string, batch Batch) func() error {
+	buf := new(bytes.Buffer)
+	encoder := json.NewEncoder(buf)
+
+	return func() error {
+		buf.Reset()
+		if err := encoder.Encode(batch); err != nil {
+			return fmt.Errorf("could not encode events batch: %s", err)
+		}
+
+		resp, err := http.Post(endpoint, "application/json", buf)
+		if err != nil {
+			return fmt.Errorf("error publishing events batch: %s", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return fmt.Errorf("non-%d status code publishing events batch: %d", http.StatusOK, resp.StatusCode)
+		}
+
+		batchWriteResponse := make(Batch)
+		if err := json.NewDecoder(resp.Body).Decode(&batchWriteResponse); err != nil {
+			return fmt.Errorf("error decoding batch write response: %s", err)
+		}
+
+		newRecords := make(Records, 0, len(batch["records"]))
+		for i, record := range batchWriteResponse["records"] {
+			failed, ok := record["failed"].(bool)
+			if !ok {
+				log.Panicf(`invalid response: expected field "failed"`)
+			}
+
+			if failed {
+				newRecords = append(newRecords, batch["records"][i])
+			}
+		}
+
+		if numRetry := len(newRecords); numRetry > 0 {
+			batch = Batch{"records": newRecords}
+			return fmt.Errorf("Retrying %d events", numRetry)
+		}
+
+		fmt.Print(".")
+		return nil
+	}
+}
+
+func notifyBackoff(err error, bo time.Duration) {
+	fmt.Println()
+	log.Printf("%s.  Backing off %s", err, bo)
+}
+
+func simulateUser(wg *sync.WaitGroup, usersWg *sync.WaitGroup, ctx context.Context, config *Config, userID uuid.UUID, ads <-chan uuid.UUID, records chan<- Record) {
+	defer wg.Done()
+	defer usersWg.Done()
+
+	sessionID := uuid.New()
+	for ad := range ads {
+		contextID := uuid.New()
+		impressionID := uuid.New()
+		records <- Record{
+			"session_id":  sessionID,
+			"context_id":  contextID,
+			"actor_type":  "customer",
+			"actor_id":    userID,
+			"event_type":  "impression",
+			"event_id":    impressionID,
+			"object_type": "ad",
+			"object_id":   ad,
+			"occurred_at": time.Now(),
+		}
+
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(config.Users.ConsiderDuration):
+		}
+
+		if rand.Float64() < config.Users.ClickthroughProbability {
+			records <- Record{
+				"session_id":  sessionID,
+				"context_id":  contextID,
+				"parent_id":   impressionID,
+				"actor_type":  "customer",
+				"actor_id":    userID,
+				"event_type":  "click",
+				"event_id":    uuid.New(),
+				"object_type": "ad",
+				"object_id":   ad,
+				"occurred_at": time.Now(),
+			}
+		}
+
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(config.Users.ViewFrequency):
+		}
+	}
 }
 
 var (
@@ -87,170 +237,44 @@ func main() {
 	flag.StringVar(&configFile, "c", configFile, "The config file for the load test")
 	flag.Parse()
 
-	f, err := os.OpenFile(configFile, os.O_RDONLY, 0)
+	config, err := LoadConfig(configFile)
 	if err != nil {
 		log.Panic(err)
 	}
-	defer f.Close()
 
-	config := new(Config)
-	if err := yaml.NewDecoder(f).Decode(config); err != nil {
-		log.Panic(err)
-	}
-
-	baseURL, err := url.Parse(os.ExpandEnv(config.BaseURL))
+	baseURL, err := url.Parse(config.BaseURL)
 	if err != nil {
 		log.Panicf("could not parse base URL: %s", err)
 	}
+	earl := baseURL.ResolveReference(&url.URL{
+		Path: filepath.Join(baseURL.Path, "/data/events"),
+	}).String()
 
-	ads := NewAds(config.Ads.Number)
-	users := NewUsers(config.Users.Number)
+	ads := NewAds(config.Ads.Count)
+	users := NewUsers(config.Users.Count)
 
 	wg := new(sync.WaitGroup)
 	ctx, cancel := context.WithTimeout(context.Background(), config.Duration)
 
-	eventBatches := make(chan *api.Events)
+	batches := make(chan Batch)
 	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	go publisher(ctx, wg, batches, earl)
 
-		buf := new(bytes.Buffer)
-		encoder := json.NewEncoder(buf)
-		earl := baseURL.ResolveReference(&url.URL{
-			Path: filepath.Join(baseURL.Path, "/data/events"),
-		}).String()
-
-		for batch := range eventBatches {
-			eb := backoff.WithContext(backoff.NewExponentialBackOff(), ctx)
-			err := backoff.RetryNotify(func() error {
-				buf.Reset()
-				if err := encoder.Encode(batch); err != nil {
-					return fmt.Errorf("could not encode events batch: %s", err)
-				}
-
-				resp, err := http.Post(earl, "application/json", buf)
-				if err != nil {
-					return fmt.Errorf("error publishing events batch: %s", err)
-				}
-				defer resp.Body.Close()
-
-				if resp.StatusCode != http.StatusOK {
-					return fmt.Errorf("non-%d status code publishing events batch: %d", http.StatusOK, resp.StatusCode)
-				}
-
-				batchWriteResponse := new(api.BatchWriteResponse)
-				if err := json.NewDecoder(resp.Body).Decode(batchWriteResponse); err != nil {
-					return fmt.Errorf("error decoding batch write response: %s", err)
-				}
-
-				newBatch := new(api.Events)
-				for i, record := range batchWriteResponse.Records {
-					if record.Failed {
-						newBatch.Events = append(newBatch.Events, batch.Events[i])
-					}
-				}
-
-				if numRetry := len(newBatch.Events); numRetry > 0 {
-					batch = newBatch
-					return fmt.Errorf("Retrying %d events", numRetry)
-				}
-
-				fmt.Print(".")
-				return nil
-			}, eb, func(err error, bo time.Duration) {
-				fmt.Println()
-				log.Printf("%s.  Backing off %s", err, bo)
-			})
-			if err != nil {
-				log.Printf("events dropped: %s", err)
-			}
-		}
-	}()
-
-	events := make(chan *api.Event)
+	records := make(chan Record)
 	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		batch := new(api.Events)
-
-		defer func() {
-			if len(batch.Events) > 0 {
-				eventBatches <- batch
-			}
-
-			close(eventBatches)
-		}()
-
-		for impression := range events {
-			batch.Events = append(batch.Events, impression)
-			if len(batch.Events) == 500 {
-				eventBatches <- batch
-				batch = new(api.Events)
-			}
-		}
-	}()
+	go batcher(wg, "events", records, batches)
 
 	usersWg := new(sync.WaitGroup)
 	go func() {
 		usersWg.Wait()
-		close(events)
+		close(records)
 	}()
 
 	adStream := make(chan uuid.UUID)
-	wg.Add(config.Users.Number)
-	usersWg.Add(config.Users.Number)
-	for i := 0; i < config.Users.Number; i++ {
-		i := i
-		go func() {
-			defer wg.Done()
-			defer usersWg.Done()
-
-			sessionID := uuid.New()
-
-			for ad := range adStream {
-				contextID := uuid.New()
-				impressionID := uuid.New()
-
-				events <- &api.Event{
-					Session:    sessionID,
-					Context:    contextID,
-					ActorType:  "customer",
-					Actor:      users.Users[i],
-					EventType:  "impression",
-					Event:      impressionID,
-					ObjectType: "ad",
-					Object:     ad,
-					OccurredAt: time.Now(),
-				}
-
-				select {
-				case <-ctx.Done():
-					return
-				case <-time.After(config.Users.ConsiderDuration):
-				}
-
-				if rand.Float64() < config.Users.ClickthroughProbability {
-					events <- &api.Event{
-						Session:    sessionID,
-						Context:    contextID,
-						Parent:     impressionID,
-						ActorType:  "customer",
-						Actor:      users.Users[i],
-						EventType:  "click",
-						Event:      uuid.New(),
-						ObjectType: "ad",
-						Object:     ad,
-						OccurredAt: time.Now(),
-					}
-				}
-
-				select {
-				case <-ctx.Done():
-					return
-				case <-time.After(config.Users.ViewFrequency):
-				}
-			}
-		}()
+	wg.Add(config.Users.Count)
+	usersWg.Add(config.Users.Count)
+	for i := 0; i < config.Users.Count; i++ {
+		go simulateUser(wg, usersWg, ctx, config, users.Users[i], adStream, records)
 	}
 
 	signals := make(chan os.Signal)
