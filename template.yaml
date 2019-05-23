@@ -897,8 +897,11 @@ Resources:
   RealTimeAdvertisingLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: bin/real-time-advertising
+      Handler: bin/real-time-advertising-to-cloudwatch
       Role: !GetAtt RealTimeAdvertisingLambdaRole.Arn
+      Environment:
+        Variables:
+          METRIC_NAMESPACE: Warehouse/Advertising
 
   RealTimeAdvertisingApplicationRole:
     Type: AWS::IAM::Role
@@ -1002,6 +1005,33 @@ Resources:
         WINDOW
           "last_5_minutes" AS (RANGE INTERVAL '5' MINUTE PRECEDING)
         ;
+
+        CREATE OR REPLACE STREAM "metrics" (
+          "name"  VARCHAR(255),
+          "at"    TIMESTAMP,
+          "value" DOUBLE
+        );
+
+        CREATE OR REPLACE PUMP "impressions_metric_pump" AS
+        INSERT INTO "metrics"
+        SELECT STREAM
+          'Impressions'                                                                                               AS "name",
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "advertising"."impression_at")) AS "at",
+          COUNT(1)                                                                                                    AS "value"
+        FROM "advertising"
+        GROUP BY STEP("advertising".ROWTIME BY INTERVAL '60' SECOND)
+        ;
+
+        CREATE OR REPLACE PUMP "clicks_metric_pump" AS
+        INSERT INTO "metrics"
+        SELECT STREAM
+          'Clicks'                                                                                                    AS "name",
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "advertising"."impression_at")) AS "at",
+          COUNT(1)                                                                                                    AS "value"
+        FROM "advertising"
+        WHERE "advertising"."clicked_at" IS NOT NULL
+        GROUP BY STEP("advertising".ROWTIME BY INTERVAL '60' SECOND)
+        ;
       Inputs:
         - NamePrefix: events
           KinesisFirehoseInput:
@@ -1051,7 +1081,7 @@ Resources:
     Properties:
       ApplicationName: !Ref RealTimeAdvertisingApplication
       Output:
-        Name: advertising
+        Name: metrics
         DestinationSchema:
           RecordFormatType: JSON
         LambdaOutput:
