@@ -132,6 +132,7 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 		putMetricDataInput.SetMetricData(metricData)
 
 		status := events.KinesisAnalyticsOutputDeliveryOK
+		json.NewEncoder(os.Stdout).Encode(putMetricDataInput)
 		if _, err := cw.PutMetricDataWithContext(ctx, putMetricDataInput); err != nil {
 			log.Printf("metric delivery failed for %d metrics: %s", numMetrics, err)
 			status = events.KinesisAnalyticsOutputDeliveryFailed
