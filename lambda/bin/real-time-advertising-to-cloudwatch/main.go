@@ -41,6 +41,8 @@ type AdvertisingMetric struct {
 	Value float64   `json:"value"`
 }
 
+// UnmarshalJSON implements the json.Unmarshaler interface.  This properly
+// handles the timestamp format.
 func (metric *AdvertisingMetric) UnmarshalJSON(bs []byte) error {
 	var err error
 
