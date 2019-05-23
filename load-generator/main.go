@@ -43,11 +43,11 @@ func LoadConfig(path string) (*Config, error) {
 }
 
 type AdsConfig struct {
-	Count int `yaml:"Number"`
+	Count int `yaml:"Count"`
 }
 
 type UsersConfig struct {
-	Count                   int           `yaml:"Number"`
+	Count                   int           `yaml:"Count"`
 	ClickthroughProbability float64       `yaml:"ClickthroughProbability"`
 	ViewFrequency           time.Duration `yaml:"ViewFrequency"`
 	ViewVariance            float64       `yaml:"ViewVariance"`
@@ -89,6 +89,17 @@ type Records []Record
 
 type Record map[string]interface{}
 
+type Response struct {
+	FailedCount int               `json:"failed_count"`
+	Records     []*ResponseRecord `json:"records"`
+}
+
+type ResponseRecord struct {
+	Failed       bool   `json:"failed"`
+	ErrorCode    string `json:"error_code"`
+	ErrorMessage string `json:"error_message"`
+}
+
 func jitter(d time.Duration, variability float64) time.Duration {
 	dInt64 := int64(d)
 	fD := float64(dInt64)
@@ -99,6 +110,7 @@ func jitter(d time.Duration, variability float64) time.Duration {
 
 func batcher(wg *sync.WaitGroup, batchKey string, records <-chan Record, batches chan<- Batch) {
 	defer wg.Done()
+	defer close(batches)
 
 	rs := make(Records, 0, MaxBatchSize)
 	defer func() {
@@ -148,19 +160,14 @@ func publishBatch(endpoint string, batch Batch) func() error {
 			return fmt.Errorf("non-%d status code publishing events batch: %d", http.StatusOK, resp.StatusCode)
 		}
 
-		batchWriteResponse := make(Batch)
-		if err := json.NewDecoder(resp.Body).Decode(&batchWriteResponse); err != nil {
+		response := new(Response)
+		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 			return fmt.Errorf("error decoding batch write response: %s", err)
 		}
 
 		newRecords := make(Records, 0, len(batch["records"]))
-		for i, record := range batchWriteResponse["records"] {
-			failed, ok := record["failed"].(bool)
-			if !ok {
-				log.Panicf(`invalid response: expected field "failed"`)
-			}
-
-			if failed {
+		for i, record := range response.Records {
+			if record.Failed {
 				newRecords = append(newRecords, batch["records"][i])
 			}
 		}
@@ -273,6 +280,7 @@ func main() {
 	adStream := make(chan uuid.UUID)
 	wg.Add(config.Users.Count)
 	usersWg.Add(config.Users.Count)
+
 	for i := 0; i < config.Users.Count; i++ {
 		go simulateUser(wg, usersWg, ctx, config, users.Users[i], adStream, records)
 	}
