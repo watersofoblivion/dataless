@@ -1988,6 +1988,18 @@ Resources:
   # API #
   #######
 
+  API:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+      MethodSettings:
+        - HttpMethod: "*"
+          ResourcePath: "/*"
+          # LoggingLevel: "ERROR"
+          MetricsEnabled: true
+      TracingEnabled: true
+      DefinitionUri: api.yaml
+
   APILambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -2019,13 +2031,14 @@ Resources:
                 Resource:
                   - !GetAtt AdvertisingInfoTable.Arn
 
-  EventsCaptureAPILambda:
+  EventsBeaconLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: bin/events-capture-api
+      Handler: bin/beacon-endpoint
       Role: !GetAtt APILambdaRole.Arn
       Environment:
         Variables:
+          BATCH_KEY: events
           DELIVERY_STREAM_NAME: !Ref EventsDeliveryStream
       Events:
         Api:
@@ -2035,33 +2048,21 @@ Resources:
             Path: /data/events
             RestApiId: !Ref API
 
-  AdvertisingInfoAPILambda:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: bin/advertising-info-api
-      Role: !GetAtt APILambdaRole.Arn
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref AdvertisingInfoTable
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            Method: get
-            Path: /info/ads/{id}
-            RestApiId: !Ref API
-
-  API:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: !Ref Stage
-      MethodSettings:
-        - HttpMethod: "*"
-          ResourcePath: "/*"
-          # LoggingLevel: "ERROR"
-          MetricsEnabled: true
-      TracingEnabled: true
-      DefinitionUri: api.yaml
+  # AdvertisingInfoAPILambda:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Handler: bin/advertising-info-api
+  #     Role: !GetAtt APILambdaRole.Arn
+  #     Environment:
+  #       Variables:
+  #         TABLE_NAME: !Ref AdvertisingInfoTable
+  #     Events:
+  #       Api:
+  #         Type: Api
+  #         Properties:
+  #           Method: get
+  #           Path: /info/ads/{id}
+  #           RestApiId: !Ref API
 
   Certificate:
     Type: AWS::CertificateManager::Certificate
