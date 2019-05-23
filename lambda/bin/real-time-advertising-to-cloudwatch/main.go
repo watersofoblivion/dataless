@@ -20,7 +20,7 @@ var (
 	cw              = cloudwatch.New(sess)
 	encoder         = json.NewEncoder(os.Stdout)
 	metricNamespace = os.Getenv("METRIC_NAMESPACE")
-	location, _     = time.LoadLocation("")
+	location        = time.FixedZone("UTC", 0)
 )
 
 func init() {
