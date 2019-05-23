@@ -1988,17 +1988,17 @@ Resources:
   # API #
   #######
 
-  API:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: !Ref Stage
-      MethodSettings:
-        - HttpMethod: "*"
-          ResourcePath: "/*"
-          # LoggingLevel: "ERROR"
-          MetricsEnabled: true
-      TracingEnabled: true
-      DefinitionUri: api.yaml
+  # API:
+  #   Type: AWS::Serverless::Api
+  #   Properties:
+  #     StageName: !Ref Stage
+  #     MethodSettings:
+  #       - HttpMethod: "*"
+  #         ResourcePath: "/*"
+  #         # LoggingLevel: "ERROR"
+  #         MetricsEnabled: true
+  #     TracingEnabled: true
+  #     DefinitionUri: api.yaml
 
   APILambdaRole:
     Type: AWS::IAM::Role
@@ -2048,21 +2048,21 @@ Resources:
             Path: /data/events
             RestApiId: !Ref API
 
-  # AdvertisingInfoAPILambda:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     Handler: bin/advertising-info-api
-  #     Role: !GetAtt APILambdaRole.Arn
-  #     Environment:
-  #       Variables:
-  #         TABLE_NAME: !Ref AdvertisingInfoTable
-  #     Events:
-  #       Beacon:
-  #         Type: Api
-  #         Properties:
-  #           Method: get
-  #           Path: /info/ads/{id}
-  #           RestApiId: !Ref API
+  AdvertisingInfoAPILambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: bin/advertising-info-api
+      Role: !GetAtt APILambdaRole.Arn
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref AdvertisingInfoTable
+      Events:
+        Beacon:
+          Type: Api
+          Properties:
+            Method: get
+            Path: /info/ads/{id}
+            RestApiId: !Ref API
 
   Certificate:
     Type: AWS::CertificateManager::Certificate
@@ -2085,7 +2085,8 @@ Resources:
     Condition: DNSEnabled
     Properties:
       DomainName: !Ref DomainName
-      RestApiId: !Ref API
+      # RestApiId: !Ref API
+      RestApiId: !Ref ServerlessRestApi
       Stage: !Ref API.Stage
 
   #######
