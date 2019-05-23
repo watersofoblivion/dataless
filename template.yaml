@@ -2108,10 +2108,45 @@ Resources:
                     application/json:
                       schema:
                         $ref: "#/components/schemas/BatchWriteResponse"
-          /info/events:
+          /info/ads/{id}:
             get:
               summary: Get info about events
               operationId: info-events
+              parameters:
+                - name: id
+                  in: path
+                  description: ID of the ad
+                  required: true
+                  schema:
+                    type: string
+                    format: uuid
+                - name: start
+                  in: querystring
+                  description: The start day
+                  required: true
+                  schema:
+                    $ref: "#/components/schemas/Date"
+                - name: end
+                  in: querystring
+                  description: The end day
+                  required: true
+                  schema:
+                    $ref: "#/components/schemas/Date"
+                - name: page
+                  in: querystring
+                  required: false
+                  description: The page of results to fetch
+                  schema:
+                    $ref: "#/components/schemas/Base64"
+                - name: limit
+                  in: querystring
+                  required: false
+                  description: The number of results to fetch
+                  schema:
+                    type: integer
+                    minimum: 1
+                    maximum: 100
+                    default: 100
               x-amazon-apigateway-integration:
                 type: AWS
                 httpMethod: POST
@@ -2120,21 +2155,21 @@ Resources:
                 requestTemplates:
                   application/json: !Sub |
                     {
+                      "TableName": "${AdvertisingInfoTable}",
+                      "ExpressionAttributeNames": {
+                        "#ad_id": "ad_id",
+                        "#day": "day"
+                      },
+                      "ExpressionAttributeValues": {
+                        ":ad_id": { "S": "$input.params('id')" },
+                        ":start": { "S": "$input.params('start')" },
+                        ":end": { "S": "$input.params('end')" }
+                      },
+                      "KeyConditionExpression": "#ad_id = :ad_id AND #day BETWEEN :start AND :end",
                       #if($input.params('page') != "")
                       "ExclusiveStartKey": $util.parseJSON($util.base64Decode($input.params('page'))),
                       #end
-                      "ExpressionAttributeNames": {
-                        "#ID": "ID",
-                        "#Date": "Date"
-                      },
-                      "ExpressionAttributeValues": {
-                        ":id": { "S": "$input.params('id')" },
-                        ":start": { "S": "$input.params('start')" },
-                        ":end": { "S": #if($input.params('end') != "") "$input.params('end')" #else "$input.params('start')" #end }
-                      },
-                      "KeyConditionExpression": "#ID = :id AND #Date BETWEEN #start AND #end",
-                      "Limit": $input.params('limit'),
-                      "TableName": "${AdvertisingInfoTable}"
+                      "Limit": $input.params('limit')
                     }
                 requestParameters:
                   integration.request.header.Content-Type: "'x-amz-json-1.1'"
@@ -2144,14 +2179,17 @@ Resources:
                     responseTemplates:
                       application/json: |
                         {
-                          #if($input.path('$.LastEvaluatedKey') != "")
+                          #if($input.path('$.LastEvaluatedKey'))
                           "next": "$util.base64Encode($input.json('$.LastEvaluatedKey'))",
                           #end
                           "count": $input.path('$.Count'),
-                          "events": [
+                          "days": [
                             #foreach($elem in $input.path('$.Items'))
                             {
-                              "id": "$elem.ID"
+                              "day": "$elem.day",
+                              "impressions": $elem.impressions,
+                              "clicks": $elem.clicks,
+                              "clickthrough_rate": $elem.clickthrough_rate
                             }#if($foreach.hasNext),#end
                             #end
                           ]
@@ -2163,7 +2201,7 @@ Resources:
                   content:
                     application/json:
                       schema:
-                        $ref: "#/components/schemas/EventsInfo"
+                        $ref: "#/components/schemas/AdvertisingInfo"
         x-amazon-apigateway-request-validators:
           all:
             validateRequestBody: true
@@ -2251,7 +2289,7 @@ Resources:
               required:
                 - failed
               additionalProperties: false
-            EventsInfo:
+            AdvertisingInfo:
               type: object
               properties:
                 next:
@@ -2260,22 +2298,34 @@ Resources:
                 count:
                   type: integer
                   minimum: 0
-                events:
+                days:
                   type: array
                   items:
-                    $ref: "#/components/schemas/EventInfo"
+                    $ref: "#/components/schemas/AdvertisingDay"
               required:
                 - count
-                - events
+                - days
               additionalProperties: false
-            EventInfo:
+            AdvertisingDay:
               type: object
               properties:
-                id:
-                  type: string
-                  format: uuid
+                day:
+                  $ref: "#/components/schemas/Date"
+                impressions:
+                  type: integer
+                  minimum: 0
+                clicks:
+                  type: integer
+                  minimum: 0
+                clickthrough_rate:
+                  type: number
+                  minimum: 0.0
+                  maximum: 1.0
               required:
-                - id
+                - day
+                - impressions
+                - clicks
+                - clickthrough_rate
               additionalProperties: false
             Error:
               type: object
