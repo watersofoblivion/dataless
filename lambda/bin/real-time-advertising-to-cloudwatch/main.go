@@ -41,6 +41,24 @@ type AdvertisingMetric struct {
 	Value float64   `json:"value"`
 }
 
+func (metric *AdvertisingMetric) UnmarshalJSON(bs []byte) error {
+	var err error
+
+	v := make(map[string]interface{})
+	if err = json.Unmarshal(bs, &v); err != nil {
+		return err
+	}
+
+	metric.Name = v["name"].(string)
+	metric.At, err = time.Parse("2006-01-02 15:04:05.678", v["at"].(string))
+	if err != nil {
+		return err
+	}
+	metric.Value = v["name"].(float64)
+
+	return nil
+}
+
 func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEvent) (events.KinesisAnalyticsOutputDeliveryResponse, error) {
 	// Create a response
 	output := events.KinesisAnalyticsOutputDeliveryResponse{
