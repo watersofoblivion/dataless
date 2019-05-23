@@ -1521,11 +1521,11 @@ Resources:
             - Key: column
               StringValue: day STRING
             - Key: column
-              StringValue: impressions BIGINT
+              StringValue: impressions INT
             - Key: column
-              StringValue: clicks BIGINT
+              StringValue: clicks INT
             - Key: column
-              StringValue: clickthrough_rate DOUBLE
+              StringValue: clickthrough_rate FLOAT
         - Id: AdvertisingInfoStagingTable
           Name: Advertising Info Staging Table
           Fields:
@@ -2027,9 +2027,10 @@ Resources:
       Events:
         Api:
           Type: Api
-          Method: POST
-          Path: /data/events
-          RestApiId: !Ref API
+          Properties:
+            Method: POST
+            Path: /data/events
+            RestApiId: !Ref API
 
   AdvertisingInfoAPILambda:
     Type: AWS::Serverless::Function
@@ -2039,9 +2040,10 @@ Resources:
       Events:
         Api:
           Type: Api
-          Method: GET
-          Path: /info/ads
-          RestApiId: !Ref API
+          Properties:
+            Method: GET
+            Path: /info/ads
+            RestApiId: !Ref API
 
   API:
     Type: AWS::Serverless::Api
