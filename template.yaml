@@ -41,9 +41,6 @@ Metadata:
           - EnableRedshift
           - RedshiftNodeType
           - RedshiftNumberOfNodes
-      - Label: API Gateway
-        Parameters:
-          - APIName
     ParameterLabels:
       CodeBucket:
         default: Bucket containing scripts
@@ -85,8 +82,6 @@ Metadata:
         default: Type of Redshift instance nodes
       RedshiftNumberOfNodes:
         default: Number of Redshift nodes
-      APIName:
-        default: Displayed name of API gateway
 
 Parameters:
   CodeBucket:
@@ -193,10 +188,6 @@ Parameters:
     MinValue: 1
     MaxValue: 100
     Default: 1
-  APIName:
-    Type: String
-    Description: The name of the API Gateway api.
-    Default: Warehouse Service
 
 Conditions:
   DNSEnabled: !And
@@ -1997,7 +1988,7 @@ Resources:
   # API #
   #######
 
-  APIRole:
+  APILambdaRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -2008,7 +1999,10 @@ Resources:
             Effect: Allow
             Principal:
               Service:
-                - !Sub "apigateway.${AWS::URLSuffix}"
+                - !Sub "lambda.${AWS::URLSuffix}"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
       Policies:
         - PolicyName: Execution
           PolicyDocument:
@@ -2025,6 +2019,30 @@ Resources:
                 Resource:
                   - !GetAtt AdvertisingInfoTable.Arn
 
+  EventsCaptureAPILambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: bin/events-capture-api
+      Role: !GetAtt APILambdaRole.Arn
+      Events:
+        Api:
+          Type: Api
+          Method: POST
+          Path: /data/events
+          RestApiId: !Ref API
+
+  AdvertisingInfoAPILambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: bin/advertising-info-api
+      Role: !GetAtt APILambdaRole.Arn
+      Events:
+        Api:
+          Type: Api
+          Method: GET
+          Path: /info/ads
+          RestApiId: !Ref API
+
   API:
     Type: AWS::Serverless::Api
     Properties:
@@ -2035,269 +2053,7 @@ Resources:
           # LoggingLevel: "ERROR"
           MetricsEnabled: true
       TracingEnabled: true
-      DefinitionBody:
-        openapi: 3.0.0
-        info:
-          version: 0.1.0
-          title: !Ref APIName
-        paths:
-          /data/events:
-            post:
-              summary: Record a batch of events
-              operationId: data-events
-              requestBody:
-                description: A batch of ad events
-                required: true
-                content:
-                  application/json:
-                    schema:
-                      $ref: "#/components/schemas/DataEvents"
-              x-amazon-apigateway-integration:
-                type: AWS
-                httpMethod: POST
-                uri: !Sub "arn:aws:apigateway:${AWS::Region}:firehose:action/PutRecordBatch"
-                credentials: !GetAtt APIRole.Arn
-                requestTemplates:
-                  application/json: !Sub |
-                    #set($newline = "
-                    ")
-                    {
-                      "DeliveryStreamName": "${EventsDeliveryStream}",
-                      "Records": [
-                        #foreach($elem in $input.path('$.events'))
-                        #set($val = $input.json("$.events[$foreach.index]"))
-                        #set($rec = "${!val}${!newline}")
-                        { "Data": "$util.base64Encode($rec)" }#if($foreach.hasNext),#end
-                        #end
-                      ]
-                    }
-                requestParameters:
-                  integration.request.header.Content-Type: "'x-amz-json-1.1'"
-                responses:
-                  '200':
-                    statusCode: 200
-                    responseTemplates:
-                      application/json: |
-                        {
-                          "failed_count": $input.path("$.FailedPutCount"),
-                          "records": [
-                            #foreach($record in $input.path("$.RequestResponses"))
-                            {
-                              #if($record.keySet().contains("ErrorCode"))
-                              "failed": true,
-                              "error_code": "$record.ErrorCode",
-                              "error_message": "$record.ErrorMessage"
-                              #else
-                              "failed": false
-                              #end
-                            }#if($foreach.hasNext),#end
-                            #end
-                          ]
-                        }
-              responses:
-                '200':
-                  description: |
-                    The batch was processed.  Some events may not have been
-                    processed.  The response contains a list of events in the
-                    same order submitted, indicating which succeeded and which
-                    failed.
-                  content:
-                    application/json:
-                      schema:
-                        $ref: "#/components/schemas/BatchWriteResponse"
-          /info/events:
-            get:
-              summary: Get info about events
-              operationId: info-events
-              x-amazon-apigateway-integration:
-                type: AWS
-                httpMethod: POST
-                uri: !Sub "arn:aws:apigateway:${AWS::Region}:dynamodb:action/Query"
-                credentials: !GetAtt APIRole.Arn
-                requestTemplates:
-                  application/json: !Sub |
-                    {
-                      #if($input.params('page') != "")
-                      "ExclusiveStartKey": $util.parseJSON($util.base64Decode($input.params('page'))),
-                      #end
-                      "ExpressionAttributeNames": {
-                        "#ID": "ID",
-                        "#Date": "Date"
-                      },
-                      "ExpressionAttributeValues": {
-                        ":id": { "S": "$input.params('id')" },
-                        ":start": { "S": "$input.params('start')" },
-                        ":end": { "S": #if($input.params('end') != "") "$input.params('end')" #else "$input.params('start')" #end }
-                      },
-                      "KeyConditionExpression": "#ID = :id AND #Date BETWEEN #start AND #end",
-                      "Limit": $input.params('limit'),
-                      "TableName": "${AdvertisingInfoTable}"
-                    }
-                requestParameters:
-                  integration.request.header.Content-Type: "'x-amz-json-1.1'"
-                responses:
-                  '200':
-                    statusCode: 200
-                    responseTemplates:
-                      application/json: |
-                        {
-                          #if($input.path('$.LastEvaluatedKey') != "")
-                          "next": "$util.base64Encode($input.json('$.LastEvaluatedKey'))",
-                          #end
-                          "count": $input.path('$.Count'),
-                          "events": [
-                            #foreach($elem in $input.path('$.Items'))
-                            {
-                              "id": "$elem.ID"
-                            }#if($foreach.hasNext),#end
-                            #end
-                          ]
-                        }
-              responses:
-                '200':
-                  description: |
-                    The query was successful.
-                  content:
-                    application/json:
-                      schema:
-                        $ref: "#/components/schemas/EventsInfo"
-        x-amazon-apigateway-request-validators:
-          all:
-            validateRequestBody: true
-            validateRequestParameters: true
-        x-amazon-apigateway-request-validator: all
-        components:
-          schemas:
-            DataEvents:
-              type: object
-              properties:
-                events:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/DataEvent"
-                  minItems: 1
-                  maxItems: 500
-              required:
-                - events
-              additionalProperties: false
-            DataEvent:
-              type: object
-              properties:
-                session_id:
-                  type: string
-                  format: uuid
-                context_id:
-                  type: string
-                  format: uuid
-                parent_id:
-                  type: string
-                  format: uuid
-                actor_type:
-                  type:
-                    $ref: "#/components/schemas/Type"
-                actor_id:
-                  type: string
-                  format: uuid
-                event_type:
-                  type:
-                    $ref: "#/components/schemas/Type"
-                event_id:
-                  type: string
-                  format: uuid
-                object_type:
-                  type:
-                    $ref: "#/components/schemas/Type"
-                object_id:
-                  type: string
-                  format: uuid
-                occurred_at:
-                  type:
-                    $ref: "#/components/schemas/Timestamp"
-              required:
-                - session_id
-                - context_id
-                - actor_type
-                - actor_id
-                - event_type
-                - event_id
-                - object_type
-                - object_id
-                - occurred_at
-              additionalProperties: false
-            BatchWriteResponse:
-              type: object
-              properties:
-                records:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/BatchWriteRecord"
-                  minItems: 1
-                  maxItems: 500
-              required:
-                - records
-              additionalProperties: false
-            BatchWriteRecord:
-              type: object
-              properties:
-                failed:
-                  type: boolean
-                error_code:
-                  type: string
-                error_message:
-                  type: string
-              required:
-                - failed
-              additionalProperties: false
-            EventsInfo:
-              type: object
-              properties:
-                next:
-                  type:
-                    $ref: "#/components/schemas/Base64"
-                count:
-                  type: integer
-                  minimum: 0
-                events:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/EventInfo"
-              required:
-                - count
-                - events
-              additionalProperties: false
-            EventInfo:
-              type: object
-              properties:
-                id:
-                  type: string
-                  format: uuid
-              required:
-                - id
-              additionalProperties: false
-            Error:
-              type: object
-              properties:
-                code:
-                  type: integer
-                  format: int32
-                message:
-                  type: string
-              required:
-                - code
-                - message
-              additionalProperties: false
-            Type:
-              type: string
-              format: "^[a-z]+[-a-z0-9]*$"
-            Date:
-              type: string
-              format: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
-            Timestamp:
-              type: string
-              format: "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?$"
-            Base64:
-              type: string
-              format: "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+      DefinitionUri: api.yaml
 
   Certificate:
     Type: AWS::CertificateManager::Certificate

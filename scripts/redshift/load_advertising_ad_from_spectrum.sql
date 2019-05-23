@@ -5,9 +5,9 @@ AS
 SELECT
   *
 FROM
-  warehouse.advertising AS advertising
+  warehouse.advertising
 WHERE
-      advertising.year = $1
-  AND advertising.year = $2
-  AND advertising.impression_at BETWEEN $3 AND $4
+      year = $1
+  AND year = $2
+  AND impression_at BETWEEN $3 AND $4
 ;

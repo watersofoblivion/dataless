@@ -19,6 +19,8 @@ import (
 	"github.com/cenkalti/backoff"
 	"github.com/google/uuid"
 	yaml "gopkg.in/yaml.v2"
+
+	"github.com/watersofoblivion/dataless/go/api"
 )
 
 type Config struct {
@@ -39,61 +41,6 @@ type UsersConfig struct {
 	ViewVariance            float64       `yaml:"ViewVariance"`
 	ConsiderDuration        time.Duration `yaml:"ConsiderDuration"`
 	ConsiderVariance        float64       `yaml:"ConsiderVariance"`
-}
-
-type Events struct {
-	Events []*Event `json:"events"`
-}
-
-type Event struct {
-	Session    uuid.UUID
-	Context    uuid.UUID
-	Parent     uuid.UUID
-	ActorType  string
-	Actor      uuid.UUID
-	EventType  string
-	Event      uuid.UUID
-	ObjectType string
-	Object     uuid.UUID
-	OccurredAt time.Time
-}
-
-func (event *Event) MarshalJSON() ([]byte, error) {
-	evt := map[string]interface{}{
-		"session_id":  event.Session.String(),
-		"context_id":  event.Context.String(),
-		"actor_type":  event.ActorType,
-		"actor_id":    event.Actor.String(),
-		"event_type":  event.EventType,
-		"event_id":    event.Event.String(),
-		"object_type": event.ObjectType,
-		"object_id":   event.Object.String(),
-		"occurred_at": event.OccurredAt.Format("2006-01-02 15:04:05.000"),
-	}
-
-	if event.Parent != uuid.Nil {
-		evt["parent_id"] = event.Parent.String()
-	}
-
-	return json.Marshal(evt)
-}
-
-type BatchWriteResponse struct {
-	Records []*BatchWriteRecord `json:"records"`
-}
-
-type BatchWriteRecord struct {
-	Failed       bool   `json:"failed"`
-	ErrorCode    string `json:"error_code"`
-	ErrorMessage string `json:"error_message"`
-}
-
-func (record *BatchWriteRecord) Error() string {
-	if record.Failed {
-		return fmt.Sprintf("%s: %s", record.ErrorCode, record.ErrorMessage)
-	}
-
-	return ""
 }
 
 type Ads struct {
@@ -162,7 +109,7 @@ func main() {
 	wg := new(sync.WaitGroup)
 	ctx, cancel := context.WithTimeout(context.Background(), config.Duration)
 
-	eventBatches := make(chan *Events)
+	eventBatches := make(chan *api.Events)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -191,12 +138,12 @@ func main() {
 					return fmt.Errorf("non-%d status code publishing events batch: %d", http.StatusOK, resp.StatusCode)
 				}
 
-				batchWriteResponse := new(BatchWriteResponse)
+				batchWriteResponse := new(api.BatchWriteResponse)
 				if err := json.NewDecoder(resp.Body).Decode(batchWriteResponse); err != nil {
 					return fmt.Errorf("error decoding batch write response: %s", err)
 				}
 
-				newBatch := new(Events)
+				newBatch := new(api.Events)
 				for i, record := range batchWriteResponse.Records {
 					if record.Failed {
 						newBatch.Events = append(newBatch.Events, batch.Events[i])
@@ -220,11 +167,11 @@ func main() {
 		}
 	}()
 
-	events := make(chan *Event)
+	events := make(chan *api.Event)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		batch := new(Events)
+		batch := new(api.Events)
 
 		defer func() {
 			if len(batch.Events) > 0 {
@@ -238,7 +185,7 @@ func main() {
 			batch.Events = append(batch.Events, impression)
 			if len(batch.Events) == 500 {
 				eventBatches <- batch
-				batch = new(Events)
+				batch = new(api.Events)
 			}
 		}
 	}()
@@ -264,7 +211,7 @@ func main() {
 				contextID := uuid.New()
 				impressionID := uuid.New()
 
-				events <- &Event{
+				events <- &api.Event{
 					Session:    sessionID,
 					Context:    contextID,
 					ActorType:  "customer",
@@ -283,7 +230,7 @@ func main() {
 				}
 
 				if rand.Float64() < config.Users.ClickthroughProbability {
-					events <- &Event{
+					events <- &api.Event{
 						Session:    sessionID,
 						Context:    contextID,
 						Parent:     impressionID,
