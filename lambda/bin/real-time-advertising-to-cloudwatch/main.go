@@ -20,6 +20,7 @@ var (
 	cw              = cloudwatch.New(sess)
 	encoder         = json.NewEncoder(os.Stdout)
 	metricNamespace = os.Getenv("METRIC_NAMESPACE")
+	location, _     = time.LoadLocation("")
 )
 
 func init() {
@@ -52,7 +53,7 @@ func (metric *AdvertisingMetric) UnmarshalJSON(bs []byte) error {
 	}
 
 	metric.Name = v["name"].(string)
-	metric.At, err = time.Parse("2006-01-02 15:04:05.000", v["at"].(string))
+	metric.At, err = time.ParseInLocation("2006-01-02 15:04:05.000", v["at"].(string), location)
 	if err != nil {
 		return err
 	}
@@ -109,6 +110,7 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 
 			// Publish the metrics and record the status for the output records
 			log.Printf("Publishing metrics")
+			json.NewEncoder(os.Stdout).Encode(putMetricDataInput)
 			status := events.KinesisAnalyticsOutputDeliveryOK
 			if _, err := cw.PutMetricDataWithContext(ctx, putMetricDataInput); err != nil {
 				log.Printf("metric delivery failed for %d metrics: %s", numMetrics, err)
