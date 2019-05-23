@@ -43,7 +43,7 @@ type AdvertisingMetric struct {
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface.  This properly
-// handles the timestamp format.
+// handles the timestamp format and timezone.
 func (metric *AdvertisingMetric) UnmarshalJSON(bs []byte) error {
 	var err error
 
@@ -77,10 +77,8 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 	outputRecords := make([]events.KinesisAnalyticsOutputDeliveryResponseRecord, 0, MetricDataLimit)
 
 	// Process all the input records
-	log.Printf("Processing %d records", len(input.Records))
 	for _, record := range input.Records {
 		// Create the output record
-		log.Printf("Processing record %s", record.RecordID)
 		outputRecord := events.KinesisAnalyticsOutputDeliveryResponseRecord{RecordID: record.RecordID}
 
 		// Parse the input record
@@ -109,7 +107,6 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 			putMetricDataInput.SetMetricData(metricData)
 
 			// Publish the metrics and record the status for the output records
-			log.Printf("Publishing metrics")
 			json.NewEncoder(os.Stdout).Encode(putMetricDataInput)
 			status := events.KinesisAnalyticsOutputDeliveryOK
 			if _, err := cw.PutMetricDataWithContext(ctx, putMetricDataInput); err != nil {
@@ -119,7 +116,6 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 
 			// Set the status of the output records and add them to the response
 			for _, outputRecord := range outputRecords {
-				log.Printf("Marking record %s as %s", outputRecord.RecordID, status)
 				outputRecord.Result = status
 			}
 			output.Records = append(output.Records, outputRecords...)
@@ -133,7 +129,6 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 	// Flush any remaining metric data
 	numMetrics := len(metricData)
 	if numMetrics > 0 {
-		log.Printf("Publishing final metrics batch")
 		putMetricDataInput.SetMetricData(metricData)
 
 		status := events.KinesisAnalyticsOutputDeliveryOK
@@ -149,6 +144,5 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 	}
 
 	// Done!
-	log.Printf("Done!")
 	return output, nil
 }
