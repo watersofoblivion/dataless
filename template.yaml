@@ -2629,7 +2629,6 @@ Resources:
               "properties": {
                 "metrics": [
                   ["AWS/KinesisAnalytics", "Success", "Application", "${RealTimeAdvertisingApplication}"]
-                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"Success\"', 'Sum', 60)" } ]
                 ],
                 "title": "Success",
                 "liveData": false
