@@ -1923,6 +1923,30 @@ Resources:
                 DISTSTYLE KEY
                 DISTKEY (user_id)
                 ;
+        - Id: DummyInputTableFormat
+          Name: Dummy Input Table Format
+          Fields:
+            - Key: type
+              StringValue: CSV
+            - Key: column
+              StringValue: ad_id STRING
+            - Key: column
+              StringValue: day STRING
+            - Key: column
+              StringValue: impressions BIGINT
+            - Key: column
+              StringValue: clicks BIGINT
+            - Key: column
+              StringValue: clickthrough_rate DOUBLE
+        - Id: DummyInputTable
+          Name: Dummy Input Table
+          Fields:
+            - Key: type
+              StringValue: S3DataNode
+            - Key: directoryPath
+              StringValue: !Sub "s3://${Bucket}/data/raw/events/"
+            - Key: dataFormat
+              RefValue: DummyInputTableFormat
         - Id: RedshiftStagingTableFormat
           Name: Redshift Staging Table Format
           Fields:
@@ -1961,7 +1985,7 @@ Resources:
                 - Key: runsOn
                   RefValue: EMRCluster
             - Key: input
-              RefValue: RedshiftStagingTable
+              RefValue: DummyInputTable
             - Key: output
               RefValue: RedshiftStagingTable
             - Key: scriptVariable
