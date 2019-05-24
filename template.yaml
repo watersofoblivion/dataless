@@ -2484,10 +2484,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "Count", "ApiName", "${APIName}", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}"]
+                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"Count\" ApiName=\"${APIName}\" Stage=\"Stage\"', 'Sum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Request Rate",
                 "liveData": false
@@ -2499,10 +2497,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "Latency", "ApiName", "${APIName}", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}"]
+                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"Latency\" ApiName=\"${APIName}\" Stage=\"Stage\"', 'p95', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "p95",
                 "region": "${AWS::Region}",
                 "title": "Latency",
                 "liveData": false
@@ -2514,10 +2510,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "${APIName}", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}"]
+                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"IntegrationName\" ApiName=\"${APIName}\" Stage=\"Stage\"', 'p95', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "p95",
                 "region": "${AWS::Region}",
                 "title": "Integration Latency",
                 "liveData": false
@@ -2529,11 +2523,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/ApiGateway", "4XXError", "ApiName", "${APIName}", "Resource", "/data/events", "Method", "POST", "Stage", "${Stage}"],
-                  [".",              "5XXError", ".",       "${APIName}", ".",        "/data/events", ".",      "POST", ".",     "${Stage}"]
+                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"4XXError\" ApiName=\"${APIName}\" Stage=\"Stage\"', 'Sum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Errors",
                 "liveData": false
@@ -2551,10 +2542,8 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "IncomingRecords", "DeliveryStreamName", "${EventsDeliveryStream}"]
+                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"IncomingRecords\"', 'Sum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Incoming Records",
                 "liveData": false
@@ -2566,10 +2555,8 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "IncomingBytes", "DeliveryStreamName", "${EventsDeliveryStream}"]
+                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"IncomingBytes\"', 'Sum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Incoming Bytes",
                 "liveData": false
@@ -2581,10 +2568,8 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "DeliveryToS3.Success", "DeliveryStreamName", "${EventsDeliveryStream}"]
+                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Success\"', 'Sum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Successful Delivery To S3",
                 "liveData": false
@@ -2596,10 +2581,8 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "DeliveryToS3.Records", "DeliveryStreamName", "${EventsDeliveryStream}"]
+                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Records\"', 'Sum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Records Delivered To S3",
                 "liveData": false
@@ -2611,7 +2594,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "DeliveryToS3.Bytes", "DeliveryStreamName", "${EventsDeliveryStream}"]
+                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.Bytes\"', 'Sum', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2626,10 +2609,8 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/Firehose", "DeliveryToS3.DataFreshness", "DeliveryStreamName", "${EventsDeliveryStream}"]
+                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"DeliveryToS3.DataFreshness\"', 'Maximum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Maximum",
                 "region": "${AWS::Region}",
                 "title": "Delivery To S3 Data Freshness",
                 "liveData": false
@@ -2648,9 +2629,8 @@ Resources:
               "properties": {
                 "metrics": [
                   ["AWS/KinesisAnalytics", "Success", "Application", "${RealTimeAdvertisingApplication}"]
+                  [ { "expression": "SEARCH('{AWS/Firehose,DeliveryStreamName} MetricName=\"Success\"', 'Sum', 60)" } ]
                 ],
-                "period": 60,
-                "region": "${AWS::Region}",
                 "title": "Success",
                 "liveData": false
               }
@@ -2676,12 +2656,12 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "MillisBehindLatest", "Application", "${RealTimeAdvertisingApplication}"]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"MillisBehindLatest\" Application=\"${RealTimeAdvertisingApplication}\" Flow=\"Input\"', 'Maximum', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Maximum",
                 "region": "${AWS::Region}",
-                "title": "Lag (ms)",
+                "title": "Input Lag (ms)",
                 "liveData": false
               }
             },
@@ -2691,12 +2671,12 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "Records", "Application", "${RealTimeAdvertisingApplication}"]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"Records\" Application=\"${RealTimeAdvertisingApplication}\" Flow=\"Input\"', 'Maximum', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Records Processed",
+                "title": "Input Records Processed",
                 "liveData": false
               }
             },
@@ -2706,12 +2686,12 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "Bytes", "Application", "${RealTimeAdvertisingApplication}"]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"Bytes\" Application=\"${RealTimeAdvertisingApplication}\" Flow=\"Input\"', 'Maximum', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Bytes Processed",
+                "title": "Input Bytes Processed",
                 "liveData": false
               }
             },
@@ -2721,12 +2701,12 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.Success", "Application", "${RealTimeAdvertisingApplication}"]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"Bytes\" Application=\"${RealTimeAdvertisingApplication}\" Flow=\"Output\"', 'Average', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Sum",
                 "region": "${AWS::Region}",
-                "title": "Input Processing Success",
+                "title": "Output Processing Success",
                 "liveData": false
               }
             },
@@ -2736,10 +2716,25 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.OkBytes", "Application", "${RealTimeAdvertisingApplication}"]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"Records\" Application=\"${RealTimeAdvertisingApplication}\" Flow=\"Output\"', 'Average', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Output Processing Records",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"Bytes\" Application=\"${RealTimeAdvertisingApplication}\" Flow=\"Output\"', 'Average', 60)" } ]
+                ],
+                "period": 60,
+                "stat": "Average",
                 "region": "${AWS::Region}",
                 "title": "Input Processing Bytes",
                 "liveData": false
@@ -2751,67 +2746,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.Duration", "Application", "${RealTimeAdvertisingApplication}"]
-                ],
-                "period": 60,
-                "stat": "Average",
-                "region": "${AWS::Region}",
-                "title": "Input Processing Duration",
-                "liveData": false
-              }
-            },
-            {
-              "type": "metric",
-              "width": 8,
-              "height": 6,
-              "properties": {
-                "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.OkRecords", "Application", "${RealTimeAdvertisingApplication}"]
-                ],
-                "period": 60,
-                "stat": "Sum",
-                "region": "${AWS::Region}",
-                "title": "Input Processing Successful Records",
-                "liveData": false
-              }
-            },
-            {
-              "type": "metric",
-              "width": 8,
-              "height": 6,
-              "properties": {
-                "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.DroppedRecords", "Application", "${RealTimeAdvertisingApplication}"]
-                ],
-                "period": 60,
-                "stat": "Sum",
-                "region": "${AWS::Region}",
-                "title": "Input Processing Dropped Records",
-                "liveData": false
-              }
-            },
-            {
-              "type": "metric",
-              "width": 8,
-              "height": 6,
-              "properties": {
-                "metrics": [
-                  ["AWS/KinesisAnalytics", "InputProcessing.ProcessingFailedRecords", "Application", "${RealTimeAdvertisingApplication}"]
-                ],
-                "period": 60,
-                "stat": "Sum",
-                "region": "${AWS::Region}",
-                "title": "Input Processing Failed Records",
-                "liveData": false
-              }
-            },
-            {
-              "type": "metric",
-              "width": 8,
-              "height": 6,
-              "properties": {
-                "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.OkRecords", "Application", "${RealTimeAdvertisingApplication}"]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"LambdaDelivery.OkRecords\" Application=\"${RealTimeAdvertisingApplication}\" Flow=\"Output\"', 'Average', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2826,7 +2761,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.DeliveryFailedRecords", "Application", "${RealTimeAdvertisingApplication}"]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"LambdaDelivery.FailedRecords\" Application=\"${RealTimeAdvertisingApplication}\" Flow=\"Output\"', 'Average', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -2841,7 +2776,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "LambdaDelivery.Duration", "Application", "${RealTimeAdvertisingApplication}"]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"LambdaDelivery.Duration\" Application=\"${RealTimeAdvertisingApplication}\" Flow=\"Output\"', 'Average', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Average",
@@ -2862,10 +2797,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Invocations", "FunctionName", "${RealTimeAdvertisingLambda}"]
+                  [ { "expression": "SEARCH('{AWS/Lambda,FunctionName} MetricName=\"Invocations\"', 'Sum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Invocations",
                 "liveData": false
@@ -2877,10 +2810,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Duration", "FunctionName", "${RealTimeAdvertisingLambda}"]
+                  [ { "expression": "SEARCH('{AWS/Lambda,FunctionName} MetricName=\"Duration\"', 'p95', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "p95",
                 "region": "${AWS::Region}",
                 "title": "Duration",
                 "liveData": false
@@ -2892,10 +2823,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Errors", "FunctionName", "${RealTimeAdvertisingLambda}"]
+                  [ { "expression": "SEARCH('{AWS/Lambda,FunctionName} MetricName=\"Errors\"', 'Sum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Errors",
                 "liveData": false
@@ -2907,10 +2836,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "DeadLetterErrors", "FunctionName", "${RealTimeAdvertisingLambda}"]
+                  [ { "expression": "SEARCH('{AWS/Lambda,FunctionName} MetricName=\"DeadLetterErrors\"', 'Sum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Dead Letter Errors",
                 "liveData": false
@@ -2922,10 +2849,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${RealTimeAdvertisingLambda}"]
+                  [ { "expression": "SEARCH('{AWS/Lambda,FunctionName} MetricName=\"ConcurrentExecutions\"', 'Maximum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Maximum",
                 "region": "${AWS::Region}",
                 "title": "Concurrent Executions",
                 "liveData": false
@@ -2937,10 +2862,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "UnreservedConcurrentExecutions", "FunctionName", "${RealTimeAdvertisingLambda}"]
+                  [ { "expression": "SEARCH('{AWS/Lambda,FunctionName} MetricName=\"UnreservedConcurrentExecutions\"', 'Sum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Average",
                 "region": "${AWS::Region}",
                 "title": "Unreserved Concurrent Executions",
                 "liveData": false
@@ -2952,10 +2875,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "Throttles", "FunctionName", "${RealTimeAdvertisingLambda}"]
+                  [ { "expression": "SEARCH('{AWS/Lambda,FunctionName} MetricName=\"Throttles\"', 'Sum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Throttles",
                 "liveData": false
@@ -2967,10 +2888,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/Lambda", "IteratorAge", "FunctionName", "${RealTimeAdvertisingLambda}"]
+                  [ { "expression": "SEARCH('{AWS/Lambda,FunctionName} MetricName=\"IteratorAge\"', 'Maximum', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Maximum",
                 "region": "${AWS::Region}",
                 "title": "Iterator Age",
                 "liveData": false
