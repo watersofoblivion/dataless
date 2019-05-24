@@ -2484,11 +2484,16 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"Count\" ApiName=\"${APIName}\" Stage=\"Stage\"', 'Sum', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"Count\" ApiName=\"${APIName}\" Stage=\"${Stage}\"', 'Sum', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Request Rate",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2497,11 +2502,16 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"Latency\" ApiName=\"${APIName}\" Stage=\"Stage\"', 'p95', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"Latency\" ApiName=\"${APIName}\" Stage=\"${Stage}\"', 'p95', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Latency",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2510,11 +2520,16 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"IntegrationName\" ApiName=\"${APIName}\" Stage=\"Stage\"', 'p95', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"IntegrationName\" ApiName=\"${APIName}\" Stage=\"${Stage}\"', 'p95', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Integration Latency",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2523,11 +2538,16 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=XXError ApiName=\"${APIName}\" Stage=\"Stage\"', 'Sum', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=XXError ApiName=\"${APIName}\" Stage=\"${Stage}\"', 'Sum', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Errors",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2546,7 +2566,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Incoming Records",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2559,7 +2584,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Incoming Bytes",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2572,7 +2602,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Successful Delivery To S3",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2585,7 +2620,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Records Delivered To S3",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2600,7 +2640,12 @@ Resources:
                 "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Bytes Delivered To S3",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2613,7 +2658,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Delivery To S3 Data Freshness",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2634,7 +2684,12 @@ Resources:
                 "stat": "Average",
                 "title": "Success",
                 "region": "${AWS::Region}",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2649,7 +2704,12 @@ Resources:
                 "stat": "Average",
                 "region": "${AWS::Region}",
                 "title": "KPUs",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2664,7 +2724,12 @@ Resources:
                 "stat": "Maximum",
                 "region": "${AWS::Region}",
                 "title": "Input Lag (ms)",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2679,7 +2744,12 @@ Resources:
                 "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Input Records Processed",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2694,7 +2764,12 @@ Resources:
                 "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Input Bytes Processed",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2709,7 +2784,12 @@ Resources:
                 "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Output Processing Success",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2724,7 +2804,12 @@ Resources:
                 "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Output Processing Records",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2739,7 +2824,12 @@ Resources:
                 "stat": "Average",
                 "region": "${AWS::Region}",
                 "title": "Input Processing Bytes",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2754,7 +2844,12 @@ Resources:
                 "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Lambda Delivery Success",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2769,7 +2864,12 @@ Resources:
                 "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Lambda Delivery Failures",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2784,7 +2884,12 @@ Resources:
                 "stat": "Average",
                 "region": "${AWS::Region}",
                 "title": "Lambda Delivery Duration",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2803,7 +2908,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Invocations",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2816,7 +2926,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Duration",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2829,7 +2944,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Errors",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2842,7 +2962,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Dead Letter Errors",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2855,7 +2980,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Concurrent Executions",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2868,7 +2998,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Unreserved Concurrent Executions",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2881,7 +3016,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Throttles",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2894,7 +3034,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Iterator Age",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2913,7 +3058,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Bucket Size (bytes)",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2926,7 +3076,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Bucket Size (objects)",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2939,7 +3094,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "All Requests",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2952,7 +3112,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Get Requests",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2965,7 +3130,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Put Requests",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2978,7 +3148,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Select Requests",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -2991,7 +3166,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Bytes Uploaded",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -3004,7 +3184,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Bytes Downloaded",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -3017,7 +3202,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "First Byte Latency",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
@@ -3030,7 +3220,12 @@ Resources:
                 ],
                 "region": "${AWS::Region}",
                 "title": "Select Requests",
-                "liveData": false
+                "liveData": false,
+                "view": "timeSeries",
+                "stacked": false,
+                "legend": {
+                    "position": "hidden"
+                }
               }
             },
             {
