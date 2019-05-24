@@ -1508,24 +1508,24 @@ Resources:
               StringValue: hive.metastore.glue.catalogid
             - Key: value
               StringValue: !Ref AWS::AccountId
-        - Id: HiveTempDir
-          Name: Hive Temp Dir
-          Fields:
-            - Key: type
-              StringValue: Property
-            - Key: key
-              StringValue: system:java.io.tmpdir
-            - Key: value
-              StringValue: /tmp/hive/java
-        - Id: HiveSystemUserName
-          Name: Hive System User Name
-          Fields:
-            - Key: type
-              StringValue: Property
-            - Key: key
-              StringValue: system:user.name
-            - Key: value
-              StringValue: "${user.name}"
+        # - Id: HiveTempDir
+        #   Name: Hive Temp Dir
+        #   Fields:
+        #     - Key: type
+        #       StringValue: Property
+        #     - Key: key
+        #       StringValue: system:java.io.tmpdir
+        #     - Key: value
+        #       StringValue: /tmp/hive/java
+        # - Id: HiveSystemUserName
+        #   Name: Hive System User Name
+        #   Fields:
+        #     - Key: type
+        #       StringValue: Property
+        #     - Key: key
+        #       StringValue: system:user.name
+        #     - Key: value
+        #       StringValue: "${user.name}"
         - Id: GlueCatalogAsHiveMetastore
           Name: Glue Catalog as Hive Metastore
           Fields:
@@ -1552,10 +1552,10 @@ Resources:
               RefValue: HiveMetastoreClientFactoryClass
             - Key: property
               RefValue: HiveMetastoreCatalog
-            - Key: property
-              RefValue: HiveTempDir
-            - Key: property
-              RefValue: HiveSystemUserName
+            # - Key: property
+            #   RefValue: HiveTempDir
+            # - Key: property
+            #   RefValue: HiveSystemUserName
         - Id: EMRCluster
           Name: EMR Cluster
           Fields:
@@ -1846,24 +1846,24 @@ Resources:
               StringValue: hive.metastore.glue.catalogid
             - Key: value
               StringValue: !Ref AWS::AccountId
-        - Id: HiveTempDir
-          Name: Hive Temp Dir
-          Fields:
-            - Key: type
-              StringValue: Property
-            - Key: key
-              StringValue: system:java.io.tmpdir
-            - Key: value
-              StringValue: /tmp/hive/java
-        - Id: HiveSystemUserName
-          Name: Hive System User Name
-          Fields:
-            - Key: type
-              StringValue: Property
-            - Key: key
-              StringValue: system:user.name
-            - Key: value
-              StringValue: "${user.name}"
+        # - Id: HiveTempDir
+        #   Name: Hive Temp Dir
+        #   Fields:
+        #     - Key: type
+        #       StringValue: Property
+        #     - Key: key
+        #       StringValue: system:java.io.tmpdir
+        #     - Key: value
+        #       StringValue: /tmp/hive/java
+        # - Id: HiveSystemUserName
+        #   Name: Hive System User Name
+        #   Fields:
+        #     - Key: type
+        #       StringValue: Property
+        #     - Key: key
+        #       StringValue: system:user.name
+        #     - Key: value
+        #       StringValue: "${user.name}"
         - Id: GlueCatalogAsHiveMetastore
           Name: Glue Catalog as Hive Metastore
           Fields:
@@ -1890,10 +1890,10 @@ Resources:
               RefValue: HiveMetastoreClientFactoryClass
             - Key: property
               RefValue: HiveMetastoreCatalog
-            - Key: property
-              RefValue: HiveTempDir
-            - Key: property
-              RefValue: HiveSystemUserName
+            # - Key: property
+            #   RefValue: HiveTempDir
+            # - Key: property
+            #   RefValue: HiveSystemUserName
         - Id: EMRCluster
           Name: EMR Cluster
           Fields:
@@ -2152,6 +2152,8 @@ Resources:
           Fields:
             - Key: type
               StringValue: SqlActivity
+            - Key: dependsOn
+              RefValue: UseSpectrumDataLake
             - Key: database
               RefValue: RedshiftCluster
             - !If
@@ -2167,6 +2169,8 @@ Resources:
           Fields:
             - Key: type
               StringValue: SqlActivity
+            - Key: dependsOn
+              RefValue: UseSpectrumDataLake
             - Key: database
               RefValue: RedshiftCluster
             - !If
