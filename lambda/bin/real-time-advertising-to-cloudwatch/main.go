@@ -144,5 +144,6 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 	}
 
 	// Done!
+	json.NewEncoder(os.Stdout).Encode(output)
 	return output, nil
 }
