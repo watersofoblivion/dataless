@@ -2136,6 +2136,14 @@ Resources:
                 RefValue: EC2Instance
             - Key: scriptUri
               StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/load_advertising_ad_from_spectrum.sql"
+            - Key: scriptArgument
+              StringValue: "#{year(@scheduledStartTime)}"
+            - Key: scriptArgument
+              StringValue: "#{month(@scheduledStartTime)}"
+            - Key: scriptArgument
+              StringValue: "#{format(@scheduledStartTime, 'YYYY-MM-dd')}"
+            - Key: scriptArgument
+              StringValue: "#{format(@scheduledEndTime, 'YYYY-MM-dd')}"
         - Id: SpectrumLoadAdvertisingUser
           Name: Spectrum Load Advertising by User
           Fields:
@@ -2153,6 +2161,14 @@ Resources:
                 RefValue: EC2Instance
             - Key: scriptUri
               StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/load_advertising_user_from_spectrum.sql"
+            - Key: scriptArgument
+              StringValue: "#{year(@scheduledStartTime)}"
+            - Key: scriptArgument
+              StringValue: "#{month(@scheduledStartTime)}"
+            - Key: scriptArgument
+              StringValue: "#{format(@scheduledStartTime, 'YYYY-MM-dd')}"
+            - Key: scriptArgument
+              StringValue: "#{format(@scheduledEndTime, 'YYYY-MM-dd')}"
 
   #######
   # API #
