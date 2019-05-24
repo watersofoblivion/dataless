@@ -3,7 +3,11 @@ CREATE TABLE advertising_ad_spectrum
   DISTKEY (ad_id)
 AS
 SELECT
-  *
+  session_id,
+  user_id,
+  ad_id,
+  impression_at,
+  click_at
 FROM
   lake.advertising
 WHERE

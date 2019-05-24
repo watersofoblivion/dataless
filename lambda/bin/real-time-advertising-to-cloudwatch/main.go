@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -30,15 +31,18 @@ func main() {
 	lambda.Start(handler)
 }
 
-// MetricDataLimit is the maximum number of metrics allowed in a batch of data
-// sent to CloudWatch.
-const MetricDataLimit = 20
+// CloudWatch service limits
+const (
+	MetricDataLimit      = 20
+	MetricDimensionLimit = 10
+)
 
 // AdvertisingMetric is a metric to publish to CloudWatch
 type AdvertisingMetric struct {
-	Name  string    `json:"name"`
-	At    time.Time `json:"at"`
-	Value float64   `json:"value"`
+	Name       string            `json:"name"`
+	At         time.Time         `json:"at"`
+	Value      float64           `json:"value"`
+	Dimensions map[string]string `json:"-"`
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface.  This properly
@@ -57,6 +61,23 @@ func (metric *AdvertisingMetric) UnmarshalJSON(bs []byte) error {
 		return err
 	}
 	metric.Value = v["value"].(float64)
+
+	delete(v, "name")
+	delete(v, "at")
+	delete(v, "value")
+
+	metric.Dimensions = make(map[string]string)
+	for k, v := range v {
+		s, ok := v.(string)
+		if !ok {
+			return fmt.Errorf("expected dimension %q to be a string, found %T", k, v)
+		}
+		metric.Dimensions[k] = s
+	}
+
+	if numDimensions := len(metric.Dimensions); numDimensions >= MetricDimensionLimit {
+		return fmt.Errorf("%d dimensions on metric %q %q is greater than the limit of %d dimensions", numDimensions, metricNamespace, metric.Name, MetricDimensionLimit)
+	}
 
 	return nil
 }
@@ -84,8 +105,8 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 		metric := new(AdvertisingMetric)
 		if err := json.Unmarshal(record.Data, metric); err != nil {
 			// Mark the input record as failed and move on
-			log.Printf("Error unmarshaling record %s: %s", record.RecordID, err)
-			outputRecord.Result = events.KinesisAnalyticsOutputDeliveryFailed
+			log.Printf("error unmarshaling record %s (dropped): %s", record.RecordID, err)
+			outputRecord.Result = events.KinesisAnalyticsOutputDeliveryOK
 			output.Records = append(output.Records, *outputRecord)
 			continue
 		}
