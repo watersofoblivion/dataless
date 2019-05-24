@@ -1986,15 +1986,15 @@ Resources:
             - Key: type
               StringValue: CSV
             - Key: column
+              StringValue: session_id STRING
+            - Key: column
+              StringValue: user_id STRING
+            - Key: column
               StringValue: ad_id STRING
             - Key: column
-              StringValue: day STRING
+              StringValue: impression_at TIMESTAMP
             - Key: column
-              StringValue: impressions BIGINT
-            - Key: column
-              StringValue: clicks BIGINT
-            - Key: column
-              StringValue: clickthrough_rate DOUBLE
+              StringValue: click_at TIMESTAMP
         - Id: DummyInputTable
           Name: Dummy Input Table
           Fields:
@@ -2025,7 +2025,7 @@ Resources:
             - Key: type
               StringValue: S3DataNode
             - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/temp/#{@pipelineId}/#{@version}/#{@scheduledStartTime}/redshift-staging-table/"
+              StringValue: !Sub "s3://${Bucket}/data/temp/redshift-staging-table/"
             - Key: dataFormat
               RefValue: RedshiftStagingTableFormat
         - Id: StageDataForRedshift
