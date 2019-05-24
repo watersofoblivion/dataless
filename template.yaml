@@ -870,8 +870,38 @@ Resources:
               "width": 8,
               "height": 6,
               "properties": {
-                "metrics": [],
-                "period": 300,
+                "metrics": [
+                  ["Warehouse/Advertising", "Impressions"]
+                ],
+                "period": 60,
+                "stat": "Maximum",
+                "region": "${AWS::Region}",
+                "title": "Impressions"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["Warehouse/Advertising", "Clicks"]
+                ],
+                "period": 60,
+                "stat": "Maximum",
+                "region": "${AWS::Region}",
+                "title": "Clicks"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["Warehouse/Advertising", "ClickthroughRate"]
+                ],
+                "period": 60,
                 "stat": "Average",
                 "region": "${AWS::Region}",
                 "title": "Clickthrough Rate"
