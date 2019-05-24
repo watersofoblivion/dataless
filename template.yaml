@@ -1961,7 +1961,7 @@ Resources:
                 - Key: runsOn
                   RefValue: EMRCluster
             - Key: input
-              StringValue: RedshiftStagingTable
+              RefValue: RedshiftStagingTable
             - Key: output
               RefValue: RedshiftStagingTable
             - Key: scriptVariable
@@ -2010,6 +2010,22 @@ Resources:
                 StringValue: !Sub "${AWS::StackName}-${AWS::Region}-instance-worker-group"
               - Key: runsOn
                 RefValue: EC2Instance
+        - Id: DummyOutputTableFormat
+          Name: Dummy Output Table Format
+          Fields:
+            - Key: type
+              StringValue: CSV
+            - Key: column
+              StringValue: rows INT
+        - Id: DummyOutputTable
+          Name: Dummy Output Table
+          Fields:
+            - Key: type
+              StringValue: S3DataNode
+            - Key: directoryPath
+              StringValue: !Sub "s3://${Bucket}/data/tmp/dummy/"
+            - Key: dataFormat
+              RefValue: DummyOutputTableFormat
         - Id: TruncateRedshiftStagingTable
           Name: Truncate Redshift Staging Table
           Fields:
@@ -2027,10 +2043,10 @@ Resources:
                   StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
                 - Key: runsOn
                   RefValue: EMRCluster
-            - Key: stage
-              StringValue: false
             - Key: input
               RefValue: RedshiftStagingTable
+            - Key: output
+              RefValue: DummyOutputTable
         - Id: UseSpectrumDataLake
           Name: Use Spectrum Data Lake
           Fields:
