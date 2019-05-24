@@ -1521,7 +1521,7 @@ Resources:
           Name: Hive System User Name
           Fields:
             - Key: type
-              StringVaue: Property
+              StringValue: Property
             - Key: key
               StringValue: system:user.name
             - Key: value
@@ -1859,7 +1859,7 @@ Resources:
   #         Name: Hive System User Name
   #         Fields:
   #           - Key: type
-  #             StringVaue: Property
+  #             StringValue: Property
   #           - Key: key
   #             StringValue: system:user.name
   #           - Key: value
