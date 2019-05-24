@@ -1696,7 +1696,7 @@ Resources:
             - Key: type
               StringValue: CSV
             - Key: column
-              StringValue: rows INTEGER
+              StringValue: rows INT
         - Id: DummyOutputTable
           Name: Dummy Output Table
           Fields:
