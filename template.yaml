@@ -2520,7 +2520,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"IntegrationName\" ApiName=\"${APIName}\" Stage=\"${Stage}\"', 'p95', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"IntegrationLatency\" ApiName=\"${APIName}\" Stage=\"${Stage}\"', 'p95', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Integration Latency",
@@ -3219,7 +3219,7 @@ Resources:
                   [ { "expression": "SEARCH('{AWS/S3,BucketName,FilterId} MetricName=\"TotalRequestLatency\"', 'p95', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
-                "title": "Select Requests",
+                "title": "Total Request Latency",
                 "liveData": false,
                 "view": "timeSeries",
                 "stacked": false,
