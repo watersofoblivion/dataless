@@ -849,246 +849,246 @@ Resources:
   # Real Time #
   #############
 
-  # RealTimeAdvertisingDashboard:
-  #   Type: AWS::CloudWatch::Dashboard
-  #   Properties:
-  #     DashboardBody: !Sub |
-  #       {
-  #         "start": "-PT1H",
-  #         "periodOverride": "inherit",
-  #         "widgets": [
-  #           {
-  #             "type": "text",
-  #             "width": 24,
-  #             "height": 1,
-  #             "properties": {
-  #               "markdown": "# Clickthrough Rate"
-  #             }
-  #           },
-  #           {
-  #             "type": "metric",
-  #             "width": 8,
-  #             "height": 6,
-  #             "properties": {
-  #               "metrics": [],
-  #               "period": 300,
-  #               "stat": "Average",
-  #               "region": "${AWS::Region}",
-  #               "title": "Clickthrough Rate"
-  #             }
-  #           }
-  #         ]
-  #       }
-  #
-  # RealTimeAdvertisingLambdaRole:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Statement:
-  #         - Action: sts:AssumeRole
-  #           Effect: Allow
-  #           Principal:
-  #             Service:
-  #               - !Sub "lambda.${AWS::URLSuffix}"
-  #     ManagedPolicyArns:
-  #       - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-  #       - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
-  #     Policies:
-  #       - PolicyName: Execution
-  #         PolicyDocument:
-  #           Version: "2012-10-17"
-  #           Statement:
-  #             - Action:
-  #                 - cloudwatch:PutMetricData
-  #               Effect: Allow
-  #               Resource: "*"
-  #
-  # RealTimeAdvertisingLambda:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     Handler: bin/real-time-advertising-to-cloudwatch
-  #     Role: !GetAtt RealTimeAdvertisingLambdaRole.Arn
-  #     Environment:
-  #       Variables:
-  #         METRIC_NAMESPACE: Warehouse/Advertising
-  #
-  # RealTimeAdvertisingApplicationRole:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Action:
-  #             - sts:AssumeRole
-  #           Effect: Allow
-  #           Principal:
-  #             Service:
-  #               - !Sub "kinesisanalytics.${AWS::URLSuffix}"
-  #     ManagedPolicyArns:
-  #       - arn:aws:iam::aws:policy/AmazonKinesisAnalyticsFullAccess
-  #     Policies:
-  #       - PolicyName: Execution
-  #         PolicyDocument:
-  #           Version: "2012-10-17"
-  #           Statement:
-  #             - Action:
-  #                 - lambda:InvokeFunction
-  #                 - lambda:GetFunctionConfiguration
-  #               Effect: Allow
-  #               Resource:
-  #                 - !GetAtt RealTimeAdvertisingLambda.Arn
-  #             - Action:
-  #                 - firehose:DescribeDeliveryStream
-  #                 - firehose:Get*
-  #               Effect: Allow
-  #               Resource:
-  #                 - !GetAtt EventsDeliveryStream.Arn
-  #
-  # RealTimeAdvertisingApplication:
-  #   Type: AWS::KinesisAnalytics::Application
-  #   Properties:
-  #     ApplicationCode: |
-  #       CREATE OR REPLACE STREAM "impression_counts" (
-  #         "at"    TIMESTAMP,
-  #         "value" DOUBLE
-  #       );
-  #
-  #       CREATE OR REPLACE PUMP "impressions_counter" AS
-  #       INSERT INTO "impression_counts"
-  #       SELECT STREAM
-  #         CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "events".ROWTIME)) AS "at",
-  #         COUNT(1)                                                                                       AS "value"
-  #       FROM
-  #         "events_001" AS "events"
-  #       WHERE
-  #             "events"."object_type" = 'ad'
-  #         AND "events"."event_type" = 'impression'
-  #       GROUP BY
-  #         CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "events".ROWTIME)),
-  #         STEP("events".ROWTIME BY INTERVAL '60' SECOND)
-  #       ;
-  #
-  #       CREATE OR REPLACE STREAM "click_counts" (
-  #         "at"    TIMESTAMP,
-  #         "value" DOUBLE
-  #       );
-  #
-  #       CREATE OR REPLACE PUMP "clicks_counter" AS
-  #       INSERT INTO "click_counts"
-  #       SELECT STREAM
-  #         CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "events".ROWTIME)) AS "at",
-  #         COUNT(1)                                                                                       AS "value"
-  #       FROM
-  #         "events_001" AS "events"
-  #       WHERE
-  #             "events"."object_type" = 'ad'
-  #         AND "events"."event_type" = 'click'
-  #       GROUP BY
-  #         CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "events".ROWTIME)),
-  #         STEP("events".ROWTIME BY INTERVAL '60' SECOND)
-  #       ;
-  #
-  #       CREATE OR REPLACE STREAM "clickthrough_rates" (
-  #         "at"    TIMESTAMP,
-  #         "value" DOUBLE
-  #       );
-  #
-  #       CREATE OR REPLACE PUMP "clickthrough_rate_computer" AS
-  #       INSERT INTO "clickthrough_rates"
-  #       SELECT STREAM
-  #         "impressions"."at"                                                       AS "at",
-  #         CAST("clicks"."value" AS DOUBLE) / CAST("impressions"."value" AS DOUBLE) AS "value"
-  #       FROM "impression_counts" OVER  (RANGE INTERVAL '2' MINUTE PRECEDING) AS "impressions"
-  #       JOIN "click_counts"      OVER  (RANGE INTERVAL '2' MINUTE PRECEDING) AS "clicks" ON "clicks"."at" = "impressions"."at"
-  #       ;
-  #
-  #       CREATE OR REPLACE STREAM "metrics" (
-  #         "name"  VARCHAR(255),
-  #         "at"    TIMESTAMP,
-  #         "value" DOUBLE
-  #       );
-  #
-  #       CREATE OR REPLACE PUMP "impressions_dumper" AS
-  #       INSERT INTO "metrics"
-  #       SELECT STREAM
-  #         'Impressions'               AS "name",
-  #         "impression_counts"."at"    AS "at",
-  #         "impression_counts"."value" AS "value"
-  #       FROM "impression_counts"
-  #       ;
-  #
-  #       CREATE OR REPLACE PUMP "clicks_dumper" AS
-  #       INSERT INTO "metrics"
-  #       SELECT STREAM
-  #         'Clicks'               AS "name",
-  #         "click_counts"."at"    AS "at",
-  #         "click_counts"."value" AS "value"
-  #       FROM "click_counts"
-  #       ;
-  #
-  #       CREATE OR REPLACE PUMP "clickthrough_rate_dumper" AS
-  #       INSERT INTO "metrics"
-  #       SELECT STREAM
-  #         'ClickthroughRate'            AS "name",
-  #         "clickthrough_rates"."at"     AS "at",
-  #         "clickthrough_rates"."value"  AS "value"
-  #       FROM "clickthrough_rates"
-  #       ;
-  #     Inputs:
-  #       - NamePrefix: events
-  #         KinesisFirehoseInput:
-  #           ResourceARN: !GetAtt EventsDeliveryStream.Arn
-  #           RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
-  #         InputSchema:
-  #           RecordEncoding: UTF-8
-  #           RecordFormat:
-  #             RecordFormatType: JSON
-  #             MappingParameters:
-  #               JSONMappingParameters:
-  #                 RecordRowPath: "$"
-  #           RecordColumns:
-  #             - Name: session_id
-  #               SqlType: VARCHAR(64)
-  #               Mapping: "$.session_id"
-  #             - Name: context_id
-  #               SqlType: VARCHAR(64)
-  #               Mapping: "$.context_id"
-  #             - Name: parent_id
-  #               SqlType: VARCHAR(64)
-  #               Mapping: "$.parent_id"
-  #             - Name: actor_type
-  #               SqlType: VARCHAR(255)
-  #               Mapping: "$.actor_type"
-  #             - Name: actor_id
-  #               SqlType: VARCHAR(64)
-  #               Mapping: "$.actor_id"
-  #             - Name: event_type
-  #               SqlType: VARCHAR(255)
-  #               Mapping: "$.event_type"
-  #             - Name: event_id
-  #               SqlType: VARCHAR(64)
-  #               Mapping: "$.event_id"
-  #             - Name: object_type
-  #               SqlType: VARCHAR(255)
-  #               Mapping: "$.object_type"
-  #             - Name: object_id
-  #               SqlType: VARCHAR(64)
-  #               Mapping: "$.object_id"
-  #             - Name: occurred_at
-  #               SqlType: TIMESTAMP
-  #               Mapping: "$.occurred_at"
-  #
-  # RealTimeEventsOutputs:
-  #   Type: AWS::KinesisAnalytics::ApplicationOutput
-  #   Properties:
-  #     ApplicationName: !Ref RealTimeAdvertisingApplication
-  #     Output:
-  #       Name: metrics
-  #       DestinationSchema:
-  #         RecordFormatType: JSON
-  #       LambdaOutput:
-  #         ResourceARN: !GetAtt RealTimeAdvertisingLambda.Arn
-  #         RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
+  RealTimeAdvertisingDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardBody: !Sub |
+        {
+          "start": "-PT1H",
+          "periodOverride": "inherit",
+          "widgets": [
+            {
+              "type": "text",
+              "width": 24,
+              "height": 1,
+              "properties": {
+                "markdown": "# Clickthrough Rate"
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [],
+                "period": 300,
+                "stat": "Average",
+                "region": "${AWS::Region}",
+                "title": "Clickthrough Rate"
+              }
+            }
+          ]
+        }
+
+  RealTimeAdvertisingLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "lambda.${AWS::URLSuffix}"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
+      Policies:
+        - PolicyName: Execution
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - cloudwatch:PutMetricData
+                Effect: Allow
+                Resource: "*"
+
+  RealTimeAdvertisingLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: bin/real-time-advertising-to-cloudwatch
+      Role: !GetAtt RealTimeAdvertisingLambdaRole.Arn
+      Environment:
+        Variables:
+          METRIC_NAMESPACE: Warehouse/Advertising
+
+  RealTimeAdvertisingApplicationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "kinesisanalytics.${AWS::URLSuffix}"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonKinesisAnalyticsFullAccess
+      Policies:
+        - PolicyName: Execution
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - lambda:InvokeFunction
+                  - lambda:GetFunctionConfiguration
+                Effect: Allow
+                Resource:
+                  - !GetAtt RealTimeAdvertisingLambda.Arn
+              - Action:
+                  - firehose:DescribeDeliveryStream
+                  - firehose:Get*
+                Effect: Allow
+                Resource:
+                  - !GetAtt EventsDeliveryStream.Arn
+
+  RealTimeAdvertisingApplication:
+    Type: AWS::KinesisAnalytics::Application
+    Properties:
+      ApplicationCode: |
+        CREATE OR REPLACE STREAM "impression_counts" (
+          "at"    TIMESTAMP,
+          "value" DOUBLE
+        );
+
+        CREATE OR REPLACE PUMP "impressions_counter" AS
+        INSERT INTO "impression_counts"
+        SELECT STREAM
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "events".ROWTIME)) AS "at",
+          COUNT(1)                                                                                       AS "value"
+        FROM
+          "events_001" AS "events"
+        WHERE
+              "events"."object_type" = 'ad'
+          AND "events"."event_type" = 'impression'
+        GROUP BY
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "events".ROWTIME)),
+          STEP("events".ROWTIME BY INTERVAL '60' SECOND)
+        ;
+
+        CREATE OR REPLACE STREAM "click_counts" (
+          "at"    TIMESTAMP,
+          "value" DOUBLE
+        );
+
+        CREATE OR REPLACE PUMP "clicks_counter" AS
+        INSERT INTO "click_counts"
+        SELECT STREAM
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "events".ROWTIME)) AS "at",
+          COUNT(1)                                                                                       AS "value"
+        FROM
+          "events_001" AS "events"
+        WHERE
+              "events"."object_type" = 'ad'
+          AND "events"."event_type" = 'click'
+        GROUP BY
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "events".ROWTIME)),
+          STEP("events".ROWTIME BY INTERVAL '60' SECOND)
+        ;
+
+        CREATE OR REPLACE STREAM "clickthrough_rates" (
+          "at"    TIMESTAMP,
+          "value" DOUBLE
+        );
+
+        CREATE OR REPLACE PUMP "clickthrough_rate_computer" AS
+        INSERT INTO "clickthrough_rates"
+        SELECT STREAM
+          "impressions"."at"                                                       AS "at",
+          CAST("clicks"."value" AS DOUBLE) / CAST("impressions"."value" AS DOUBLE) AS "value"
+        FROM "impression_counts" OVER  (RANGE INTERVAL '2' MINUTE PRECEDING) AS "impressions"
+        JOIN "click_counts"      OVER  (RANGE INTERVAL '2' MINUTE PRECEDING) AS "clicks" ON "clicks"."at" = "impressions"."at"
+        ;
+
+        CREATE OR REPLACE STREAM "metrics" (
+          "name"  VARCHAR(255),
+          "at"    TIMESTAMP,
+          "value" DOUBLE
+        );
+
+        CREATE OR REPLACE PUMP "impressions_dumper" AS
+        INSERT INTO "metrics"
+        SELECT STREAM
+          'Impressions'               AS "name",
+          "impression_counts"."at"    AS "at",
+          "impression_counts"."value" AS "value"
+        FROM "impression_counts"
+        ;
+
+        CREATE OR REPLACE PUMP "clicks_dumper" AS
+        INSERT INTO "metrics"
+        SELECT STREAM
+          'Clicks'               AS "name",
+          "click_counts"."at"    AS "at",
+          "click_counts"."value" AS "value"
+        FROM "click_counts"
+        ;
+
+        CREATE OR REPLACE PUMP "clickthrough_rate_dumper" AS
+        INSERT INTO "metrics"
+        SELECT STREAM
+          'ClickthroughRate'            AS "name",
+          "clickthrough_rates"."at"     AS "at",
+          "clickthrough_rates"."value"  AS "value"
+        FROM "clickthrough_rates"
+        ;
+      Inputs:
+        - NamePrefix: events
+          KinesisFirehoseInput:
+            ResourceARN: !GetAtt EventsDeliveryStream.Arn
+            RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
+          InputSchema:
+            RecordEncoding: UTF-8
+            RecordFormat:
+              RecordFormatType: JSON
+              MappingParameters:
+                JSONMappingParameters:
+                  RecordRowPath: "$"
+            RecordColumns:
+              - Name: session_id
+                SqlType: VARCHAR(64)
+                Mapping: "$.session_id"
+              - Name: context_id
+                SqlType: VARCHAR(64)
+                Mapping: "$.context_id"
+              - Name: parent_id
+                SqlType: VARCHAR(64)
+                Mapping: "$.parent_id"
+              - Name: actor_type
+                SqlType: VARCHAR(255)
+                Mapping: "$.actor_type"
+              - Name: actor_id
+                SqlType: VARCHAR(64)
+                Mapping: "$.actor_id"
+              - Name: event_type
+                SqlType: VARCHAR(255)
+                Mapping: "$.event_type"
+              - Name: event_id
+                SqlType: VARCHAR(64)
+                Mapping: "$.event_id"
+              - Name: object_type
+                SqlType: VARCHAR(255)
+                Mapping: "$.object_type"
+              - Name: object_id
+                SqlType: VARCHAR(64)
+                Mapping: "$.object_id"
+              - Name: occurred_at
+                SqlType: TIMESTAMP
+                Mapping: "$.occurred_at"
+
+  RealTimeEventsOutputs:
+    Type: AWS::KinesisAnalytics::ApplicationOutput
+    Properties:
+      ApplicationName: !Ref RealTimeAdvertisingApplication
+      Output:
+        Name: metrics
+        DestinationSchema:
+          RecordFormatType: JSON
+        LambdaOutput:
+          ResourceARN: !GetAtt RealTimeAdvertisingLambda.Arn
+          RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
 
   #############
   # Data Lake #
@@ -2605,14 +2605,347 @@ Resources:
                 "liveData": false
               }
             },
-
-
-
-
-
-
-
-
+            {
+              "type": "text",
+              "width": 24,
+              "height": 1,
+              "properties": { "markdown": "# Real-Time App" }
+            },
+            {
+              "type": "metric",
+              "width": 24,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "Success", "Application", "${RealTimeAdvertisingApplication}"]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "title": "Success",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "KPUs", "Application", "${RealTimeAdvertisingApplication}"]
+                ],
+                "period": 60,
+                "stat": "Average",
+                "region": "${AWS::Region}",
+                "title": "KPUs",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "MillisBehindLatest", "Application", "${RealTimeAdvertisingApplication}"]
+                ],
+                "period": 60,
+                "stat": "Maximum",
+                "region": "${AWS::Region}",
+                "title": "Lag (ms)",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "Records", "Application", "${RealTimeAdvertisingApplication}"]
+                ],
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Records Processed",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "Bytes", "Application", "${RealTimeAdvertisingApplication}"]
+                ],
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Bytes Processed",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "InputProcessing.Success", "Application", "${RealTimeAdvertisingApplication}"]
+                ],
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Input Processing Success",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "InputProcessing.OkBytes", "Application", "${RealTimeAdvertisingApplication}"]
+                ],
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Input Processing Bytes",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "InputProcessing.Duration", "Application", "${RealTimeAdvertisingApplication}"]
+                ],
+                "period": 60,
+                "stat": "Average",
+                "region": "${AWS::Region}",
+                "title": "Input Processing Duration",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "InputProcessing.OkRecords", "Application", "${RealTimeAdvertisingApplication}"]
+                ],
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Input Processing Successful Records",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "InputProcessing.DroppedRecords", "Application", "${RealTimeAdvertisingApplication}"]
+                ],
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Input Processing Dropped Records",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "InputProcessing.ProcessingFailedRecords", "Application", "${RealTimeAdvertisingApplication}"]
+                ],
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Input Processing Failed Records",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.OkRecords", "Application", "${RealTimeAdvertisingApplication}"]
+                ],
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Lambda Delivery Success",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.DeliveryFailedRecords", "Application", "${RealTimeAdvertisingApplication}"]
+                ],
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Lambda Delivery Failures",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/KinesisAnalytics", "LambdaDelivery.Duration", "Application", "${RealTimeAdvertisingApplication}"]
+                ],
+                "period": 60,
+                "stat": "Average",
+                "region": "${AWS::Region}",
+                "title": "Lambda Delivery Duration",
+                "liveData": false
+              }
+            },
+            {
+              "type": "text",
+              "width": 24,
+              "height": 1,
+              "properties": { "markdown": "# Lambas" }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "Invocations", "FunctionName", "${RealTimeAdvertisingLambda}"]
+                ],
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Invocations",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "Duration", "FunctionName", "${RealTimeAdvertisingLambda}"]
+                ],
+                "period": 60,
+                "stat": "p95",
+                "region": "${AWS::Region}",
+                "title": "Duration",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "Errors", "FunctionName", "${RealTimeAdvertisingLambda}"]
+                ],
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Errors",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "DeadLetterErrors", "FunctionName", "${RealTimeAdvertisingLambda}"]
+                ],
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Dead Letter Errors",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${RealTimeAdvertisingLambda}"]
+                ],
+                "period": 60,
+                "stat": "Maximum",
+                "region": "${AWS::Region}",
+                "title": "Concurrent Executions",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "UnreservedConcurrentExecutions", "FunctionName", "${RealTimeAdvertisingLambda}"]
+                ],
+                "period": 60,
+                "stat": "Average",
+                "region": "${AWS::Region}",
+                "title": "Unreserved Concurrent Executions",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "Throttles", "FunctionName", "${RealTimeAdvertisingLambda}"]
+                ],
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Throttles",
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "width": 6,
+              "height": 4,
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "IteratorAge", "FunctionName", "${RealTimeAdvertisingLambda}"]
+                ],
+                "period": 60,
+                "stat": "Maximum",
+                "region": "${AWS::Region}",
+                "title": "Iterator Age",
+                "liveData": false
+              }
+            },
             {
               "type": "text",
               "width": 24,
