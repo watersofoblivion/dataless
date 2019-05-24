@@ -2107,12 +2107,14 @@ Resources:
                 RefValue: EC2Instance
             - Key: database
               RefValue: RedshiftCluster
-            - Key: scriptUri
-              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/use_spectrum_data_lake.sql"
-            - Key: scriptArgument
-              StringValue: !Ref Database
-            - Key: scriptArgument
-              StringValue: !GetAtt PipelineRole.Arn
+            - Key: script
+              StringValue: !Sub |
+                CREATE EXTERNAL SCHEMA lake
+                FROM DATA CATALOG
+                DATABASE '${Database}'
+                IAM_ROLE '${PipelineRole.Arn}'
+                CREATE EXTERNAL DATABASE
+                IF NOT EXISTS;
         - Id: SpectrumLoadAdvertisingAd
           Name: Spectrum Load Advertising by Ad
           Fields:
