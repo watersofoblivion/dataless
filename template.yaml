@@ -417,6 +417,11 @@ Resources:
                 Resource:
                   - !Sub "${Bucket.Arn}/data/lake/events/*"
                   - !Sub "${Bucket.Arn}/data/lake/advertising/*"
+              - Action:
+                  - glue:*
+                  - athena:*
+                Effect: Allow
+                Resource: "*"
 
   Redshift:
     Type: AWS::Redshift::Cluster
@@ -2086,6 +2091,10 @@ Resources:
               RefValue: RedshiftCluster
             - Key: scriptUri
               StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/use_spectrum_data_lake.sql"
+            - Key: scriptArgument
+              StringValue: !Ref Database
+            - Key: scriptArgument
+              StringValue: !GetAtt RedshiftRole.Arn
         - Id: SpectrumLoadAdvertisingAd
           Name: Spectrum Load Advertising by Ad
           Fields:
