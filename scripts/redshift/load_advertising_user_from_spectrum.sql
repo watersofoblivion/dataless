@@ -5,7 +5,7 @@ AS
 SELECT
   *
 FROM
-  warehouse.advertising
+  lake.advertising
 WHERE
       year = ?
   AND month = ?

@@ -14,8 +14,8 @@ WITH
     WHERE
           year = ${PARTITION_YEAR}
       AND month = ${PARTITION_MONTH}
-      AND occurred_at >= '${TIME_START}'
-      AND occurred_at < '${TIME_END}'
+      AND occurred_at >= '${DATE_START}'
+      AND occurred_at < '${DATE_END}'
       AND actor_type = 'customer'
       AND event_type IN ('impression', 'click')
       AND object_type = 'ad'

@@ -1591,13 +1591,13 @@ Resources:
             - Key: stage
               StringValue: false
             - Key: scriptVariable
-              StringValue: PARTITION_YEAR="#{year(@scheduledStartTime)}"
+              StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
             - Key: scriptVariable
-              StringValue: PARTITION_MONTH="#{month(@scheduledStartTime)}"
+              StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
             - Key: scriptVariable
-              StringValue: TIME_START="#{format(@scheduledStartTime, 'YYYY-MM-dd HH:mm:ss')}"
+              StringValue: DATE_START=#{format(@scheduledStartTime, 'YYYY-MM-dd')}
             - Key: scriptVariable
-              StringValue: TIME_END="#{format(@scheduledEndTime, 'YYYY-MM-dd HH:mm:ss')}"
+              StringValue: DATE_END=#{format(@scheduledEndTime, 'YYYY-MM-dd')}
         # - Id: AdvertisingInfoTableExists
         #   Name: Advertising Info Table Exists
         #   Fields:
@@ -1689,13 +1689,13 @@ Resources:
         #     - Key: output
         #       RefValue: AdvertisingInfoStagingTable
         #     - Key: scriptVariable
-        #       StringValue: PARTITION_YEAR="#{year(@scheduledStartTime)}"
+        #       StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
         #     - Key: scriptVariable
-        #       StringValue: PARTITION_MONTH="#{month(@scheduledStartTime)}"
+        #       StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
         #     - Key: scriptVariable
-        #       StringValue: TIME_START="#{format(@scheduledStartTime, 'YYYY-MM-dd HH:mm:ss')}"
+        #       StringValue: DATE_START=#{format(@scheduledStartTime, 'YYYY-MM-dd')}
         #     - Key: scriptVariable
-        #       StringValue: TIME_END="#{format(@scheduledEndTime, 'YYYY-MM-dd HH:mm:ss')}"
+        #       StringValue: DATE_END=#{format(@scheduledEndTime, 'YYYY-MM-dd')}
         # - Id: LoadAdvertisingInfoTable
         #   Name: Load Advertising Info Into DynamoDB Table
         #   Fields:
@@ -2012,13 +2012,13 @@ Resources:
             - Key: output
               RefValue: RedshiftStagingTable
             - Key: scriptVariable
-              StringValue: PARTITION_YEAR="#{year(@scheduledStartTime)}"
+              StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
             - Key: scriptVariable
-              StringValue: PARTITION_MONTH="#{month(@scheduledStartTime)}"
+              StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
             - Key: scriptVariable
-              StringValue: TIME_START="#{format(@scheduledStartTime, 'YYYY-MM-dd HH:mm:ss')}"
+              StringValue: DATE_START=#{format(@scheduledStartTime, 'YYYY-MM-dd')}
             - Key: scriptVariable
-              StringValue: TIME_END="#{format(@scheduledEndTime, 'YYYY-MM-dd HH:mm:ss')}"
+              StringValue: DATE_END=#{format(@scheduledEndTime, 'YYYY-MM-dd')}
         - Id: LoadAdvertisingAdIntoRedshift
           Name: Load Advertising by Ad Into Redshift
           Fields:
