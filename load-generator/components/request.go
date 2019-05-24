@@ -2,6 +2,7 @@ package component
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/oliveagle/jsonpath"
 	"github.com/qri-io/jsonschema"
@@ -102,24 +103,16 @@ func (output *Output) UnmarshalYAML(unmarshal func(v interface{}) error) (err er
 		return err
 	}
 
-	output.Type = v["Type"].(string)
+	output.Location = v["Path"].(string)
+	output.Type = OutputType(v["Type"].(string))
 	switch output.Type {
-
-	}
-
-	output.Path, err = jsonpath.Compile(v["Path"].(string))
-	if err != nil {
-		return err
-	}
-
-	bs, err := json.Marshal(v["Schema"])
-	if err != nil {
-		return err
-	}
-
-	output.Schema = &jsonschema.Schema{}
-	if err := json.Unmarshal(bs, &output.Schema); err != nil {
-		return err
+	case OutputTypeBody:
+		output.jsonPath, err = jsonpath.Compile(output.Location)
+		if err != nil {
+			return err
+		}
+	default:
+		log.Panicf("unknown output type %q", output.Type)
 	}
 
 	return nil
