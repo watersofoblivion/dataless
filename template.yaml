@@ -1575,156 +1575,156 @@ Resources:
               StringValue: TIME_START=#{format(@scheduledStartTime, 'YYYY-MM-dd HH:mm:ss')}
             - Key: scriptVariable
               StringValue: TIME_END=#{format(@scheduledEndTime, 'YYYY-MM-dd HH:mm:ss')}
-        - Id: AdvertisingInfoTableExists
-          Name: Advertising Info Table Exists
-          Fields:
-            - Key: type
-              StringValue: DynamoDBTableExists
-            - Key: tableName
-              StringValue: !Ref AdvertisingInfoTable
-        - Id: AdvertisingInfoStagingTableFormat
-          Name: Advertising Info Staging Table Format
-          Fields:
-            - Key: type
-              StringValue: DynamoDBExportDataFormat
-            - Key: column
-              StringValue: ad_id STRING
-            - Key: column
-              StringValue: day STRING
-            - Key: column
-              StringValue: impressions BIGINT
-            - Key: column
-              StringValue: clicks BIGINT
-            - Key: column
-              StringValue: clickthrough_rate DOUBLE
-        - Id: AdvertisingInfoStagingTable
-          Name: Advertising Info Staging Table
-          Fields:
-            - Key: type
-              StringValue: S3DataNode
-            - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/tmp/advertising-info-staging-table/"
-            - Key: dataFormat
-              RefValue: AdvertisingInfoStagingTableFormat
-        - Id: DummyInputTableFormat
-          Name: Dummy Input Table Format
-          Fields:
-            - Key: type
-              StringValue: CSV
-            - Key: column
-              StringValue: ad_id STRING
-            - Key: column
-              StringValue: day STRING
-            - Key: column
-              StringValue: impressions BIGINT
-            - Key: column
-              StringValue: clicks BIGINT
-            - Key: column
-              StringValue: clickthrough_rate DOUBLE
-        - Id: DummyInputTable
-          Name: Dummy Input Table
-          Fields:
-            - Key: type
-              StringValue: S3DataNode
-            - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/raw/events/"
-            - Key: dataFormat
-              RefValue: DummyInputTableFormat
-        - Id: AdvertisingInfoTableFormat
-          Name: Advertising Info Table Format
-          Fields:
-            - Key: type
-              StringValue: DynamoDBExportDataFormat
-        - Id: AdvertisingInfoTable
-          Name: Advertising Info Table
-          Fields:
-            - Key: type
-              StringValue: DynamoDBDataNode
-            - Key: tableName
-              StringValue: !Ref AdvertisingInfoTable
-            - Key: dataFormat
-              RefValue: AdvertisingInfoTableFormat
-            - Key: precondition
-              RefValue: AdvertisingInfoTableExists
-        - Id: StageDataForAdvertisingInfo
-          Name: Stage Data for Advertising Info
-          Fields:
-            - Key: type
-              StringValue: HiveActivity
-            - Key: dependsOn
-              RefValue: ExtractAdvertisingData
-            - Key: scriptUri
-              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/stage_data_for_advertising_info.hql"
-            - !If
-                - EMREnabled
-                - Key: workerGroup
-                  StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
-                - Key: runsOn
-                  RefValue: EMRCluster
-            - Key: input
-              RefValue: DummyInputTable
-            - Key: output
-              RefValue: AdvertisingInfoStagingTable
-            - Key: scriptVariable
-              StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
-            - Key: scriptVariable
-              StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
-            - Key: scriptVariable
-              StringValue: TIME_START=#{format(@scheduledStartTime, 'YYYY-MM-dd HH:mm:ss')}
-            - Key: scriptVariable
-              StringValue: TIME_END=#{format(@scheduledEndTime, 'YYYY-MM-dd HH:mm:ss')}
-        - Id: LoadAdvertisingInfoTable
-          Name: Load Advertising Info Into DynamoDB Table
-          Fields:
-            - Key: type
-              StringValue: HiveCopyActivity
-            - Key: dependsOn
-              RefValue: StageDataForAdvertisingInfo
-            - Key: input
-              RefValue: AdvertisingInfoStagingTable
-            - Key: output
-              RefValue: AdvertisingInfoTable
-            - !If
-                - EMREnabled
-                - Key: workerGroup
-                  StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
-                - Key: runsOn
-                  RefValue: EMRCluster
-        - Id: DummyOutputTableFormat
-          Name: Dummy Output Table Format
-          Fields:
-            - Key: type
-              StringValue: CSV
-            - Key: column
-              StringValue: rows INT
-        - Id: DummyOutputTable
-          Name: Dummy Output Table
-          Fields:
-            - Key: type
-              StringValue: S3DataNode
-            - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/tmp/dummy/"
-            - Key: dataFormat
-              RefValue: DummyOutputTableFormat
-        - Id: TruncateAdvertisingInfoStagingTable
-          Name: Truncate Advertising Info Staging Table
-          Fields:
-            - Key: type
-              StringValue: HiveActivity
-            - Key: dependsOn
-              RefValue: LoadAdvertisingInfoTable
-            - Key: hiveScript
-              StringValue: TRUNCATE TABLE ${input1}
-            - !If
-                - EMREnabled
-                - Key: workerGroup
-                  StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
-                - Key: runsOn
-                  RefValue: EMRCluster
-            - Key: input
-              RefValue: AdvertisingInfoStagingTable
-            - Key: output
-              RefValue: DummyOutputTable
+        # - Id: AdvertisingInfoTableExists
+        #   Name: Advertising Info Table Exists
+        #   Fields:
+        #     - Key: type
+        #       StringValue: DynamoDBTableExists
+        #     - Key: tableName
+        #       StringValue: !Ref AdvertisingInfoTable
+        # - Id: AdvertisingInfoStagingTableFormat
+        #   Name: Advertising Info Staging Table Format
+        #   Fields:
+        #     - Key: type
+        #       StringValue: DynamoDBExportDataFormat
+        #     - Key: column
+        #       StringValue: ad_id STRING
+        #     - Key: column
+        #       StringValue: day STRING
+        #     - Key: column
+        #       StringValue: impressions BIGINT
+        #     - Key: column
+        #       StringValue: clicks BIGINT
+        #     - Key: column
+        #       StringValue: clickthrough_rate DOUBLE
+        # - Id: AdvertisingInfoStagingTable
+        #   Name: Advertising Info Staging Table
+        #   Fields:
+        #     - Key: type
+        #       StringValue: S3DataNode
+        #     - Key: directoryPath
+        #       StringValue: !Sub "s3://${Bucket}/data/tmp/advertising-info-staging-table/"
+        #     - Key: dataFormat
+        #       RefValue: AdvertisingInfoStagingTableFormat
+        # - Id: DummyInputTableFormat
+        #   Name: Dummy Input Table Format
+        #   Fields:
+        #     - Key: type
+        #       StringValue: CSV
+        #     - Key: column
+        #       StringValue: ad_id STRING
+        #     - Key: column
+        #       StringValue: day STRING
+        #     - Key: column
+        #       StringValue: impressions BIGINT
+        #     - Key: column
+        #       StringValue: clicks BIGINT
+        #     - Key: column
+        #       StringValue: clickthrough_rate DOUBLE
+        # - Id: DummyInputTable
+        #   Name: Dummy Input Table
+        #   Fields:
+        #     - Key: type
+        #       StringValue: S3DataNode
+        #     - Key: directoryPath
+        #       StringValue: !Sub "s3://${Bucket}/data/raw/events/"
+        #     - Key: dataFormat
+        #       RefValue: DummyInputTableFormat
+        # - Id: AdvertisingInfoTableFormat
+        #   Name: Advertising Info Table Format
+        #   Fields:
+        #     - Key: type
+        #       StringValue: DynamoDBExportDataFormat
+        # - Id: AdvertisingInfoTable
+        #   Name: Advertising Info Table
+        #   Fields:
+        #     - Key: type
+        #       StringValue: DynamoDBDataNode
+        #     - Key: tableName
+        #       StringValue: !Ref AdvertisingInfoTable
+        #     - Key: dataFormat
+        #       RefValue: AdvertisingInfoTableFormat
+        #     - Key: precondition
+        #       RefValue: AdvertisingInfoTableExists
+        # - Id: StageDataForAdvertisingInfo
+        #   Name: Stage Data for Advertising Info
+        #   Fields:
+        #     - Key: type
+        #       StringValue: HiveActivity
+        #     - Key: dependsOn
+        #       RefValue: ExtractAdvertisingData
+        #     - Key: scriptUri
+        #       StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/stage_data_for_advertising_info.hql"
+        #     - !If
+        #         - EMREnabled
+        #         - Key: workerGroup
+        #           StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+        #         - Key: runsOn
+        #           RefValue: EMRCluster
+        #     - Key: input
+        #       RefValue: DummyInputTable
+        #     - Key: output
+        #       RefValue: AdvertisingInfoStagingTable
+        #     - Key: scriptVariable
+        #       StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
+        #     - Key: scriptVariable
+        #       StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
+        #     - Key: scriptVariable
+        #       StringValue: TIME_START=#{format(@scheduledStartTime, 'YYYY-MM-dd HH:mm:ss')}
+        #     - Key: scriptVariable
+        #       StringValue: TIME_END=#{format(@scheduledEndTime, 'YYYY-MM-dd HH:mm:ss')}
+        # - Id: LoadAdvertisingInfoTable
+        #   Name: Load Advertising Info Into DynamoDB Table
+        #   Fields:
+        #     - Key: type
+        #       StringValue: HiveCopyActivity
+        #     - Key: dependsOn
+        #       RefValue: StageDataForAdvertisingInfo
+        #     - Key: input
+        #       RefValue: AdvertisingInfoStagingTable
+        #     - Key: output
+        #       RefValue: AdvertisingInfoTable
+        #     - !If
+        #         - EMREnabled
+        #         - Key: workerGroup
+        #           StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+        #         - Key: runsOn
+        #           RefValue: EMRCluster
+        # - Id: DummyOutputTableFormat
+        #   Name: Dummy Output Table Format
+        #   Fields:
+        #     - Key: type
+        #       StringValue: CSV
+        #     - Key: column
+        #       StringValue: rows INT
+        # - Id: DummyOutputTable
+        #   Name: Dummy Output Table
+        #   Fields:
+        #     - Key: type
+        #       StringValue: S3DataNode
+        #     - Key: directoryPath
+        #       StringValue: !Sub "s3://${Bucket}/data/tmp/dummy/"
+        #     - Key: dataFormat
+        #       RefValue: DummyOutputTableFormat
+        # - Id: TruncateAdvertisingInfoStagingTable
+        #   Name: Truncate Advertising Info Staging Table
+        #   Fields:
+        #     - Key: type
+        #       StringValue: HiveActivity
+        #     - Key: dependsOn
+        #       RefValue: LoadAdvertisingInfoTable
+        #     - Key: hiveScript
+        #       StringValue: TRUNCATE TABLE ${input1}
+        #     - !If
+        #         - EMREnabled
+        #         - Key: workerGroup
+        #           StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+        #         - Key: runsOn
+        #           RefValue: EMRCluster
+        #     - Key: input
+        #       RefValue: AdvertisingInfoStagingTable
+        #     - Key: output
+        #       RefValue: DummyOutputTable
 
   RedshiftPipeline:
     Type: AWS::DataPipeline::Pipeline
