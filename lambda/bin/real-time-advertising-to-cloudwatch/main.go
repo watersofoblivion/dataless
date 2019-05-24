@@ -74,12 +74,12 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 
 	// Create buffers for the metrics and output records
 	metricData := make([]*cloudwatch.MetricDatum, 0, MetricDataLimit)
-	outputRecords := make([]events.KinesisAnalyticsOutputDeliveryResponseRecord, 0, MetricDataLimit)
+	outputRecords := make([]*events.KinesisAnalyticsOutputDeliveryResponseRecord, 0, MetricDataLimit)
 
 	// Process all the input records
 	for _, record := range input.Records {
 		// Create the output record
-		outputRecord := events.KinesisAnalyticsOutputDeliveryResponseRecord{RecordID: record.RecordID}
+		outputRecord := &events.KinesisAnalyticsOutputDeliveryResponseRecord{RecordID: record.RecordID}
 
 		// Parse the input record
 		metric := new(AdvertisingMetric)
@@ -87,7 +87,7 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 			// Mark the input record as failed and move on
 			log.Printf("Error unmarshaling record %s: %s", record.RecordID, err)
 			outputRecord.Result = events.KinesisAnalyticsOutputDeliveryFailed
-			output.Records = append(output.Records, outputRecord)
+			output.Records = append(output.Records, *outputRecord)
 			continue
 		}
 
@@ -116,12 +116,12 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 			// Set the status of the output records and add them to the response
 			for _, outputRecord := range outputRecords {
 				outputRecord.Result = status
+				output.Records = append(output.Records, *outputRecord)
 			}
-			output.Records = append(output.Records, outputRecords...)
 
 			// Reset the buffers
 			metricData = make([]*cloudwatch.MetricDatum, 0, MetricDataLimit)
-			outputRecords = make([]events.KinesisAnalyticsOutputDeliveryResponseRecord, 0, MetricDataLimit)
+			outputRecords = make([]*events.KinesisAnalyticsOutputDeliveryResponseRecord, 0, MetricDataLimit)
 		}
 	}
 
@@ -139,8 +139,8 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 
 		for _, outputRecord := range outputRecords {
 			outputRecord.Result = status
+			output.Records = append(output.Records, *outputRecord)
 		}
-		output.Records = append(output.Records, outputRecords...)
 	}
 
 	// Done!
