@@ -1386,14 +1386,23 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSDataPipelineRole
       Policies:
-        - PolicyName: GlueAccess
+        - PolicyName: Spectrum Access
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Action:
                   - glue:*
+                  - athena:*
                 Effect: Allow
                 Resource: "*"
+              - Action:
+                  - s3:Get*
+                  - s3:List*
+                Effect: Allow
+                Resource:
+                  - !Sub "${Bucket.Arn}/data/raw/events/*"
+                  - !Sub "${Bucket.Arn}/data/lake/events/*"
+                  - !Sub "${Bucket.Arn}/data/lake/advertising/*"
 
   PipelineProfile:
     Type: AWS::IAM::InstanceProfile
@@ -1427,14 +1436,23 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforDataPipelineRole
       Policies:
-        - PolicyName: GlueAccess
+        - PolicyName: Spectrum Access
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Action:
                   - glue:*
+                  - athena:*
                 Effect: Allow
                 Resource: "*"
+              - Action:
+                  - s3:Get*
+                  - s3:List*
+                Effect: Allow
+                Resource:
+                  - !Sub "${Bucket.Arn}/data/raw/events/*"
+                  - !Sub "${Bucket.Arn}/data/lake/events/*"
+                  - !Sub "${Bucket.Arn}/data/lake/advertising/*"
 
   PipelineResourceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -1508,24 +1526,6 @@ Resources:
               StringValue: hive.metastore.glue.catalogid
             - Key: value
               StringValue: !Ref AWS::AccountId
-        # - Id: HiveTempDir
-        #   Name: Hive Temp Dir
-        #   Fields:
-        #     - Key: type
-        #       StringValue: Property
-        #     - Key: key
-        #       StringValue: system:java.io.tmpdir
-        #     - Key: value
-        #       StringValue: /tmp/hive/java
-        # - Id: HiveSystemUserName
-        #   Name: Hive System User Name
-        #   Fields:
-        #     - Key: type
-        #       StringValue: Property
-        #     - Key: key
-        #       StringValue: system:user.name
-        #     - Key: value
-        #       StringValue: "${user.name}"
         - Id: GlueCatalogAsHiveMetastore
           Name: Glue Catalog as Hive Metastore
           Fields:
@@ -1537,10 +1537,6 @@ Resources:
               RefValue: HiveMetastoreClientFactoryClass
             - Key: property
               RefValue: HiveMetastoreCatalog
-            # - Key: property
-            #   RefValue: HiveTempDir
-            # - Key: property
-            #   RefValue: HiveSystemUserName
         - Id: GlueCatalogAsSparkMetastore
           Name: Glue Catalog as Spark Metastore
           Fields:
@@ -1552,10 +1548,6 @@ Resources:
               RefValue: HiveMetastoreClientFactoryClass
             - Key: property
               RefValue: HiveMetastoreCatalog
-            # - Key: property
-            #   RefValue: HiveTempDir
-            # - Key: property
-            #   RefValue: HiveSystemUserName
         - Id: EMRCluster
           Name: EMR Cluster
           Fields:
@@ -1846,24 +1838,6 @@ Resources:
               StringValue: hive.metastore.glue.catalogid
             - Key: value
               StringValue: !Ref AWS::AccountId
-        # - Id: HiveTempDir
-        #   Name: Hive Temp Dir
-        #   Fields:
-        #     - Key: type
-        #       StringValue: Property
-        #     - Key: key
-        #       StringValue: system:java.io.tmpdir
-        #     - Key: value
-        #       StringValue: /tmp/hive/java
-        # - Id: HiveSystemUserName
-        #   Name: Hive System User Name
-        #   Fields:
-        #     - Key: type
-        #       StringValue: Property
-        #     - Key: key
-        #       StringValue: system:user.name
-        #     - Key: value
-        #       StringValue: "${user.name}"
         - Id: GlueCatalogAsHiveMetastore
           Name: Glue Catalog as Hive Metastore
           Fields:
@@ -1875,10 +1849,6 @@ Resources:
               RefValue: HiveMetastoreClientFactoryClass
             - Key: property
               RefValue: HiveMetastoreCatalog
-            # - Key: property
-            #   RefValue: HiveTempDir
-            # - Key: property
-            #   RefValue: HiveSystemUserName
         - Id: GlueCatalogAsSparkMetastore
           Name: Glue Catalog as Spark Metastore
           Fields:
@@ -1890,10 +1860,6 @@ Resources:
               RefValue: HiveMetastoreClientFactoryClass
             - Key: property
               RefValue: HiveMetastoreCatalog
-            # - Key: property
-            #   RefValue: HiveTempDir
-            # - Key: property
-            #   RefValue: HiveSystemUserName
         - Id: EMRCluster
           Name: EMR Cluster
           Fields:
@@ -2146,7 +2112,7 @@ Resources:
             - Key: scriptArgument
               StringValue: !Ref Database
             - Key: scriptArgument
-              StringValue: !GetAtt RedshiftRole.Arn
+              StringValue: !GetAtt PipelineRole.Arn
         - Id: SpectrumLoadAdvertisingAd
           Name: Spectrum Load Advertising by Ad
           Fields:
