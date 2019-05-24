@@ -1386,7 +1386,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSDataPipelineRole
       Policies:
-        - PolicyName: Spectrum Access
+        - PolicyName: SpectrumAccess
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -1436,7 +1436,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforDataPipelineRole
       Policies:
-        - PolicyName: Spectrum Access
+        - PolicyName: SpectrumAccess
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
