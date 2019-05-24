@@ -1537,10 +1537,10 @@ Resources:
               RefValue: HiveMetastoreClientFactoryClass
             - Key: property
               RefValue: HiveMetastoreCatalog
-            - Key: property
-              RefValue: HiveTempDir
-            - Key: property
-              RefValue: HiveSystemUserName
+            # - Key: property
+            #   RefValue: HiveTempDir
+            # - Key: property
+            #   RefValue: HiveSystemUserName
         - Id: GlueCatalogAsSparkMetastore
           Name: Glue Catalog as Spark Metastore
           Fields:
@@ -1875,10 +1875,10 @@ Resources:
               RefValue: HiveMetastoreClientFactoryClass
             - Key: property
               RefValue: HiveMetastoreCatalog
-            - Key: property
-              RefValue: HiveTempDir
-            - Key: property
-              RefValue: HiveSystemUserName
+            # - Key: property
+            #   RefValue: HiveTempDir
+            # - Key: property
+            #   RefValue: HiveSystemUserName
         - Id: GlueCatalogAsSparkMetastore
           Name: Glue Catalog as Spark Metastore
           Fields:

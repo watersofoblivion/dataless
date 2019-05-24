@@ -8,6 +8,6 @@ FROM
   warehouse.advertising
 WHERE
       year = ?
-  AND year = ?
+  AND month = ?
   AND impression_at BETWEEN ? AND ?
 ;
