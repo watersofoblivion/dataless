@@ -13,18 +13,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
+	"github.com/aws/aws-sdk-go/service/cloudwatch/cloudwatchiface"
 	"github.com/aws/aws-xray-sdk-go/xray"
 )
 
 var (
-	sess            = session.New()
-	cw              = cloudwatch.New(sess)
+	cw              cloudwatchiface.CloudWatchAPI
 	metricNamespace = os.Getenv("METRIC_NAMESPACE")
 	location        = time.FixedZone("UTC", 0)
 )
 
 func init() {
-	xray.AWS(cw.Client)
+	s := session.New()
+	c := cloudwatch.New(s)
+	xray.AWS(c.Client)
+	cw = c
 }
 
 func main() {
