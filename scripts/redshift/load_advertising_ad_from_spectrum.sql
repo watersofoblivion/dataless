@@ -1,4 +1,4 @@
-CREATE TABLE advertising_ad_spectrum
+CREATE TABLE IF NOT EXISTS advertising_ad_spectrum
   DISTSTYLE KEY
   DISTKEY (ad_id)
 AS
