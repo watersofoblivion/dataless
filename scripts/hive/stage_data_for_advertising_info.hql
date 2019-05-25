@@ -1,4 +1,3 @@
-DESCRIBE warehouse.advertising;
 DESCRIBE ${output1};
 
 WITH
