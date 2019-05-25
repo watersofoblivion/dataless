@@ -1,5 +1,5 @@
-DESCRIBE TABLE warehouse.advertising;
-DESCRIBE TABLE ${output1};
+DESCRIBE warehouse.advertising;
+DESCRIBE ${output1};
 
 INSERT OVERWRITE
   TABLE ${output1}
