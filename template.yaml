@@ -945,7 +945,7 @@ Resources:
   RealTimeAdvertisingLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: bin/real-time-advertising-to-cloudwatch
+      Handler: bin/publish-cloudwatch-metrics
       Role: !GetAtt RealTimeAdvertisingLambdaRole.Arn
       Environment:
         Variables:
@@ -1042,14 +1042,16 @@ Resources:
         ;
 
         CREATE OR REPLACE STREAM "metrics" (
-          "name"  VARCHAR(255),
-          "at"    TIMESTAMP,
-          "value" DOUBLE
+          "namespace" VARCHAR(255),
+          "name"      VARCHAR(255),
+          "at"        TIMESTAMP,
+          "value"     DOUBLE
         );
 
         CREATE OR REPLACE PUMP "impressions_dumper" AS
         INSERT INTO "metrics"
         SELECT STREAM
+          'Warehouse/Advertising'     AS "namespace",
           'Impressions'               AS "name",
           "impression_counts"."at"    AS "at",
           "impression_counts"."value" AS "value"
@@ -1059,15 +1061,17 @@ Resources:
         CREATE OR REPLACE PUMP "clicks_dumper" AS
         INSERT INTO "metrics"
         SELECT STREAM
-          'Clicks'               AS "name",
-          "click_counts"."at"    AS "at",
-          "click_counts"."value" AS "value"
+          'Warehouse/Advertising' AS "namespace",
+          'Clicks'                AS "name",
+          "click_counts"."at"     AS "at",
+          "click_counts"."value"  AS "value"
         FROM "click_counts"
         ;
 
         CREATE OR REPLACE PUMP "clickthrough_rate_dumper" AS
         INSERT INTO "metrics"
         SELECT STREAM
+          'Warehouse/Advertising'       AS "namespace",
           'ClickthroughRate'            AS "name",
           "clickthrough_rates"."at"     AS "at",
           "clickthrough_rates"."value"  AS "value"
