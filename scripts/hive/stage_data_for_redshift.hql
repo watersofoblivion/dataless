@@ -1,5 +1,3 @@
-DESCRIBE ${output1};
-
 INSERT OVERWRITE
   TABLE ${output1}
 SELECT
