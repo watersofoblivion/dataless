@@ -1,5 +1,3 @@
-DESCRIBE ${output1};
-
 WITH
   events AS (
     SELECT
@@ -11,8 +9,8 @@ WITH
     WHERE
           year = ${PARTITION_YEAR}
       AND month = ${PARTITION_MONTH}
-      AND impression_at >= '${DATE_START} 00:00:00'
-      AND impression_at < '${DATE_END} 00:00:00'
+      AND impression_at >= TO_UTC_TIMESTAMP(TO_DATE('${DATE_START}'), 'UTC')
+      AND impression_at <  TO_UTC_TIMESTAMP(TO_DATE('${DATE_END}'),   'UTC')
   ),
   impressions AS (
     SELECT
@@ -39,7 +37,8 @@ SELECT
   DATE_FORMAT(impressions.day, "yyyy-MM-dd")                       AS day,
   impressions.count                                                AS impressions,
   clicks.count                                                     AS clicks,
-  (CAST(clicks.count AS float) / CAST(impressions.count AS float)) AS clickthrough_rate
+  (CAST(clicks.count AS float) / CAST(impressions.count AS float)) AS clickthrough_rate,
+  MAP()                                                            AS item
 FROM
   impressions
 JOIN clicks
