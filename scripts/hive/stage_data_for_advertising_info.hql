@@ -1,3 +1,6 @@
+DESCRIBE TABLE warehouse.advertising;
+DESCRIBE TABLE ${output1};
+
 WITH
   events AS (
     SELECT
