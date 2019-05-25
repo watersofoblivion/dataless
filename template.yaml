@@ -1926,9 +1926,9 @@ Resources:
                   user_id       VARCHAR(64) NOT NULL,
                   ad_id         VARCHAR(64) NOT NULL,
                   impression_at TIMESTAMP   NOT NULL,
-                  click_at      TIMESTAMP
+                  click_at      TIMESTAMP,
+                  PRIMARY KEY (session_id, user_id, ad_id)
                 )
-                PRIMARY KEY (session_id, user_id, ad_id, impression_at)
                 DISTSTYLE KEY
                 DISTKEY (ad_id)
                 ;
@@ -1948,9 +1948,9 @@ Resources:
                   user_id       VARCHAR(64) NOT NULL,
                   ad_id         VARCHAR(64) NOT NULL,
                   impression_at TIMESTAMP   NOT NULL,
-                  click_at      TIMESTAMP
+                  click_at      TIMESTAMP,
+                  PRIMARY KEY (session_id, user_id, ad_id)
                 )
-                PRIMARY KEY (session_id, user_id, ad_id, impression_at)
                 DISTSTYLE KEY
                 DISTKEY (user_id)
                 ;
