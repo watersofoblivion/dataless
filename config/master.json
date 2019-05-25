@@ -5,6 +5,7 @@
     "KeyPair": "temp",
     "Stage": "Prod",
     "DeploymentPreference": "AllAtOnce",
+    "EnableEMRCluster": "yes",
     "EnableRedshift": "yes"
   }
 }
