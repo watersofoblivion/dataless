@@ -2117,7 +2117,7 @@ Resources:
               RefValue: RedshiftCluster
             - Key: script
               StringValue: !Sub |
-                CREATE EXTERNAL SCHEMA lake
+                CREATE EXTERNAL SCHEMA IF NOT EXISTS lake
                 FROM DATA CATALOG
                 DATABASE '${Database}'
                 IAM_ROLE '${PipelineRole.Arn}'
