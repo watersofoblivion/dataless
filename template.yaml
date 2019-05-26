@@ -540,8 +540,8 @@ Resources:
             set -x -e
 
             # Install task runner
-            aws s3 cp "s3://datapipeline-us-east-1/us-east-1/software/latest/TaskRunner/TaskRunner-1.0.jar" "${HOME}/TaskRunner-1.0.jar"
-            echo '{"access-id": "${AccessKeyID}", "private-key": "${SecretAccessKey}"}' | jq -cr '.' > "${HOME}/credentials.json"
+            aws s3 cp "s3://datapipeline-us-east-1/us-east-1/software/latest/TaskRunner/TaskRunner-1.0.jar" "${!HOME}/TaskRunner-1.0.jar"
+            echo '{"access-id": "${AccessKeyID}", "private-key": "${SecretAccessKey}"}' | jq -cr '.' > "${!HOME}/credentials.json"
             nohup java -jar "${!HOME}/TaskRunner-1.0.jar" --workerGroup="${AWS::StackName}-${AWS::Region}-instance-worker-group" --region="${AWS::Region}" --logUri="s3://${Bucket}/logs/task-runner/instance/" &
 
   #######
