@@ -24,6 +24,10 @@ Metadata:
       - Label: VPC
         Parameters:
           - EnableVPC
+      - Label: Task Runner
+        Parameters:
+          - AccessKeyID
+          - SecretAccessKey
       - Label: EC2 Instance
         Parameters:
           - EnableEC2Instance
@@ -63,6 +67,10 @@ Metadata:
         default: Domain name for ACM certificate validation
       EnableVPC:
         default: Creates a VPC
+      AccessKeyID:
+        default: AWS Access Key ID
+      SecretAccessKey:
+        default: AWS Secret Access Key
       EnableEC2Instance:
         default: Creates an EC2 instance for Data Pipeline
       EC2InstanceSize:
@@ -136,6 +144,15 @@ Parameters:
     Type: String
     Description: If non-empty, create a VPC.  EnableEC2Instance, EnableEMRCluster, and EnableRedshift imply this option.
     Default: ''
+  AccessKeyID:
+    Type: String
+    Description: The AWS Access Key ID to use for the Data Pipeline Task Runner
+    Default: ''
+  SecretAccessKey:
+    Type: String
+    Description: The AWS Secret Access Key to use for the Data Pipeline Task Runner
+    Default: ''
+    NoEcho: true
   EnableEC2Instance:
     Type: String
     Description: If non-empty, create an EC2 instance for use by Data Pipeline.
@@ -208,8 +225,14 @@ Conditions:
     - !Not [!Equals [!Ref DNSName, ""]]
     - !Not [!Equals [!Ref ValidationDomain, ""]]
     - !Not [!Equals [!Ref HostedZoneID, ""]]
-  EC2InstanceEnabled: !Not [!Equals [!Ref EnableEC2Instance, ""]]
-  EMREnabled: !Not [!Equals [!Ref EnableEMRCluster, ""]]
+  EC2InstanceEnabled: !And
+    - !Not [!Equals [!Ref EnableEC2Instance, ""]]
+    - !Not [!Equals [!Ref AccessKeyID, ""]]
+    - !Not [!Equals [!Ref SecretAccessKey, ""]]
+  EMREnabled: !And
+    - !Not [!Equals [!Ref EnableEMRCluster, ""]]
+    - !Not [!Equals [!Ref AccessKeyID, ""]]
+    - !Not [!Equals [!Ref SecretAccessKey, ""]]
   RedshiftEnabled: !Not [!Equals [!Ref EnableRedshift, ""]]
   RedshiftSingleNode: !Equals [!Ref RedshiftNumberOfNodes, 1]
   VPCEnabled: !Or
@@ -726,16 +749,18 @@ Resources:
         - Name: hive
         - Name: pig
         - Name: spark
-      # BootstrapActions:
-      #   - Name: Install Task Runner
-      #     ScriptBootstrapAction:
-      #       Path: s3://elasticmapreduce/bootstrap-actions/run-if
-      #       Args:
-      #         - instance.isMaster=true
-      #         - !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/emr/install_task_runner.sh"
-      #         - !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
-      #         - !Ref AWS::Region
-      #         - !Sub "s3://${Bucket}/logs/task-runner/emr/"
+      BootstrapActions:
+        - Name: Install Task Runner
+          ScriptBootstrapAction:
+            Path: s3://elasticmapreduce/bootstrap-actions/run-if
+            Args:
+              - instance.isMaster=true
+              - !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/emr/install_task_runner.sh"
+              - !Ref AccessKeyID
+              - !Ref SecretAccessKey
+              - !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+              - !Ref AWS::Region
+              - !Sub "s3://${Bucket}/logs/task-runner/emr/"
       Configurations:
         - Classification: hive-site
           ConfigurationProperties:

@@ -1,7 +1,5 @@
 {
   "Parameters": {
-    "CodeBucket": "${CODE_BUCKET}",
-    "CodePrefix": "build/${CODEBUILD_BUILD_ID}",
     "KeyPair": "temp",
     "Stage": "Prod",
     "DeploymentPreference": "AllAtOnce",

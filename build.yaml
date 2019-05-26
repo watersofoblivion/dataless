@@ -10,6 +10,10 @@ Metadata:
           - Repo
           - AccessToken
           - Branch
+      - Label: Task Runner
+        Parameters:
+          - AccessKeyID
+          - SecretAccessKey
     ParameterLabels:
       Owner:
         default: GitHub repository owner
@@ -19,6 +23,10 @@ Metadata:
         default: GitHub OAuth access token
       Branch:
         default: Branch to build
+      AccessKeyID:
+        default: AWS Access Key ID
+      SecretAccessKey:
+        default: AWS Secret Access Key
 
 Parameters:
   Branch:
@@ -36,6 +44,15 @@ Parameters:
   AccessToken:
     Type: String
     Description: The GitHub token to use to fetch source code (if using GitHub.)
+    Default: ''
+    NoEcho: true
+  AccessKeyID:
+    Type: String
+    Description: The AWS Access Key ID to use for the Data Pipeline Task Runner
+    Default: ''
+  SecretAccessKey:
+    Type: String
+    Description: The AWS Secret Access Key to use for the Data Pipeline Task Runner
     Default: ''
     NoEcho: true
 
@@ -181,6 +198,12 @@ Resources:
           - Type: PLAINTEXT
             Name: CODE_BUCKET
             Value: !Ref Bucket
+          - Type: PLAINTEXT
+            Name: ACCESS_KEY_ID
+            Value: !Ref AccessKeyID
+          - Type: PLAINTEXT
+            Name: SECRET_ACCESS_KEY
+            Value: !Ref SecretAccessKey
       Source:
         Type: CODEPIPELINE
       Artifacts:
