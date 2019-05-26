@@ -2,7 +2,6 @@
   "Parameters": {
     "KeyPair": "temp",
     "Stage": "Prod",
-    "DeploymentPreference": "AllAtOnce",
-    "EnableRedshift": "yes"
+    "DeploymentPreference": "AllAtOnce"
   }
 }
