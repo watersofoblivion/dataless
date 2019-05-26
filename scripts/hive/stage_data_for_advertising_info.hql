@@ -9,8 +9,8 @@ WITH
     WHERE
           year = ${PARTITION_YEAR}
       AND month = ${PARTITION_MONTH}
-      AND impression_at >= TO_UTC_TIMESTAMP(TO_DATE('${DATE_START}'), 'UTC')
-      AND impression_at <  TO_UTC_TIMESTAMP(TO_DATE('${DATE_END}'),   'UTC')
+      AND impression_at >= '${DATE_START} 00:00:00'
+      AND impression_at <  '${DATE_END} 00:00:00'
   ),
   impressions AS (
     SELECT
@@ -34,7 +34,7 @@ INSERT OVERWRITE
   TABLE ${output1}
 SELECT
   impressions.ad_id                                                AS ad_id,
-  DATE_FORMAT(impressions.day, "yyyy-MM-dd")                       AS day,
+  impressions.day                                                  AS day,
   impressions.count                                                AS impressions,
   clicks.count                                                     AS clicks,
   (CAST(clicks.count AS float) / CAST(impressions.count AS float)) AS clickthrough_rate,
@@ -42,6 +42,6 @@ SELECT
 FROM
   impressions
 JOIN clicks
-  ON  impressions.day = clicks.day
+  ON  impressions.day   = clicks.day
   AND impressions.ad_id = clicks.ad_id
 ;
