@@ -48,7 +48,7 @@ phases:
     commands:
       - if [ ! -f ./config/${BRANCH}.json ]; then exit "No config file found"; fi
       - |
-        echo ./config/${BRANCH}.json | jq '. + {"Parameters": (.Parameters + {"CodeBucket":"${CODE_BUCKET}","CodePrefix":"build/${CODEBUILD_BUILD_ID}","AccessKeyID":"${ACCESS_KEY_ID}","SecretAccessKey":"${SECRET_ACCESS_KEY}"})}' > ./config-${BRANCH}.json
+        cat ./config/${BRANCH}.json | jq '. + {"Parameters": (.Parameters + {"CodeBucket":"${CODE_BUCKET}","CodePrefix":"build/${CODEBUILD_BUILD_ID}","AccessKeyID":"${ACCESS_KEY_ID}","SecretAccessKey":"${SECRET_ACCESS_KEY}"})}' > ./config-${BRANCH}.json
       - envsubst < ./config-${BRANCH}.json > config.json
 
 artifacts:
