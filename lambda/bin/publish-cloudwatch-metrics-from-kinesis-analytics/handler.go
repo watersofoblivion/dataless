@@ -21,16 +21,12 @@ func init() {
 	publisher = NewMetricsPublisher(cw)
 }
 
-func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEvent) (events.KinesisAnalyticsOutputDeliveryResponse, error) {
-	// Create a response
+func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEvent) events.KinesisAnalyticsOutputDeliveryResponse {
 	resp := events.KinesisAnalyticsOutputDeliveryResponse{}
 
-	// Process all the input records
 	for _, record := range input.Records {
-		// Parse the input record
 		metric := new(Metric)
 		if err := json.Unmarshal(record.Data, metric); err != nil {
-			// Mark the input record as failed and move on
 			log.Printf("error unmarshaling record %s (dropped): %s", record.RecordID, err)
 			resp.Records = append(resp.Records, events.KinesisAnalyticsOutputDeliveryResponseRecord{
 				RecordID: record.RecordID,
@@ -39,16 +35,11 @@ func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEve
 			continue
 		}
 
-		// Publish the record
 		publisher.Publish(ctx, record.RecordID, metric)
 	}
 
-	// Flush any remaining records
 	publisher.Flush(ctx)
 
-	// Append output records
 	resp.Records = append(resp.Records, publisher.Records()...)
-
-	// Done!
-	return resp, nil
+	return resp
 }

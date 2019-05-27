@@ -48,9 +48,12 @@ func TestMetricsPublisher(t *testing.T) {
 
 	records := publisher.Records()
 
-	actual := []events.KinesisAnalyticsOutputDeliveryResponseRecord{}
+	expected := []events.KinesisAnalyticsOutputDeliveryResponseRecord{}
 	for _, namespace := range namespaces {
-		actual = append(actual, publisher.namespaces[namespace].Records()...)
+		expected = append(expected, publisher.namespaces[namespace].Records()...)
 	}
-	assert.Equal(t, records, actual)
+
+	for _, record := range expected {
+		assert.Contains(t, records, record)
+	}
 }
