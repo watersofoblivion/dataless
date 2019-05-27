@@ -54,7 +54,7 @@ func TestHandler(t *testing.T) {
 
 	cw.On("PutMetricDataWithContext", ctx, mock.Anything).Return(nil, nil)
 	cw.On("PutMetricDataWithContext", ctx, mock.Anything).Return(nil, nil)
-	resp := handler(ctx, evt)
+	resp := Handler(ctx, evt)
 	cw.AssertExpectations(t)
 
 	require.Len(t, resp.Records, len(recordIDs))
@@ -79,7 +79,7 @@ func TestHandler(t *testing.T) {
 			},
 		}
 
-		resp := handler(ctx, evt)
+		resp := Handler(ctx, evt)
 
 		cw.AssertExpectations(t)
 		assert.Contains(t, resp.Records, events.KinesisAnalyticsOutputDeliveryResponseRecord{

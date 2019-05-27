@@ -21,7 +21,7 @@ func init() {
 	publisher = NewMetricsPublisher(cw)
 }
 
-func handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEvent) events.KinesisAnalyticsOutputDeliveryResponse {
+func Handler(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEvent) events.KinesisAnalyticsOutputDeliveryResponse {
 	resp := events.KinesisAnalyticsOutputDeliveryResponse{}
 
 	for _, record := range input.Records {
