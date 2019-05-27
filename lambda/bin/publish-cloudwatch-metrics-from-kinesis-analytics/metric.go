@@ -12,7 +12,7 @@ const DateFormat = "2006-01-02 15:04:05.000"
 // TimeZone the timestamps are in
 var TimeZone = time.FixedZone("UTC", 0)
 
-// Metric is a metric to publish to CloudWatch
+// Metric is a metric to publish to CloudWatch.
 type Metric struct {
 	Namespace  string            `json:"namespace"`
 	Name       string            `json:"name"`
@@ -23,6 +23,15 @@ type Metric struct {
 
 // UnmarshalJSON implements the json.Unmarshaler interface.  This validates the
 // metric as it unmarshals it and returns an error on an invalid metric.
+//
+// The "namespace", "name", "at", and "value" fields are deserialized into the
+// matching fields on the object.  "at" must match the format specified in the
+// DateFormat constant.  If the fields are blank or invalid, this method returns
+// an error.
+//
+// All other fields are used as dimensions and expected to have string values.
+// If there are more than MetricDimensionLimit dimensions or dimension values
+// are blank, this method returns an error.
 func (metric *Metric) UnmarshalJSON(bs []byte) error {
 	var err error
 
@@ -31,16 +40,16 @@ func (metric *Metric) UnmarshalJSON(bs []byte) error {
 
 	var ok bool
 
-	if metric.Namespace, ok = v["namespace"].(string); !ok {
+	if metric.Namespace, ok = v["namespace"].(string); !ok || metric.Namespace == "" {
 		return fmt.Errorf("metric namespace not given")
 	}
 
-	if metric.Name, ok = v["name"].(string); !ok {
+	if metric.Name, ok = v["name"].(string); !ok || metric.Name == "" {
 		return fmt.Errorf("metric name not given")
 	}
 
 	timestamp, ok := v["at"].(string)
-	if !ok {
+	if !ok || timestamp == "" {
 		return fmt.Errorf("metric timestamp not given")
 	}
 
@@ -63,6 +72,9 @@ func (metric *Metric) UnmarshalJSON(bs []byte) error {
 		s, ok := v.(string)
 		if !ok {
 			return fmt.Errorf("expected dimension %q to be a string, found %T", k, v)
+		}
+		if s == "" {
+			return fmt.Errorf("dimension %q value not given", k)
 		}
 		metric.Dimensions[k] = s
 	}

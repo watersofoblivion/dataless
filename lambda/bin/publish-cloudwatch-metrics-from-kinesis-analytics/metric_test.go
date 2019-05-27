@@ -53,24 +53,36 @@ func TestMetric(t *testing.T) {
 				assert.Error(t, err)
 			})
 			t.Run("on missing namespace", func(t *testing.T) {
-				delete(v, "namespace")
 				defer func() { v["namespace"] = namespace }()
 
+				delete(v, "namespace")
 				err := marshalMetric(t, v)
+				assert.Error(t, err)
+
+				v["namespace"] = ""
+				err = marshalMetric(t, v)
 				assert.Error(t, err)
 			})
 			t.Run("on missing name", func(t *testing.T) {
-				delete(v, "name")
 				defer func() { v["name"] = name }()
 
+				delete(v, "name")
 				err := marshalMetric(t, v)
+				assert.Error(t, err)
+
+				v["name"] = ""
+				err = marshalMetric(t, v)
 				assert.Error(t, err)
 			})
 			t.Run("on missing timestamp", func(t *testing.T) {
-				delete(v, "at")
 				defer func() { v["at"] = at.Format(DateFormat) }()
 
+				delete(v, "at")
 				err := marshalMetric(t, v)
+				assert.Error(t, err)
+
+				v["at"] = ""
+				err = marshalMetric(t, v)
 				assert.Error(t, err)
 			})
 			t.Run("on invalid date format", func(t *testing.T) {
@@ -95,10 +107,14 @@ func TestMetric(t *testing.T) {
 				assert.Error(t, err)
 			})
 			t.Run("on invalid dimension", func(t *testing.T) {
-				v["dimensionOne"] = 4.2
 				defer func() { v["dimensionOne"] = dimensionOne }()
 
+				v["dimensionOne"] = ""
 				err := marshalMetric(t, v)
+				assert.Error(t, err)
+
+				v["dimensionOne"] = 4.2
+				err = marshalMetric(t, v)
 				assert.Error(t, err)
 			})
 			t.Run("on excess dimensions", func(t *testing.T) {
