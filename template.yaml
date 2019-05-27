@@ -971,7 +971,7 @@ Resources:
   RealTimeAdvertisingLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: bin/publish-cloudwatch-metrics
+      Handler: bin/publish-cloudwatch-metrics-from-kinesis-analytics
       Role: !GetAtt RealTimeAdvertisingLambdaRole.Arn
       Environment:
         Variables:
