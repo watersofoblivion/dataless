@@ -2204,7 +2204,7 @@ Resources:
   # API #
   #######
 
-  APIRole:
+  APILambdaRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -2215,7 +2215,7 @@ Resources:
             Effect: Allow
             Principal:
               Service:
-                - !Sub "apigateway.${AWS::URLSuffix}"
+                - !Sub "lambda.${AWS::URLSuffix}"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
@@ -2235,6 +2235,49 @@ Resources:
                 Resource:
                   - !GetAtt AdvertisingInfoTable.Arn
 
+  IngestEventsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: bin/publish-records-to-kinesis-firehose
+      Role: !GetAtt APILambdaRole.Arn
+      Environment:
+        Variables:
+          BATCH_KEY: events
+          DELIVERY_STREAM_NAME: !Ref EventsDeliveryStream
+
+  QueryAdvertisingInfoTableLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: bin/query-advertising-info-table
+      Role: !GetAtt APILambdaRole.Arn
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref AdvertisingInfoTable
+
+  APIRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "apigateway.${AWS::URLSuffix}"
+      Policies:
+        - PolicyName: Execution
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - lambda:InvokeFunction
+                Effect: Allow
+                Resource:
+                  - !GetAtt IngestEventsLambda.Arn
+                  - !GetAtt QueryAdvertisingInfoTableLambda.Arn
+
   API:
     Type: AWS::Serverless::Api
     Properties:
@@ -2246,318 +2289,10 @@ Resources:
           MetricsEnabled: true
       TracingEnabled: true
       DefinitionBody:
-        openapi: 3.0.0
-        info:
-          version: 0.1.0
-          title: !Ref APIName
-        paths:
-          /data/events:
-            post:
-              summary: Record a batch of events
-              operationId: data-events
-              requestBody:
-                description: A batch of ad events
-                required: true
-                content:
-                  application/json:
-                    schema:
-                      $ref: "#/components/schemas/DataEvents"
-              x-amazon-apigateway-integration:
-                type: AWS
-                httpMethod: POST
-                uri: !Sub "arn:aws:apigateway:${AWS::Region}:firehose:action/PutRecordBatch"
-                credentials: !GetAtt APIRole.Arn
-                requestTemplates:
-                  application/json: !Sub |
-                    #set($newline = "
-                    ")
-                    {
-                      "DeliveryStreamName": "${EventsDeliveryStream}",
-                      "Records": [
-                        #foreach($elem in $input.path('$.events'))
-                        #set($val = $input.json("$.events[$foreach.index]"))
-                        #set($rec = "${!val}${!newline}")
-                        { "Data": "$util.base64Encode($rec)" }#if($foreach.hasNext),#end
-                        #end
-                      ]
-                    }
-                requestParameters:
-                  integration.request.header.Content-Type: "'x-amz-json-1.1'"
-                responses:
-                  '200':
-                    statusCode: 200
-                    responseTemplates:
-                      application/json: |
-                        {
-                          "failed_count": $input.path("$.FailedPutCount"),
-                          "records": [
-                            #foreach($record in $input.path("$.RequestResponses"))
-                            {
-                              #if($record.keySet().contains("ErrorCode"))
-                              "failed": true,
-                              "error_code": "$record.ErrorCode",
-                              "error_message": "$record.ErrorMessage"
-                              #else
-                              "failed": false
-                              #end
-                            }#if($foreach.hasNext),#end
-                            #end
-                          ]
-                        }
-              responses:
-                '200':
-                  description: |
-                    The batch was processed.  Some events may not have been
-                    processed.  The response contains a list of events in the
-                    same order submitted, indicating which succeeded and which
-                    failed.
-                  content:
-                    application/json:
-                      schema:
-                        $ref: "#/components/schemas/BatchWriteResponse"
-          /info/ads/{id}:
-            get:
-              summary: Get info about events
-              operationId: info-events
-              parameters:
-                - name: id
-                  in: path
-                  description: ID of the ad
-                  required: true
-                  schema:
-                    type: string
-                    format: uuid
-                - name: start
-                  in: querystring
-                  description: The start day
-                  required: true
-                  schema:
-                    $ref: "#/components/schemas/Date"
-                - name: end
-                  in: querystring
-                  description: The end day
-                  required: true
-                  schema:
-                    $ref: "#/components/schemas/Date"
-                - name: page
-                  in: querystring
-                  required: false
-                  description: The page of results to fetch
-                  schema:
-                    $ref: "#/components/schemas/Base64"
-                - name: limit
-                  in: querystring
-                  required: false
-                  description: The number of results to fetch
-                  schema:
-                    type: integer
-                    minimum: 1
-                    maximum: 100
-                    default: 100
-              x-amazon-apigateway-integration:
-                type: AWS
-                httpMethod: POST
-                uri: !Sub "arn:aws:apigateway:${AWS::Region}:dynamodb:action/Query"
-                credentials: !GetAtt APIRole.Arn
-                requestTemplates:
-                  application/json: !Sub |
-                    {
-                      "TableName": "${AdvertisingInfoTable}",
-                      "ExpressionAttributeNames": {
-                        "#ad_id": "ad_id",
-                        "#day": "day"
-                      },
-                      "ExpressionAttributeValues": {
-                        ":ad_id": { "S": "$input.params('id')" },
-                        ":start": { "S": "$input.params('start')" },
-                        ":end": { "S": "$input.params('end')" }
-                      },
-                      "KeyConditionExpression": "#ad_id = :ad_id AND #day BETWEEN :start AND :end",
-                      #if($input.params('page') != "")
-                      "ExclusiveStartKey": $util.parseJSON($util.base64Decode($input.params('page'))),
-                      #end
-                      "Limit": $input.params('limit')
-                    }
-                requestParameters:
-                  integration.request.header.Content-Type: "'x-amz-json-1.1'"
-                responses:
-                  '200':
-                    statusCode: 200
-                    responseTemplates:
-                      application/json: |
-                        {
-                          #if($input.path('$.LastEvaluatedKey'))
-                          "next": "$util.base64Encode($input.json('$.LastEvaluatedKey'))",
-                          #end
-                          "count": $input.path('$.Count'),
-                          "days": [
-                            #foreach($elem in $input.path('$.Items'))
-                            {
-                              "day": "$elem.day",
-                              "impressions": $elem.impressions,
-                              "clicks": $elem.clicks,
-                              "clickthrough_rate": $elem.clickthrough_rate
-                            }#if($foreach.hasNext),#end
-                            #end
-                          ]
-                        }
-              responses:
-                '200':
-                  description: |
-                    The query was successful.
-                  content:
-                    application/json:
-                      schema:
-                        $ref: "#/components/schemas/AdvertisingInfo"
-        x-amazon-apigateway-request-validators:
-          all:
-            validateRequestBody: true
-            validateRequestParameters: true
-        x-amazon-apigateway-request-validator: all
-        components:
-          schemas:
-            DataEvents:
-              type: object
-              properties:
-                events:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/DataEvent"
-                  minItems: 1
-                  maxItems: 500
-              required:
-                - events
-              additionalProperties: false
-            DataEvent:
-              type: object
-              properties:
-                session_id:
-                  type: string
-                  format: uuid
-                context_id:
-                  type: string
-                  format: uuid
-                parent_id:
-                  type: string
-                  format: uuid
-                actor_type:
-                  type:
-                    $ref: "#/components/schemas/Type"
-                actor_id:
-                  type: string
-                  format: uuid
-                event_type:
-                  type:
-                    $ref: "#/components/schemas/Type"
-                event_id:
-                  type: string
-                  format: uuid
-                object_type:
-                  type:
-                    $ref: "#/components/schemas/Type"
-                object_id:
-                  type: string
-                  format: uuid
-                occurred_at:
-                  type:
-                    $ref: "#/components/schemas/Timestamp"
-              required:
-                - session_id
-                - context_id
-                - actor_type
-                - actor_id
-                - event_type
-                - event_id
-                - object_type
-                - object_id
-                - occurred_at
-              additionalProperties: false
-            BatchWriteResponse:
-              type: object
-              properties:
-                records:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/BatchWriteRecord"
-                  minItems: 1
-                  maxItems: 500
-              required:
-                - records
-              additionalProperties: false
-            BatchWriteRecord:
-              type: object
-              properties:
-                failed:
-                  type: boolean
-                error_code:
-                  type: string
-                error_message:
-                  type: string
-              required:
-                - failed
-              additionalProperties: false
-            AdvertisingInfo:
-              type: object
-              properties:
-                next:
-                  type:
-                    $ref: "#/components/schemas/Base64"
-                count:
-                  type: integer
-                  minimum: 0
-                days:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/AdvertisingDay"
-              required:
-                - count
-                - days
-              additionalProperties: false
-            AdvertisingDay:
-              type: object
-              properties:
-                day:
-                  $ref: "#/components/schemas/Date"
-                impressions:
-                  type: integer
-                  minimum: 0
-                clicks:
-                  type: integer
-                  minimum: 0
-                clickthrough_rate:
-                  type: number
-                  minimum: 0.0
-                  maximum: 1.0
-              required:
-                - day
-                - impressions
-                - clicks
-                - clickthrough_rate
-              additionalProperties: false
-            Error:
-              type: object
-              properties:
-                code:
-                  type: integer
-                  format: int32
-                message:
-                  type: string
-              required:
-                - code
-                - message
-              additionalProperties: false
-            Type:
-              type: string
-              format: "^[a-z]+[-a-z0-9]*$"
-            Date:
-              type: string
-              format: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
-            Timestamp:
-              type: string
-              format: "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?$"
-            Base64:
-              type: string
-              format: "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        "Fn::Transform":
+          Name: AWS::Include
+          Parameters:
+            Location: api.yaml
 
   Certificate:
     Type: AWS::CertificateManager::Certificate
