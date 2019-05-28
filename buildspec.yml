@@ -7,7 +7,7 @@ phases:
     commands:
       # AWS Codebuild Go images use /go for the $GOPATH so let's symlink our
       # application source code into that directory structure.
-      - ln -s "${CODEBUILD_SRC_DIR}" "/go/src/app"
+      - ln -s "${CODEBUILD_SRC_DIR}" "/go/src/github.com/watersofoblivion/dataless"
 
       # Install dependencies
       - go get golang.org/x/lint/golint
@@ -15,15 +15,15 @@ phases:
   pre_build:
     commands:
       # Make sure we're in the project directory within our GOPATH
-      - cd "/go/src/app"
+      - cd "/go/src/github.com/watersofoblivion/dataless"
 
       # Fetch dependencies
-      - go get ./...
+      - go get github.com/watersofoblivion/dataless/...
 
       # Lint, vet, and test
       - golint -set_exit_status
-      - go vet ./...
-      - go test ./...
+      - go vet github.com/watersofoblivion/dataless/...
+      - go test github.com/watersofoblivion/dataless/...
   build:
     commands:
       # Build the Go lambdas
