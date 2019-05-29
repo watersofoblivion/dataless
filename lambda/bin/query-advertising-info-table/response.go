@@ -19,6 +19,9 @@ func APIGWResponse(status int, body interface{}, headers map[string]string) (eve
 			return events.APIGatewayProxyResponse{}, err
 		}
 
+		if resp.Headers == nil {
+			resp.Headers = make(map[string]string)
+		}
 		resp.Headers["Content-Type"] = "application/json"
 		resp.Body = string(bs)
 	}
