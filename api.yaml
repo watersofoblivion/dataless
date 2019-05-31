@@ -17,8 +17,12 @@ paths:
       x-amazon-apigateway-integration:
         type: AWS_PROXY
         httpMethod: POST
-        uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IngestEventsLambda.Arn}/invocations"
-        credentials: !GetAtt APIRole.Arn
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IngestEventsLambda.Arn}/invocations"
+        credentials:
+          Fn::GetAtt:
+            - APIRole
+            - Arn
         passthroughBehavior: when_no_match
       responses:
         '200':
