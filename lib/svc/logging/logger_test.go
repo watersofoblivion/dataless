@@ -1,4 +1,4 @@
-package svc
+package logging
 
 import (
 	"context"
@@ -7,11 +7,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMockPublisher(t *testing.T) {
+func TestMockLogger(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("Go", func(t *testing.T) {
-		mock := new(MockPublisher)
+		mock := new(MockLogger)
 		mock.On("Go", ctx).Return()
 
 		mock.Go(ctx)
@@ -21,7 +21,7 @@ func TestMockPublisher(t *testing.T) {
 
 	t.Run("Errors", func(t *testing.T) {
 		errors := (<-chan error)(make(chan error))
-		mock := new(MockPublisher)
+		mock := new(MockLogger)
 		mock.On("Errors").Return(errors)
 
 		returned := mock.Errors()
@@ -31,7 +31,7 @@ func TestMockPublisher(t *testing.T) {
 	})
 
 	t.Run("Close", func(t *testing.T) {
-		mock := new(MockPublisher)
+		mock := new(MockLogger)
 		mock.On("Close", ctx).Return()
 
 		mock.Close(ctx)
@@ -42,10 +42,10 @@ func TestMockPublisher(t *testing.T) {
 	t.Run("Publish", func(t *testing.T) {
 		v := map[string]string{"foo": "bar"}
 
-		mock := new(MockPublisher)
-		mock.On("Publish", v).Return(nil)
+		mock := new(MockLogger)
+		mock.On("Log", v).Return(nil)
 
-		mock.Publish(v)
+		mock.Log(v)
 
 		mock.AssertExpectations(t)
 	})

@@ -1,4 +1,4 @@
-package svc
+package bang
 
 import (
 	"context"

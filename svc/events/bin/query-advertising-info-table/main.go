@@ -1,7 +1,12 @@
 package main
 
-import "github.com/aws/aws-lambda-go/lambda"
+import (
+	"github.com/aws/aws-lambda-go/lambda"
+
+	"github.com/watersofoblivion/dataless/svc/events"
+)
 
 func main() {
-	lambda.Start(Handler)
+	controller := events.EnvController()
+	lambda.Start(controller.AdvertisingInfo)
 }

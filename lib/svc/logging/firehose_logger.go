@@ -1,4 +1,4 @@
-package svc
+package logging
 
 import (
 	"bytes"
@@ -19,7 +19,7 @@ const (
 	FirehoseMaxBatchSize = 500
 )
 
-type FirehosePublisher struct {
+type FirehoseLogger struct {
 	Timeout            time.Duration
 	BatchSize          int
 	Ticker             *time.Ticker
@@ -31,8 +31,8 @@ type FirehosePublisher struct {
 	done               chan struct{}
 }
 
-func NewFirehosePublisher(deliveryStreamName string, fh firehoseiface.FirehoseAPI) *FirehosePublisher {
-	return &FirehosePublisher{
+func NewFirehoseLogger(deliveryStreamName string, fh firehoseiface.FirehoseAPI) *FirehoseLogger {
+	return &FirehoseLogger{
 		BatchSize:          FirehoseMaxBatchSize,
 		Ticker:             time.NewTicker(48 * time.Hour),
 		fh:                 fh,
@@ -44,43 +44,43 @@ func NewFirehosePublisher(deliveryStreamName string, fh firehoseiface.FirehoseAP
 	}
 }
 
-func (publisher *FirehosePublisher) Go(ctx context.Context) {
+func (logger *FirehoseLogger) Go(ctx context.Context) {
 	records := make(chan []byte)
 	batches := make(chan []*firehose.Record)
 
-	publisher.wg.Add(1)
-	go publisher.serialize(ctx, publisher.values, records, publisher.errors)
+	logger.wg.Add(1)
+	go logger.serialize(ctx, logger.values, records, logger.errors)
 
-	publisher.wg.Add(1)
-	go publisher.publish(ctx, records, batches)
+	logger.wg.Add(1)
+	go logger.publish(ctx, records, batches)
 
-	publisher.wg.Add(1)
-	go publisher.flush(ctx, batches, publisher.errors)
+	logger.wg.Add(1)
+	go logger.flush(ctx, batches, logger.errors)
 
-	publisher.wg.Wait()
-	publisher.done <- struct{}{}
+	logger.wg.Wait()
+	logger.done <- struct{}{}
 }
 
-func (publisher *FirehosePublisher) Publish(v interface{}) {
-	publisher.values <- v
+func (logger *FirehoseLogger) Log(v interface{}) {
+	logger.values <- v
 }
 
-func (publisher *FirehosePublisher) Errors() <-chan error {
-	return publisher.errors
+func (logger *FirehoseLogger) Errors() <-chan error {
+	return logger.errors
 }
 
-func (publisher *FirehosePublisher) Close(ctx context.Context) {
-	close(publisher.values)
-	defer close(publisher.errors)
+func (logger *FirehoseLogger) Close(ctx context.Context) {
+	close(logger.values)
+	defer close(logger.errors)
 
 	select {
 	case <-ctx.Done():
-	case <-publisher.done:
+	case <-logger.done:
 	}
 }
 
-func (publisher *FirehosePublisher) serialize(ctx context.Context, values <-chan interface{}, records chan<- []byte, errors chan<- error) {
-	defer publisher.wg.Done()
+func (logger *FirehoseLogger) serialize(ctx context.Context, values <-chan interface{}, records chan<- []byte, errors chan<- error) {
+	defer logger.wg.Done()
 	defer close(records)
 
 	buf := new(bytes.Buffer)
@@ -96,8 +96,8 @@ func (publisher *FirehosePublisher) serialize(ctx context.Context, values <-chan
 	}
 }
 
-func (publisher *FirehosePublisher) publish(ctx context.Context, records <-chan []byte, batches chan<- []*firehose.Record) {
-	defer publisher.wg.Done()
+func (logger *FirehoseLogger) publish(ctx context.Context, records <-chan []byte, batches chan<- []*firehose.Record) {
+	defer logger.wg.Done()
 
 	batch := make([]*firehose.Record, 0, FirehoseMaxBatchSize)
 
@@ -111,32 +111,32 @@ func (publisher *FirehosePublisher) publish(ctx context.Context, records <-chan 
 
 	for {
 		select {
-		case <-publisher.Ticker.C:
+		case <-logger.Ticker.C:
 			batches <- batch
-			batch = make([]*firehose.Record, 0, publisher.BatchSize)
+			batch = make([]*firehose.Record, 0, logger.BatchSize)
 		case bs, more := <-records:
 			if !more {
 				return
 			}
 			batch = append(batch, &firehose.Record{Data: bs})
-			if len(batch) == publisher.BatchSize {
+			if len(batch) == logger.BatchSize {
 				batches <- batch
-				batch = make([]*firehose.Record, 0, publisher.BatchSize)
+				batch = make([]*firehose.Record, 0, logger.BatchSize)
 			}
 		}
 	}
 }
 
-func (publisher *FirehosePublisher) flush(ctx context.Context, batches <-chan []*firehose.Record, errors chan<- error) {
-	defer publisher.wg.Done()
+func (logger *FirehoseLogger) flush(ctx context.Context, batches <-chan []*firehose.Record, errors chan<- error) {
+	defer logger.wg.Done()
 
 	input := new(firehose.PutRecordBatchInput)
-	input.SetDeliveryStreamName(publisher.deliveryStreamName)
+	input.SetDeliveryStreamName(logger.deliveryStreamName)
 
 	var batch []*firehose.Record
 
 	publishBatch := func() error {
-		resp, err := publisher.fh.PutRecordBatchWithContext(ctx, input)
+		resp, err := logger.fh.PutRecordBatchWithContext(ctx, input)
 		if err != nil {
 			return err
 		}
@@ -165,7 +165,7 @@ func (publisher *FirehosePublisher) flush(ctx context.Context, batches <-chan []
 
 		eb := backoff.NewExponentialBackOff()
 		eb.InitialInterval = 100 * time.Millisecond
-		eb.MaxElapsedTime = publisher.Timeout
+		eb.MaxElapsedTime = logger.Timeout
 		ebCtx := backoff.WithContext(eb, ctx)
 
 		if err := backoff.RetryNotify(publishBatch, ebCtx, notifyBackoff); err != nil {

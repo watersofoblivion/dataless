@@ -1,4 +1,4 @@
-package svc
+package logging
 
 import (
 	"bytes"
@@ -18,21 +18,21 @@ import (
 	"github.com/watersofoblivion/dataless/lib/amzmock"
 )
 
-func TestCollector(t *testing.T) {
+func TestLogger(t *testing.T) {
 	ctx := context.Background()
 	deliveryStreamName := "delivery-stream-name"
 	fh := new(amzmock.Firehose)
 
-	var publisher *FirehosePublisher
+	var logger *FirehoseLogger
 	t.Run("Constructor", func(t *testing.T) {
-		publisher = NewFirehosePublisher(deliveryStreamName, fh)
+		logger = NewFirehoseLogger(deliveryStreamName, fh)
 
-		assert.Equal(t, time.Duration(0), publisher.Timeout)
-		assert.Equal(t, FirehoseMaxBatchSize, publisher.BatchSize)
-		assert.NotNil(t, publisher.Ticker)
+		assert.Equal(t, time.Duration(0), logger.Timeout)
+		assert.Equal(t, FirehoseMaxBatchSize, logger.BatchSize)
+		assert.NotNil(t, logger.Ticker)
 	})
 
-	go publisher.Go(ctx)
+	go logger.Go(ctx)
 
 	record := map[string]string{"foo": "bar"}
 	buf := new(bytes.Buffer)
@@ -57,16 +57,16 @@ func TestCollector(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer publisher.Close(ctx)
+		defer logger.Close(ctx)
 
-		publisher.Publish(record)
-		publisher.Publish(make(chan int))
+		logger.Log(record)
+		logger.Log(make(chan int))
 	}()
 
 	_, expectedErr := json.Marshal(make(chan int))
 
 	errCount := 0
-	for err := range publisher.Errors() {
+	for err := range logger.Errors() {
 		errCount++
 		assert.Equal(t, expectedErr, err)
 	}
@@ -78,8 +78,8 @@ func TestCollector(t *testing.T) {
 	t.Run("retries failed records", func(t *testing.T) {
 		fh := new(amzmock.Firehose)
 
-		publisher := NewFirehosePublisher(deliveryStreamName, fh)
-		go publisher.Go(ctx)
+		logger := NewFirehoseLogger(deliveryStreamName, fh)
+		go logger.Go(ctx)
 
 		buf := new(bytes.Buffer)
 		encoder := json.NewEncoder(buf)
@@ -157,14 +157,14 @@ func TestCollector(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			defer publisher.Close(ctx)
+			defer logger.Close(ctx)
 
 			for _, record := range []map[string]string{recordOne, recordTwo, recordThree} {
-				publisher.Publish(record)
+				logger.Log(record)
 			}
 		}()
 
-		for err := range publisher.Errors() {
+		for err := range logger.Errors() {
 			assert.NoError(t, err)
 		}
 
@@ -182,11 +182,11 @@ func TestCollector(t *testing.T) {
 		t.Run("on full buffer", func(t *testing.T) {
 			fh := new(amzmock.Firehose)
 
-			publisher := NewFirehosePublisher(deliveryStreamName, fh)
-			go publisher.Go(ctx)
+			logger := NewFirehoseLogger(deliveryStreamName, fh)
+			go logger.Go(ctx)
 
-			records := make([]*firehose.Record, publisher.BatchSize)
-			responses := make([]*firehose.PutRecordBatchResponseEntry, publisher.BatchSize)
+			records := make([]*firehose.Record, logger.BatchSize)
+			responses := make([]*firehose.PutRecordBatchResponseEntry, logger.BatchSize)
 			for i := range records {
 				records[i] = &firehose.Record{Data: bs}
 				responses[i] = &firehose.PutRecordBatchResponseEntry{
@@ -216,14 +216,14 @@ func TestCollector(t *testing.T) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				defer publisher.Close(ctx)
+				defer logger.Close(ctx)
 
-				for i := 0; i < publisher.BatchSize+1; i++ {
-					publisher.Publish(record)
+				for i := 0; i < logger.BatchSize+1; i++ {
+					logger.Log(record)
 				}
 			}()
 
-			for err := range publisher.Errors() {
+			for err := range logger.Errors() {
 				assert.NoError(t, err)
 			}
 
@@ -234,9 +234,9 @@ func TestCollector(t *testing.T) {
 		t.Run("on tick", func(t *testing.T) {
 			fh := new(amzmock.Firehose)
 
-			publisher := NewFirehosePublisher(deliveryStreamName, fh)
-			publisher.Ticker = time.NewTicker(100 * time.Millisecond)
-			go publisher.Go(ctx)
+			logger := NewFirehoseLogger(deliveryStreamName, fh)
+			logger.Ticker = time.NewTicker(100 * time.Millisecond)
+			go logger.Go(ctx)
 
 			fh.On("PutRecordBatchWithContext", ctx, input).Return(output, nil)
 
@@ -244,13 +244,13 @@ func TestCollector(t *testing.T) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				defer publisher.Close(ctx)
+				defer logger.Close(ctx)
 
-				publisher.Publish(record)
+				logger.Log(record)
 				time.Sleep(150 * time.Millisecond)
 			}()
 
-			for err := range publisher.Errors() {
+			for err := range logger.Errors() {
 				assert.NoError(t, err)
 			}
 
@@ -266,9 +266,9 @@ func TestCollector(t *testing.T) {
 
 			fh := new(amzmock.Firehose)
 
-			publisher := NewFirehosePublisher(deliveryStreamName, fh)
-			publisher.Timeout = 100 * time.Millisecond
-			go publisher.Go(ctx)
+			logger := NewFirehoseLogger(deliveryStreamName, fh)
+			logger.Timeout = 100 * time.Millisecond
+			go logger.Go(ctx)
 
 			fh.On("PutRecordBatchWithContext", mock.Anything, mock.Anything).Return(nil, returnedErr)
 
@@ -276,13 +276,13 @@ func TestCollector(t *testing.T) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				defer publisher.Close(ctx)
+				defer logger.Close(ctx)
 
-				publisher.Publish(record)
+				logger.Log(record)
 			}()
 
 			errCount := 0
-			for err := range publisher.Errors() {
+			for err := range logger.Errors() {
 				errCount++
 				assert.Equal(t, expectedErr, err)
 			}

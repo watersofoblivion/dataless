@@ -1,4 +1,4 @@
-package svc
+package rest
 
 import (
 	"encoding/json"
@@ -6,13 +6,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 )
 
-type Service struct{}
-
-func New() *Service {
-	return new(Service)
-}
-
-func (service *Service) Respond(status int, body interface{}, headers map[string]string) (events.APIGatewayProxyResponse, error) {
+func Respond(status int, body interface{}, headers map[string]string) (events.APIGatewayProxyResponse, error) {
 	resp := events.APIGatewayProxyResponse{
 		StatusCode: status,
 		Headers:    headers,

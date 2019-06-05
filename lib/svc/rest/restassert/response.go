@@ -1,4 +1,4 @@
-package svcassert
+package restassert
 
 import (
 	"encoding/json"
