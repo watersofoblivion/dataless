@@ -1,58 +1,45 @@
 version: 0.2
-
 phases:
   install:
     runtime-versions:
       golang: 1.12
     commands:
-      # AWS Codebuild Go images use /go for the $GOPATH so let's symlink our
-      # application source code into that directory structure.
-      - ln -s "${CODEBUILD_SRC_DIR}" "/go/src/app"
-
-      # Install dependencies
       - go get golang.org/x/lint/golint
       - go get -u github.com/stretchr/testify
   pre_build:
     commands:
-      # Make sure we're in the project directory within our GOPATH
-      - cd "/go/src/app"
-
-      # Fetch dependencies
+      - cd "${CODEBUILD_SRC_DIR}"
       - go get ./...
-
-      # Lint, vet, and test
       - golint -set_exit_status
       - go vet ./...
       - go test ./...
   build:
     commands:
-      # Build the Go lambdas
-      - mkdir -p bin/
+      - STAGING_DIR="$(mktemp -d)"
       - |
-        for LAMBDA in $(find ./lambda/bin -type d -mindepth 1 -maxdepth 1); do
-          go build -o $(realpath --relative-to=./lambda ${LAMBDA}) ${LAMBDA}
+        set -e
+        set -x
+        for SVC in $(find "./svc" -type d -mindepth 1 -maxdepth 1); do
+          for LAMBDA in $(find "${SVC}/bin" -type d -mindepth 1 -maxdepth 1); do
+            go build -o "./bin/$(basename "${LAMBDA}")" "${LAMBDA}"
+          done
+          zip -rqDm "${SVC}/lambdas.zip" ./bin/
+          mkdir -p "${STAGING_DIR}/$(basename ${SVC})/"
+          cp -r "${SVC}/scripts/" "${STAGING_DIR}/$(basename ${SVC})/"
         done
-      - zip -r lambdas.zip bin/
-
-      # Copy lambdas, scripts, and static assets to S3
-      - aws s3 cp lambdas.zip "s3://${CODE_BUCKET}/build/${CODEBUILD_BUILD_ID}/lambda/lambdas.zip"
-      - aws s3 cp --recursive scripts/ "s3://${CODE_BUCKET}/build/${CODEBUILD_BUILD_ID}/scripts/"
-      - aws s3 cp --recursive public/ "s3://${CODE_BUCKET}/build/${CODEBUILD_BUILD_ID}/public/" --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
-
-      # Make the install_task_runner script public
-      - aws s3api put-object-acl --acl authenticated-read --bucket "${CODE_BUCKET}" --key "build/${CODEBUILD_BUILD_ID}/scripts/emr/install_task_runner.sh"
-
-      # Package application with AWS CloudFormation/SAM
-      - aws cloudformation package --template template.yaml --s3-bucket "${CODE_BUCKET}" --s3-prefix "build/${CODEBUILD_BUILD_ID}/" --output-template cloudformation.yaml
+        set +x
+      - aws s3 sync "${STAGING_DIR}/" "s3://${BUCKET}/"
+      - aws cloudformation package --template app.yaml --s3-bucket "${BUCKET}" --output-template template.yaml
   post_build:
     commands:
       - if [ ! -f ./config/${BRANCH}.json ]; then exit "No config file found"; fi
       - |
-        cat ./config/${BRANCH}.json | jq '. + {"Parameters": (.Parameters + {"CodeBucket":"${CODE_BUCKET}","CodePrefix":"build/${CODEBUILD_BUILD_ID}","AccessKeyID":"${ACCESS_KEY_ID}","SecretAccessKey":"${SECRET_ACCESS_KEY}"})}' > ./config-${BRANCH}.json
-      - envsubst < ./config-${BRANCH}.json > config.json
-
+        cat ./config/${BRANCH}.json \
+        | jq -f config.jq \
+        | envsubst \
+        > template-config.json
 artifacts:
   type: zip
   files:
-    - cloudformation.yaml
-    - config.json
+    - template.yaml
+    - template-config.json

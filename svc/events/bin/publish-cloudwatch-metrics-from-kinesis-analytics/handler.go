@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/aws/aws-xray-sdk-go/xray"
 )
 
 var publisher *MetricsPublisher
@@ -16,7 +15,6 @@ var publisher *MetricsPublisher
 func init() {
 	s := session.New()
 	cw := cloudwatch.New(s)
-	xray.AWS(cw.Client)
 
 	publisher = NewMetricsPublisher(cw)
 }

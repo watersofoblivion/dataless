@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
-	"github.com/aws/aws-xray-sdk-go/xray"
 	"github.com/google/uuid"
 )
 
@@ -26,10 +25,6 @@ var (
 	tableName = os.Getenv("TABLE_NAME")
 	ddb       = dynamodb.New(session.New())
 )
-
-func init() {
-	xray.AWS(ddb.Client)
-}
 
 func Handler(ctx context.Context, evt events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	req, err := RequestFromEvent(evt)

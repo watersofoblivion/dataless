@@ -2,6 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 
 Metadata:
+  # Documentation for the AWS console
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label: Source Location
@@ -193,11 +194,11 @@ Resources:
         Image: aws/codebuild/standard:2.0
         EnvironmentVariables:
           - Type: PLAINTEXT
-            Name: BRANCH
-            Value: !Ref Branch
-          - Type: PLAINTEXT
-            Name: CODE_BUCKET
+            Name: BUCKET
             Value: !Ref Bucket
+          - Type: PLAINTEXT
+            Name: GO111MODULE
+            Value: "on"
           - Type: PLAINTEXT
             Name: ACCESS_KEY_ID
             Value: !Ref AccessKeyID
@@ -290,8 +291,11 @@ Resources:
                 Capabilities: CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
 
   # TODO
+  #################
+  # Set up a CloudFront-cached static site behind Route53 DNS.
   #
-  # Copied from external source.  Sets up a
+  # Copied/pasted from an external source.  Not integrated yet.
+  #################
   #
   # Certificate:
   #   Type: AWS::CertificateManager::Certificate
