@@ -801,10 +801,6 @@ Resources:
               SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
             OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
             Columns:
-              - Name: session_id
-                Type: string
-              - Name: user_id
-                Type: string
               - Name: ad_id
                 Type: string
               - Name: impression_at

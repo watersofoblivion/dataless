@@ -5,7 +5,7 @@ WITH
       TO_DATE(impression_at) AS day,
       click_at IS NOT NULL   AS clicked
     FROM
-      warehouse.advertising
+      advertising.advertising
     WHERE
           year = ${PARTITION_YEAR}
       AND month = ${PARTITION_MONTH}
@@ -34,10 +34,10 @@ INSERT OVERWRITE
   TABLE ${output1}
 SELECT
   MAP(
-    "ad_id", impressions.ad_id,
-    "day", impressions.day,
-    "impressions", impressions.count,
-    "clicks", clicks.count,
+    "ad_id",             impressions.ad_id,
+    "day",               impressions.day,
+    "impressions",       impressions.count,
+    "clicks",            clicks.count,
     "clickthrough_rate", (CAST(clicks.count AS float) / CAST(impressions.count AS float))
   ) AS item
 FROM
