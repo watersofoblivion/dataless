@@ -18,11 +18,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/google/uuid"
 	yaml "gopkg.in/yaml.v2"
-
-	"github.com/watersofoblivion/dataless/lib/bang"
 )
 
 const MaxBatchSize = 500
@@ -117,7 +114,7 @@ func (publisher *Publisher) Go(ctx context.Context) {
 	publisher.wg.Wait()
 }
 
-func (publisher *Publisher) Errors() bang.Errors {
+func (publisher *Publisher) Errors() <-chan error {
 	return publisher.errors
 }
 
@@ -185,7 +182,7 @@ func (publisher *Publisher) post(bodies <-chan io.Reader, errors chan<- error) {
 
 		for _, record := range response.Records {
 			if record.Failed {
-				errors <- awserr.New(record.ErrorCode, record.ErrorMessage, nil)
+				errors <- fmt.Errorf("%s: %s", record.ErrorCode, record.ErrorMessage)
 			}
 		}
 
@@ -298,30 +295,32 @@ func main() {
 	clicks := NewPublisher(baseURL.ResolveReference(&url.URL{
 		Path: filepath.Join(baseURL.Path, "/clicks"),
 	}).String(), "clicks")
-	collector := bang.NewErrorCollector()
-	collector.Collect(impressions.Errors())
-	collector.Collect(clicks.Errors())
 	users := NewUsers(config, impressions.Records(), clicks.Records())
 
 	ctx, cancel := context.WithTimeout(context.Background(), config.Duration)
 
 	go impressions.Go(ctx)
 	go clicks.Go(ctx)
-	go collector.Go(ctx)
 	go users.Go(ctx)
 
 	wg := new(sync.WaitGroup)
-	wg.Add(1)
+	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		for err := range collector.Errors() {
+		for err := range impressions.Errors() {
+			fmt.Println()
+			log.Printf("%s", err)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		for err := range clicks.Errors() {
 			fmt.Println()
 			log.Printf("%s", err)
 		}
 	}()
 
 	defer wg.Wait()
-	defer collector.Close(ctx)
 
 	signals := make(chan os.Signal)
 	go func() {

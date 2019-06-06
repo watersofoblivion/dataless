@@ -878,14 +878,14 @@ Resources:
       CertificateArn: !Ref Certificate
       DomainName: !Ref BaseDNSName
 
-  BasePathMapping:
-    Type: AWS::ApiGateway::BasePathMapping
-    Condition: DNSEnabled
-    Properties:
-      BasePath: advertising
-      DomainName: !Ref DomainName
-      RestApiId: !GetAtt AdvertisingService.Outputs.API
-      Stage: !GetAtt AdvertisingService.Outputs.Stage
+  # BasePathMapping:
+  #   Type: AWS::ApiGateway::BasePathMapping
+  #   Condition: DNSEnabled
+  #   Properties:
+  #     BasePath: advertising
+  #     DomainName: !Ref DomainName
+  #     RestApiId: !GetAtt AdvertisingService.Outputs.API
+  #     Stage: !GetAtt AdvertisingService.Outputs.Stage
 
   #######
   # DNS #
