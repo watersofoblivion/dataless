@@ -882,6 +882,7 @@ Resources:
     Type: AWS::ApiGateway::BasePathMapping
     Condition: DNSEnabled
     Properties:
+      BasePath: advertising
       DomainName: !Ref DomainName
       RestApiId: !GetAtt AdvertisingService.Outputs.API
       Stage: !GetAtt AdvertisingService.Outputs.Stage

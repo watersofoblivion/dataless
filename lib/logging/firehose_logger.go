@@ -47,13 +47,9 @@ func (logger *FirehoseLogger) Go(ctx context.Context) {
 	records := make(chan []byte)
 	batches := make(chan []*firehose.Record)
 
-	logger.wg.Add(1)
+	logger.wg.Add(3)
 	go logger.serialize(ctx, logger.values, records, logger.errors)
-
-	logger.wg.Add(1)
 	go logger.publish(ctx, records, batches)
-
-	logger.wg.Add(1)
 	go logger.flush(ctx, batches, logger.errors)
 
 	logger.wg.Wait()
