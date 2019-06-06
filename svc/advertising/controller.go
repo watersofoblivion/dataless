@@ -101,6 +101,7 @@ func (controller *Controller) PublishToCloudWatch(ctx context.Context, input eve
 
 	for _, record := range input.Records {
 		metric := new(inst.Metric)
+		fmt.Println(string(record.Data))
 		if err := json.Unmarshal(record.Data, metric); err != nil {
 			log.Printf("error unmarshaling record %s (dropped): %s", record.RecordID, err)
 			resp.Records = append(resp.Records, events.KinesisAnalyticsOutputDeliveryResponseRecord{
