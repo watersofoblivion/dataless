@@ -811,7 +811,7 @@ Resources:
         SourceVersion: !Ref SourceVersion
         Build: !Ref Build
         CodeBucket: !Ref CodeBucket
-        CodePrefix: !Ref CodePrefix
+        CodePrefix: !Sub "${CodePrefix}/advertising"
         KeyPair: !Ref KeyPair
         Stage: !Ref Stage
         DeploymentPreference: !Ref DeploymentPreference
