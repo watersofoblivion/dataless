@@ -289,7 +289,7 @@ Outputs:
     Value: !If
       - DNSEnabled
       - !Ref DNSName
-      - !Sub "https://${API}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${Stage}"
+      - !GetAtt AdvertisingService.Outputs.BaseURL
 
 Mappings:
   AMIs:
