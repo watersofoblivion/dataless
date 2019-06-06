@@ -473,43 +473,25 @@ Resources:
   Redshift:
     Type: AWS::Redshift::Cluster
     Condition: RedshiftEnabled
-    Properties: !If
-      - RedshiftSingleNode
-      - ClusterType: single-node
-        ClusterIdentifier: !Sub "${AWS::StackName}-${AWS::Region}-redshift-cluster"
-        DBName: "warehouse"
-        Encrypted: true
-        MasterUsername: "warehouse"
-        MasterUserPassword: "War340u5e!"
-        NodeType: !Ref RedshiftNodeType
-        ClusterSubnetGroupName: !Ref RedshiftClusterSubnetGroup
-        VpcSecurityGroupIds:
-          - !Ref SecurityGroup
-          - !GetAtt VPC.DefaultSecurityGroup
-        IamRoles:
-          - !GetAtt RedshiftRole.Arn
-          # - !GetAtt PipelineRole.Arn
-          # - !GetAtt PipelineResourceRole.Arn
-        PubliclyAccessible: true
-        AvailabilityZone: !GetAtt Subnet.AvailabilityZone
-      - ClusterType: multi-node
-        ClusterIdentifier: !Sub "${AWS::StackName}-${AWS::Region}-redshift-cluster"
-        DBName: "warehouse"
-        Encrypted: true
-        MasterUsername: "warehouse"
-        MasterUserPassword: "War340u5e!"
-        NodeType: !Ref RedshiftNodeType
-        NumberOfNodes: !Ref RedshiftNumberOfNodes
-        ClusterSubnetGroupName: !Ref RedshiftClusterSubnetGroup
-        VpcSecurityGroupIds:
-          - !Ref SecurityGroup
-          - !GetAtt VPC.DefaultSecurityGroup
-        IamRoles:
-          - !GetAtt RedshiftRole.Arn
-          # - !GetAtt PipelineRole.Arn
-          # - !GetAtt PipelineResourceRole.Arn
-        PubliclyAccessible: true
-        AvailabilityZone: !GetAtt Subnet.AvailabilityZone
+    Properties:
+      ClusterType: !If [RedshiftSingleNode, "single-node", "multi-node"]
+      ClusterIdentifier: !Sub "${AWS::StackName}-${AWS::Region}-redshift-cluster"
+      DBName: "warehouse"
+      Encrypted: true
+      MasterUsername: "warehouse"
+      MasterUserPassword: "War340u5e!"
+      NodeType: !Ref RedshiftNodeType
+      NumberOfNodes: !If [RedshiftSingleNode, !Ref AWS::NoValue, !Ref RedshiftNumberOfNodes]
+      ClusterSubnetGroupName: !Ref RedshiftClusterSubnetGroup
+      VpcSecurityGroupIds:
+        - !Ref SecurityGroup
+        - !GetAtt VPC.DefaultSecurityGroup
+      IamRoles:
+        - !GetAtt RedshiftRole.Arn
+        # - !GetAtt PipelineRole.Arn
+        # - !GetAtt PipelineResourceRole.Arn
+      PubliclyAccessible: true
+      AvailabilityZone: !GetAtt Subnet.AvailabilityZone
 
   ############
   # Instance #
