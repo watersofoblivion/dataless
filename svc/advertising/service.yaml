@@ -498,12 +498,12 @@ Resources:
         SELECT STREAM
           'Warehouse/Advertising'                                                                             AS "namespace",
           'Impressions'                                                                                       AS "name",
-          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "impressions".ROWTIME)) AS "at",
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd HH:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd HH:mm', "impressions".ROWTIME)) AS "at",
           CAST(COUNT(1) AS DOUBLE)                                                                            AS "value"
         FROM
           "impressions_001" AS "impressions"
         GROUP BY
-          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "impressions".ROWTIME)),
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd HH:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd HH:mm', "impressions".ROWTIME)),
           STEP("impressions".ROWTIME BY INTERVAL '60' SECOND)
         ;
       Inputs:
@@ -557,12 +557,12 @@ Resources:
         SELECT STREAM
           'Warehouse/Advertising'                                                                        AS "namespace",
           'Clicks'                                                                                       AS "name",
-          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "clicks".ROWTIME)) AS "at",
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd HH:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd HH:mm', "clicks".ROWTIME)) AS "at",
           CAST(COUNT(1) AS DOUBLE)                                                                       AS "value"
         FROM
           "clicks_001" AS "clicks"
         GROUP BY
-          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "clicks".ROWTIME)),
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd HH:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd HH:mm', "clicks".ROWTIME)),
           STEP("clicks".ROWTIME BY INTERVAL '60' SECOND)
         ;
       Inputs:
