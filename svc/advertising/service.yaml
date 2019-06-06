@@ -283,7 +283,7 @@ Resources:
                   ["Warehouse/Advertising", "Impressions"]
                 ],
                 "period": 60,
-                "stat": "Maximum",
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Impressions"
               }
@@ -297,7 +297,7 @@ Resources:
                   ["Warehouse/Advertising", "Clicks"]
                 ],
                 "period": 60,
-                "stat": "Maximum",
+                "stat": "Sum",
                 "region": "${AWS::Region}",
                 "title": "Clicks"
               }
@@ -389,60 +389,6 @@ Resources:
     Type: AWS::KinesisAnalytics::Application
     Properties:
       ApplicationCode: |
-        CREATE OR REPLACE STREAM "impression_counts" (
-          "at"    TIMESTAMP,
-          "value" DOUBLE
-        );
-
-        CREATE OR REPLACE PUMP "impressions_counter" AS
-        INSERT INTO "impression_counts"
-        SELECT STREAM
-          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "events".ROWTIME)) AS "at",
-          COUNT(1)                                                                                       AS "value"
-        FROM
-          "events_001" AS "events"
-        WHERE
-              "events"."object_type" = 'ad'
-          AND "events"."event_type" = 'impression'
-        GROUP BY
-          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "events".ROWTIME)),
-          STEP("events".ROWTIME BY INTERVAL '60' SECOND)
-        ;
-
-        CREATE OR REPLACE STREAM "click_counts" (
-          "at"    TIMESTAMP,
-          "value" DOUBLE
-        );
-
-        CREATE OR REPLACE PUMP "clicks_counter" AS
-        INSERT INTO "click_counts"
-        SELECT STREAM
-          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "events".ROWTIME)) AS "at",
-          COUNT(1)                                                                                       AS "value"
-        FROM
-          "events_001" AS "events"
-        WHERE
-              "events"."object_type" = 'ad'
-          AND "events"."event_type" = 'click'
-        GROUP BY
-          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "events".ROWTIME)),
-          STEP("events".ROWTIME BY INTERVAL '60' SECOND)
-        ;
-
-        CREATE OR REPLACE STREAM "clickthrough_rates" (
-          "at"    TIMESTAMP,
-          "value" DOUBLE
-        );
-
-        CREATE OR REPLACE PUMP "clickthrough_rate_computer" AS
-        INSERT INTO "clickthrough_rates"
-        SELECT STREAM
-          "impressions"."at"                                                       AS "at",
-          CAST("clicks"."value" AS DOUBLE) / CAST("impressions"."value" AS DOUBLE) AS "value"
-        FROM "impression_counts" OVER  (RANGE INTERVAL '2' MINUTE PRECEDING) AS "impressions"
-        JOIN "click_counts"      OVER  (RANGE INTERVAL '2' MINUTE PRECEDING) AS "clicks" ON "clicks"."at" = "impressions"."at"
-        ;
-
         CREATE OR REPLACE STREAM "metrics" (
           "namespace" VARCHAR(255),
           "name"      VARCHAR(255),
@@ -450,34 +396,18 @@ Resources:
           "value"     DOUBLE
         );
 
-        CREATE OR REPLACE PUMP "impressions_dumper" AS
+        CREATE OR REPLACE PUMP "counter" AS
         INSERT INTO "metrics"
         SELECT STREAM
-          'Warehouse/Advertising'     AS "namespace",
-          'Impressions'               AS "name",
-          "impression_counts"."at"    AS "at",
-          "impression_counts"."value" AS "value"
-        FROM "impression_counts"
-        ;
-
-        CREATE OR REPLACE PUMP "clicks_dumper" AS
-        INSERT INTO "metrics"
-        SELECT STREAM
-          'Warehouse/Advertising' AS "namespace",
-          'Clicks'                AS "name",
-          "click_counts"."at"     AS "at",
-          "click_counts"."value"  AS "value"
-        FROM "click_counts"
-        ;
-
-        CREATE OR REPLACE PUMP "clickthrough_rate_dumper" AS
-        INSERT INTO "metrics"
-        SELECT STREAM
-          'Warehouse/Advertising'       AS "namespace",
-          'ClickthroughRate'            AS "name",
-          "clickthrough_rates"."at"     AS "at",
-          "clickthrough_rates"."value"  AS "value"
-        FROM "clickthrough_rates"
+          'Warehouse/Advertising'                                                                             AS "namespace",
+          "Impressions"                                                                                       AS "name",
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "impressions".ROWTIME)) AS "at",
+          CAST(COUNT(1) AS DOUBLE)                                                                            AS "value"
+        FROM
+          "impressions_001" AS "impressions"
+        GROUP BY
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "impressions".ROWTIME)),
+          STEP("impressions".ROWTIME BY INTERVAL '60' SECOND)
         ;
       Inputs:
         - NamePrefix: impressions
@@ -492,33 +422,12 @@ Resources:
                 JSONMappingParameters:
                   RecordRowPath: "$"
             RecordColumns:
-              - Name: session_id
+              - Name: impression_id
                 SqlType: VARCHAR(64)
-                Mapping: "$.session_id"
-              - Name: context_id
+                Mapping: "$.impression_id"
+              - Name: ad_id
                 SqlType: VARCHAR(64)
-                Mapping: "$.context_id"
-              - Name: parent_id
-                SqlType: VARCHAR(64)
-                Mapping: "$.parent_id"
-              - Name: actor_type
-                SqlType: VARCHAR(255)
-                Mapping: "$.actor_type"
-              - Name: actor_id
-                SqlType: VARCHAR(64)
-                Mapping: "$.actor_id"
-              - Name: event_type
-                SqlType: VARCHAR(255)
-                Mapping: "$.event_type"
-              - Name: event_id
-                SqlType: VARCHAR(64)
-                Mapping: "$.event_id"
-              - Name: object_type
-                SqlType: VARCHAR(255)
-                Mapping: "$.object_type"
-              - Name: object_id
-                SqlType: VARCHAR(64)
-                Mapping: "$.object_id"
+                Mapping: "$.ad_id"
               - Name: occurred_at
                 SqlType: TIMESTAMP
                 Mapping: "$.occurred_at"
@@ -527,6 +436,68 @@ Resources:
     Type: AWS::KinesisAnalytics::ApplicationOutput
     Properties:
       ApplicationName: !Ref RealTimeImpressionsApplication
+      Output:
+        Name: metrics
+        DestinationSchema:
+          RecordFormatType: JSON
+        LambdaOutput:
+          ResourceARN: !GetAtt RealTimeAdvertisingLambda.Arn
+          RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
+
+  RealTimeClicksApplication:
+    Type: AWS::KinesisAnalytics::Application
+    Properties:
+      ApplicationCode: |
+        CREATE OR REPLACE STREAM "metrics" (
+          "namespace" VARCHAR(255),
+          "name"      VARCHAR(255),
+          "at"        TIMESTAMP,
+          "value"     DOUBLE
+        );
+
+        CREATE OR REPLACE PUMP "counter" AS
+        INSERT INTO "clicks"
+        SELECT STREAM
+          'Warehouse/Advertising'                                                                             AS "namespace",
+          "Clicks"                                                                                            AS "name",
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "impressions".ROWTIME)) AS "at",
+          CAST(COUNT(1) AS DOUBLE)                                                                            AS "value"
+        FROM
+          "clicks_001" AS "clicks"
+        GROUP BY
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "clicks".ROWTIME)),
+          STEP("clicks".ROWTIME BY INTERVAL '60' SECOND)
+        ;
+      Inputs:
+        - NamePrefix: clicks
+          KinesisFirehoseInput:
+            ResourceARN: !GetAtt ClicksDeliveryStream.Arn
+            RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
+          InputSchema:
+            RecordEncoding: UTF-8
+            RecordFormat:
+              RecordFormatType: JSON
+              MappingParameters:
+                JSONMappingParameters:
+                  RecordRowPath: "$"
+            RecordColumns:
+              - Name: impression_id
+                SqlType: VARCHAR(64)
+                Mapping: "$.impression_id"
+              - Name: click_id
+                SqlType: VARCHAR(64)
+                Mapping: "$.click_id"
+              - Name: ad_id
+                SqlType: VARCHAR(64)
+                Mapping: "$.ad_id"
+              - Name: occurred_at
+                SqlType: TIMESTAMP
+                Mapping: "$.occurred_at"
+
+  RealTimeClicksOutputs:
+    Type: AWS::KinesisAnalytics::ApplicationOutput
+    Properties:
+      ApplicationName: !Ref RealTimeClicksApplication
       Output:
         Name: metrics
         DestinationSchema:

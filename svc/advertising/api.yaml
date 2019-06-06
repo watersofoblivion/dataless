@@ -142,6 +142,9 @@ components:
     Impression:
       type: object
       properties:
+        impression_id:
+          type: string
+          format: uuid
         ad_id:
           type: string
           format: uuid
@@ -168,6 +171,9 @@ components:
       type: object
       properties:
         impression_id:
+          type: string
+          format: uuid
+        click_id:
           type: string
           format: uuid
         ad_id:
