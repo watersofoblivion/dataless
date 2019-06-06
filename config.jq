@@ -1,6 +1,6 @@
 . + {
   "Parameters": (.Parameters + {
-    "CodeBucket": "${CODE_BUCKET}",
+    "CodeBucket": "${BUCKET}",
     "CodePrefix": "build/${CODEBUILD_BUILD_ID}",
     "CodePipeline": "${CODEBUILD_INITIATOR}",
     "BuildRegion": "${AWS_REGION}",
