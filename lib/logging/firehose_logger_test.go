@@ -30,7 +30,7 @@ func TestLogger(t *testing.T) {
 		assert.Equal(t, time.Duration(0), logger.Timeout)
 		assert.Equal(t, FirehoseMaxBatchSize, logger.BatchSize)
 		assert.NotNil(t, logger.Ticker)
-		assert.Equal(t, deliveryStream, logger.DeliveryStream)
+		assert.Equal(t, deliveryStreamName, logger.DeliveryStreamName)
 	})
 
 	go logger.Go(ctx)
@@ -75,103 +75,6 @@ func TestLogger(t *testing.T) {
 
 	wg.Wait()
 	fh.AssertExpectations(t)
-
-	t.Run("retries failed records", func(t *testing.T) {
-		fh := new(amzmock.Firehose)
-
-		logger := NewFirehoseLogger(deliveryStreamName, fh)
-		go logger.Go(ctx)
-
-		buf := new(bytes.Buffer)
-		encoder := json.NewEncoder(buf)
-
-		recordOne := map[string]string{"record": "one"}
-		err := encoder.Encode(recordOne)
-		require.NoError(t, err)
-		bsOne := buf.Bytes()
-
-		buf.Reset()
-
-		recordTwo := map[string]string{"record": "two"}
-		err = encoder.Encode(recordTwo)
-		require.NoError(t, err)
-		bsTwo := buf.Bytes()
-
-		buf.Reset()
-
-		recordThree := map[string]string{"record": "three"}
-		err = encoder.Encode(recordThree)
-		require.NoError(t, err)
-		bsThree := buf.Bytes()
-
-		inputOne := new(firehose.PutRecordBatchInput)
-		inputOne.SetDeliveryStreamName(deliveryStreamName)
-		inputOne.SetRecords([]*firehose.Record{
-			{Data: bsOne},
-			{Data: bsTwo},
-			{Data: bsThree},
-		})
-
-		outputOne := new(firehose.PutRecordBatchOutput)
-		outputOne.SetFailedPutCount(2)
-		outputOne.SetRequestResponses([]*firehose.PutRecordBatchResponseEntry{
-			{RecordId: aws.String("record-one"), ErrorCode: aws.String("error-code"), ErrorMessage: aws.String("error-message")},
-			{RecordId: aws.String("record-two")},
-			{RecordId: aws.String("record-three"), ErrorCode: aws.String("error-code"), ErrorMessage: aws.String("error-message")},
-		})
-
-		// TODO: Shouldn't be mock.Anything
-		fh.On("PutRecordBatchWithContext", ctx, mock.Anything).Return(outputOne, nil).Once()
-
-		inputTwo := new(firehose.PutRecordBatchInput)
-		inputTwo.SetDeliveryStreamName(deliveryStreamName)
-		inputTwo.SetRecords([]*firehose.Record{
-			{Data: bsOne},
-			{Data: bsThree},
-		})
-
-		outputTwo := new(firehose.PutRecordBatchOutput)
-		outputTwo.SetFailedPutCount(1)
-		outputTwo.SetRequestResponses([]*firehose.PutRecordBatchResponseEntry{
-			{RecordId: aws.String("record-one"), ErrorCode: aws.String("error-code"), ErrorMessage: aws.String("error-message")},
-			{RecordId: aws.String("record-three")},
-		})
-
-		// TODO: Shouldn't be mock.Anything
-		fh.On("PutRecordBatchWithContext", ctx, mock.Anything).Return(outputTwo, nil).Once()
-
-		inputThree := new(firehose.PutRecordBatchInput)
-		inputThree.SetDeliveryStreamName(deliveryStreamName)
-		inputThree.SetRecords([]*firehose.Record{
-			{Data: bsOne},
-		})
-
-		outputThree := new(firehose.PutRecordBatchOutput)
-		outputThree.SetRequestResponses([]*firehose.PutRecordBatchResponseEntry{
-			{RecordId: aws.String("record-one")},
-		})
-
-		// TODO: Shouldn't be mock.Anything
-		fh.On("PutRecordBatchWithContext", ctx, mock.Anything).Return(outputThree, nil).Once()
-
-		wg := new(sync.WaitGroup)
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			defer logger.Close(ctx)
-
-			for _, record := range []map[string]string{recordOne, recordTwo, recordThree} {
-				logger.Log(record)
-			}
-		}()
-
-		for err := range logger.Errors() {
-			assert.NoError(t, err)
-		}
-
-		wg.Wait()
-		fh.AssertExpectations(t)
-	})
 
 	t.Run("Close", func(t *testing.T) {
 		t.Run("times out on context", func(t *testing.T) {

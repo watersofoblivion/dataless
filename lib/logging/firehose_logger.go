@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"sync"
 	"time"
 
@@ -136,12 +137,13 @@ func (logger *FirehoseLogger) flush(ctx context.Context, batches <-chan []*fireh
 
 		resp, err := logger.Firehose.PutRecordBatchWithContext(ctx, input)
 		if err != nil {
-			return err
+			errors <- fmt.Errorf("%d events dropped: %s", len(batch), err)
+			continue
 		}
 
-		for i, record := range resp.RequestResponses {
-			if aws.StringValue(record.ErrorCode) != "" || aws.StringValue(record.ErrorMessage) != "" {
-				errors <- awserr.New(record.ErrorCode, record.ErrorMessage, nil)
+		for _, record := range resp.RequestResponses {
+			if errCode, errMsg := aws.StringValue(record.ErrorCode), aws.StringValue(record.ErrorMessage); errCode != "" || errMsg != "" {
+				errors <- awserr.New(errCode, errMsg, nil)
 			}
 		}
 	}
