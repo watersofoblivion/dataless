@@ -488,8 +488,8 @@ Resources:
           - !GetAtt VPC.DefaultSecurityGroup
         IamRoles:
           - !GetAtt RedshiftRole.Arn
-          - !GetAtt PipelineRole.Arn
-          - !GetAtt PipelineResourceRole.Arn
+          # - !GetAtt PipelineRole.Arn
+          # - !GetAtt PipelineResourceRole.Arn
         PubliclyAccessible: true
         AvailabilityZone: !GetAtt Subnet.AvailabilityZone
       - ClusterType: multi-node
