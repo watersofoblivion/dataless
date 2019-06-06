@@ -1714,5 +1714,5 @@ Resources:
       DefinitionBody:
         'Fn::Transform':
           Name: 'AWS::Include'
-          Properties:
+          Parameters:
             Location: api.yaml
