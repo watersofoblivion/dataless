@@ -130,6 +130,12 @@ Parameters:
     Description: The AWS Secret Access Key to use for the Data Pipeline Task Runner
     Default: ''
     NoEcho: true
+  BucketName:
+    Type: String
+    Description: The name of the data lake bucket
+  BucketARN:
+    Type: String
+    Description: The ARN of the data lake bucket
   EnableEC2Instance:
     Type: String
     Description: If non-empty, the parent created an EC2 instance for use by Data Pipeline.
@@ -200,33 +206,6 @@ Globals:
       SSEEnabled: true
 
 Resources:
-  ##########
-  # Bucket #
-  ##########
-
-  Bucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    Properties:
-      VersioningConfiguration:
-        Status: Enabled
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: aws:kms
-      MetricsConfigurations:
-        - Id: raw-ad-impressions
-          Prefix: data/raw/ad/impressions/
-        - Id: raw-ad-clicks
-          Prefix: data/raw/ad/clicks/
-        - Id: ad-impressions
-          Prefix: data/lake/ad/impressions/
-        - Id: ad-clicks
-          Prefix: data/lake/ad/clicks/
-        - Id: advertising
-          Prefix: data/lake/advertising/
-        - Id: temp
-          Prefix: data/temp/
 
   ####################
   # Delivery Streams #
@@ -255,14 +234,14 @@ Resources:
                   - s3:PutObject*
                 Effect: Allow
                 Resource:
-                  - !Sub "${Bucket.Arn}/data/raw/*"
+                  - !Sub "${BucketARN}/data/raw/*"
 
   ImpressionsDeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
     Properties:
       DeliveryStreamType: DirectPut
       S3DestinationConfiguration:
-        BucketARN: !GetAtt Bucket.Arn
+        BucketARN: !Ref BucketARN
         Prefix: data/raw/ad/impressions/
         BufferingHints:
           IntervalInSeconds: 900
@@ -320,7 +299,7 @@ Resources:
     Properties:
       DeliveryStreamType: DirectPut
       S3DestinationConfiguration:
-        BucketARN: !GetAtt Bucket.Arn
+        BucketARN: !Ref BucketARN
         Prefix: data/raw/ad/clicks/
         BufferingHints:
           IntervalInSeconds: 900
@@ -657,12 +636,12 @@ Resources:
                   - s3:PutObject*
                 Effect: Allow
                 Resource:
-                  - !Sub "${Bucket.Arn}/data/raw/*"
+                  - !Sub "${BucketARN}/data/raw/*"
               - Action:
                   - s3:ListBucket*
                 Effect: Allow
                 Resource:
-                  - !GetAtt Bucket.Arn
+                  - !Ref BucketARN
 
   RawCrawler:
     Type: AWS::Glue::Crawler
@@ -673,8 +652,8 @@ Resources:
       DatabaseName: !Ref Database
       Targets: # CloudFormation does not seem to support targeting an existing table.  Console does, at least.
         S3Targets:
-          - Path: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
-          - Path: !Sub "s3://${Bucket}/data/raw/ad/clicks/"
+          - Path: !Sub "s3://${BucketName}/data/raw/ad/impressions/"
+          - Path: !Sub "s3://${BucketName}/data/raw/ad/clicks/"
       TablePrefix: raw_
       SchemaChangePolicy:
         UpdateBehavior: UPDATE_IN_DATABASE
@@ -716,7 +695,7 @@ Resources:
             - Name: month
               Type: int
           StorageDescriptor:
-            Location: !Sub "s3://${Bucket}/data/lake/ad/impressions/"
+            Location: !Sub "s3://${BucketName}/data/lake/ad/impressions/"
             StoredAsSubDirectories: true
             InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
             SerdeInfo:
@@ -749,7 +728,7 @@ Resources:
             - Name: month
               Type: int
           StorageDescriptor:
-            Location: !Sub "s3://${Bucket}/data/lake/ad/clicks/"
+            Location: !Sub "s3://${BucketName}/data/lake/ad/clicks/"
             StoredAsSubDirectories: true
             InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
             SerdeInfo:
@@ -881,7 +860,7 @@ Resources:
             - Name: month
               Type: int
           StorageDescriptor:
-            Location: !Sub "s3://${Bucket}/data/lake/advertising/"
+            Location: !Sub "s3://${BucketName}/data/lake/advertising/"
             StoredAsSubDirectories: true
             InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
             SerdeInfo:
@@ -951,9 +930,9 @@ Resources:
                   - s3:List*
                 Effect: Allow
                 Resource:
-                  - !Sub "${Bucket.Arn}/data/raw/*"
-                  - !Sub "${Bucket.Arn}/data/lake/*"
-                  - !Sub "${Bucket.Arn}/data/temp/*"
+                  - !Sub "${BucketARN}/data/raw/*"
+                  - !Sub "${BucketARN}/data/lake/*"
+                  - !Sub "${BucketARN}/data/temp/*"
 
   PipelineProfile:
     Type: AWS::IAM::InstanceProfile
@@ -1001,9 +980,9 @@ Resources:
                   - s3:List*
                 Effect: Allow
                 Resource:
-                  - !Sub "${Bucket.Arn}/data/raw/*"
-                  - !Sub "${Bucket.Arn}/data/lake/*"
-                  - !Sub "${Bucket.Arn}/data/temp/*"
+                  - !Sub "${BucketARN}/data/raw/*"
+                  - !Sub "${BucketARN}/data/lake/*"
+                  - !Sub "${BucketARN}/data/temp/*"
 
   PipelineResourceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -1056,7 +1035,7 @@ Resources:
             - Key: resourceRole
               StringValue: !Ref PipelineResourceRole
             - Key: pipelineLogUri
-              StringValue: !Sub "s3://${Bucket}/logs/data-pipeline/"
+              StringValue: !Sub "s3://${BucketName}/logs/data-pipeline/"
             - Key: failureAndRerunMode
               StringValue: cascade
         - Id: HiveMetastoreClientFactoryClass
@@ -1177,7 +1156,7 @@ Resources:
             - Key: type
               StringValue: S3DataNode
             - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/temp/advertising-info-staging-table/"
+              StringValue: !Sub "s3://${BucketName}/data/temp/advertising-info-staging-table/"
             - Key: dataFormat
               RefValue: AdTrafficStagingTableFormat
         - Id: DummyInputTableFormat
@@ -1201,7 +1180,7 @@ Resources:
             - Key: type
               StringValue: S3DataNode
             - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/temp/dummy/"
+              StringValue: !Sub "s3://${BucketName}/data/temp/dummy/"
             - Key: dataFormat
               RefValue: DummyInputTableFormat
         - Id: AdTrafficTableFormat
@@ -1277,7 +1256,7 @@ Resources:
             - Key: type
               StringValue: S3DataNode
             - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/temp/dummy/"
+              StringValue: !Sub "s3://${BucketName}/data/temp/dummy/"
             - Key: dataFormat
               RefValue: DummyOutputTableFormat
         - Id: TruncateAdTrafficStagingTable
@@ -1345,7 +1324,7 @@ Resources:
             - Key: resourceRole
               StringValue: !Ref PipelineResourceRole
             - Key: pipelineLogUri
-              StringValue: !Sub "s3://${Bucket}/logs/data-pipeline/"
+              StringValue: !Sub "s3://${BucketName}/logs/data-pipeline/"
             - Key: failureAndRerunMode
               StringValue: cascade
         - Id: EC2Instance
@@ -1489,7 +1468,7 @@ Resources:
             - Key: type
               StringValue: S3DataNode
             - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
+              StringValue: !Sub "s3://${BucketName}/data/raw/ad/impressions/"
             - Key: dataFormat
               RefValue: DummyInputTableFormat
         - Id: RedshiftStagingTableFormat
@@ -1509,7 +1488,7 @@ Resources:
             - Key: type
               StringValue: S3DataNode
             - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/temp/redshift-staging-table/"
+              StringValue: !Sub "s3://${BucketName}/data/temp/redshift-staging-table/"
             - Key: dataFormat
               RefValue: RedshiftStagingTableFormat
         - Id: StageDataForRedshift
@@ -1569,7 +1548,7 @@ Resources:
             - Key: type
               StringValue: S3DataNode
             - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/temp/dummy/"
+              StringValue: !Sub "s3://${BucketName}/data/temp/dummy/"
             - Key: dataFormat
               RefValue: DummyOutputTableFormat
         - Id: TruncateRedshiftStagingTable

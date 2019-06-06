@@ -305,6 +305,28 @@ Mappings:
       PV64Instance: ami-0f16a2ca7efacfa65
 
 Resources:
+  ##########
+  # Bucket #
+  ##########
+
+  Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+      MetricsConfigurations:
+        - Id: raw
+          Prefix: data/raw/
+        - Id: lake
+          Prefix: data/lake/
+        - Id: temp
+          Prefix: data/temp/
+
   #######
   # VPC #
   #######
@@ -815,6 +837,8 @@ Resources:
         KeyPair: !Ref KeyPair
         Stage: !Ref Stage
         DeploymentPreference: !Ref DeploymentPreference
+        BucketName: !Ref Bucket
+        BucketARN: !GetAtt Bucket.Arn
         Subnet: !Ref Subnet
         SecurityGroup: !Ref SecurityGroup
         AccessKeyID: !Ref AccessKeyID
