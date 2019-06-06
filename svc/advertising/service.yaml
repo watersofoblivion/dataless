@@ -367,53 +367,32 @@ Resources:
           "periodOverride": "inherit",
           "widgets": [
             {
-              "type": "text",
+              "type": "metric",
               "width": 24,
-              "height": 1,
-              "properties": {
-                "markdown": "# Clickthrough Rate"
-              }
-            },
-            {
-              "type": "metric",
-              "width": 8,
-              "height": 6,
+              "height": 12,
               "properties": {
                 "metrics": [
-                  ["Warehouse/Advertising", "Impressions"]
+                  [ { "expression": "clicks/impressions", "label": "Clickthrough Rate", "yAxis": "right" } ],
+                  [ "Warehouse/Advertising", "Clicks", { "id": "clicks" } ],
+                  [ ".", "Impressions", { "id": "impressions" } ]
                 ],
                 "period": 60,
                 "stat": "Sum",
-                "region": "${AWS::Region}",
-                "title": "Impressions"
-              }
-            },
-            {
-              "type": "metric",
-              "width": 8,
-              "height": 6,
-              "properties": {
-                "metrics": [
-                  ["Warehouse/Advertising", "Clicks"]
-                ],
-                "period": 60,
-                "stat": "Sum",
-                "region": "${AWS::Region}",
-                "title": "Clicks"
-              }
-            },
-            {
-              "type": "metric",
-              "width": 8,
-              "height": 6,
-              "properties": {
-                "metrics": [
-                  ["Warehouse/Advertising", "ClickthroughRate"]
-                ],
-                "period": 60,
-                "stat": "Average",
-                "region": "${AWS::Region}",
-                "title": "Clickthrough Rate"
+                "title": "Clickthrough Rate",
+                "view": "timeSeries",
+                "stacked": false,
+                "yAxis": {
+                  "right": {
+                    "showUnits": false,
+                    "min": 0,
+                    "max": 1
+                  },
+                  "left": {
+                    "showUnits": false,
+                    "min": 0
+                  }
+                },
+                "region": "us-east-1"
               }
             }
           ]
