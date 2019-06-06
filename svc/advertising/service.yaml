@@ -1377,48 +1377,19 @@ Resources:
               StringValue: advertising
             - Key: createTableSql
               StringValue: |
-                CREATE TABLE advertising_ad (
-                  session_id    VARCHAR(64) NOT NULL,
-                  user_id       VARCHAR(64) NOT NULL,
+                CREATE TABLE advertising (
                   ad_id         VARCHAR(64) NOT NULL,
                   impression_at TIMESTAMP   NOT NULL,
-                  click_at      TIMESTAMP,
-                  PRIMARY KEY (session_id, user_id, ad_id)
+                  click_at      TIMESTAMP
                 )
                 DISTSTYLE KEY
                 DISTKEY (ad_id)
-                ;
-        - Id: RedshiftAdvertisingUserTable
-          Name: Redshift Advertising by User Table
-          Fields:
-            - Key: type
-              StringValue: RedshiftDataNode
-            - Key: database
-              RefValue: RedshiftCluster
-            - Key: tableName
-              StringValue: advertising
-            - Key: createTableSql
-              StringValue: |
-                CREATE TABLE advertising_user (
-                  session_id    VARCHAR(64) NOT NULL,
-                  user_id       VARCHAR(64) NOT NULL,
-                  ad_id         VARCHAR(64) NOT NULL,
-                  impression_at TIMESTAMP   NOT NULL,
-                  click_at      TIMESTAMP,
-                  PRIMARY KEY (session_id, user_id, ad_id)
-                )
-                DISTSTYLE KEY
-                DISTKEY (user_id)
                 ;
         - Id: DummyInputTableFormat
           Name: Dummy Input Table Format
           Fields:
             - Key: type
               StringValue: CSV
-            - Key: column
-              StringValue: session_id STRING
-            - Key: column
-              StringValue: user_id STRING
             - Key: column
               StringValue: ad_id STRING
             - Key: column
@@ -1431,7 +1402,7 @@ Resources:
             - Key: type
               StringValue: S3DataNode
             - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/raw/events/"
+              StringValue: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
             - Key: dataFormat
               RefValue: DummyInputTableFormat
         - Id: RedshiftStagingTableFormat
@@ -1439,10 +1410,6 @@ Resources:
           Fields:
             - Key: type
               StringValue: CSV
-            - Key: column
-              StringValue: session_id STRING
-            - Key: column
-              StringValue: user_id STRING
             - Key: column
               StringValue: ad_id STRING
             - Key: column
@@ -1483,8 +1450,8 @@ Resources:
               StringValue: DATE_START=#{format(@scheduledStartTime, 'YYYY-MM-dd')}
             - Key: scriptVariable
               StringValue: DATE_END=#{format(@scheduledEndTime, 'YYYY-MM-dd')}
-        - Id: LoadAdvertisingAdIntoRedshift
-          Name: Load Advertising by Ad Into Redshift
+        - Id: LoadAdvertisingIntoRedshift
+          Name: Load Advertising Into Redshift
           Fields:
             - Key: type
               StringValue: RedshiftCopyActivity
@@ -1494,25 +1461,6 @@ Resources:
               RefValue: RedshiftStagingTable
             - Key: output
               RefValue: RedshiftAdvertisingAdTable
-            - Key: insertMode
-              StringValue: OVERWRITE_EXISTING
-            - !If
-              - EC2InstanceEnabled
-              - Key: workerGroup
-                StringValue: !Sub "${AWS::StackName}-${AWS::Region}-instance-worker-group"
-              - Key: runsOn
-                RefValue: EC2Instance
-        - Id: LoadAdvertisingUserIntoRedshift
-          Name: Load Advertising by User Into Redshift
-          Fields:
-            - Key: type
-              StringValue: RedshiftCopyActivity
-            - Key: dependsOn
-              RefValue: StageDataForRedshift
-            - Key: input
-              RefValue: RedshiftStagingTable
-            - Key: output
-              RefValue: RedshiftAdvertisingUserTable
             - Key: insertMode
               StringValue: OVERWRITE_EXISTING
             - !If
@@ -1573,14 +1521,14 @@ Resources:
               RefValue: RedshiftCluster
             - Key: script
               StringValue: !Sub |
-                CREATE EXTERNAL SCHEMA IF NOT EXISTS lake
+                CREATE EXTERNAL SCHEMA IF NOT EXISTS advertising
                 FROM DATA CATALOG
                 DATABASE '${Database}'
                 IAM_ROLE '${PipelineRole.Arn}'
                 CREATE EXTERNAL DATABASE
                 IF NOT EXISTS;
-        - Id: SpectrumLoadAdvertisingAd
-          Name: Spectrum Load Advertising by Ad
+        - Id: SpectrumLoadAdvertising
+          Name: Spectrum Load Advertising
           Fields:
             - Key: type
               StringValue: SqlActivity
@@ -1595,32 +1543,7 @@ Resources:
               - Key: runsOn
                 RefValue: EC2Instance
             - Key: scriptUri
-              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/load_advertising_ad_from_spectrum.sql"
-            - Key: scriptArgument
-              StringValue: "#{year(@scheduledStartTime)}"
-            - Key: scriptArgument
-              StringValue: "#{month(@scheduledStartTime)}"
-            - Key: scriptArgument
-              StringValue: "#{format(@scheduledStartTime, 'YYYY-MM-dd')}"
-            - Key: scriptArgument
-              StringValue: "#{format(@scheduledEndTime, 'YYYY-MM-dd')}"
-        - Id: SpectrumLoadAdvertisingUser
-          Name: Spectrum Load Advertising by User
-          Fields:
-            - Key: type
-              StringValue: SqlActivity
-            - Key: dependsOn
-              RefValue: UseSpectrumDataLake
-            - Key: database
-              RefValue: RedshiftCluster
-            - !If
-              - EC2InstanceEnabled
-              - Key: workerGroup
-                StringValue: !Sub "${AWS::StackName}-${AWS::Region}-instance-worker-group"
-              - Key: runsOn
-                RefValue: EC2Instance
-            - Key: scriptUri
-              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/load_advertising_user_from_spectrum.sql"
+              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/load_advertising_from_spectrum.sql"
             - Key: scriptArgument
               StringValue: "#{year(@scheduledStartTime)}"
             - Key: scriptArgument

@@ -1,23 +1,19 @@
-CREATE TABLE IF NOT EXISTS advertising_user_spectrum (
-  session_id    VARCHAR(255) NOT NULL,
-  user_id       VARCHAR(255) NOT NULL,
+CREATE TABLE IF NOT EXISTS advertising_spectrum (
   ad_id         VARCHAR(255) NOT NULL,
   impression_at TIMESTAMP NOT NULL,
   click_at      TIMESTAMP
 )
 DISTSTYLE KEY
-DISTKEY (user_id)
+DISTKEY (ad_id)
 ;
 
-INSERT INTO advertising_user_spectrum
+INSERT INTO advertising_spectrum
 SELECT
-  session_id,
-  user_id,
   ad_id,
   impression_at,
   click_at
 FROM
-  lake.advertising
+  advertising.advertising
 WHERE
       year = ?
   AND month = ?
