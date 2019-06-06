@@ -118,9 +118,11 @@ Parameters:
   Subnet:
     Type: String
     Description: The subnet external resources are running in
+    Default: ''
   SecurityGroup:
     Type: String
     Description: A security group to access the external resources
+    Default: ''
   AccessKeyID:
     Type: String
     Description: The AWS Access Key ID to use for the Data Pipeline Task Runner

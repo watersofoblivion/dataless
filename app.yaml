@@ -838,8 +838,14 @@ Resources:
         DeploymentPreference: !Ref DeploymentPreference
         BucketName: !Ref Bucket
         BucketARN: !GetAtt Bucket.Arn
-        Subnet: !Ref Subnet
-        SecurityGroup: !Ref SecurityGroup
+        Subnet: !If
+          - VPCEnabled
+          - !Ref Subnet
+          - !Ref AWS::NoValue
+        SecurityGroup: !If
+          - VPCEnabled
+          - !Ref SecurityGroup
+          - !Ref AWS::NoValue
         AccessKeyID: !Ref AccessKeyID
         SecretAccessKey: !Ref SecretAccessKey
         EnableEC2Instance: !Ref EnableEC2Instance
