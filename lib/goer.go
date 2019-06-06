@@ -1,6 +1,10 @@
-package svc
+package lib
 
-import "context"
+import (
+	"context"
+
+	"github.com/watersofoblivion/dataless/lib/bang"
+)
 
 type Goer interface {
 	Go(ctx context.Context)
@@ -15,11 +19,7 @@ type GoCloser interface {
 	Closer
 }
 
-type Errorer interface {
-	Errors() <-chan error
-}
-
 type GoErrCloser interface {
 	GoCloser
-	Errorer
+	bang.Errorser
 }

@@ -1,4 +1,4 @@
-package svc
+package lib
 
 import (
 	"context"

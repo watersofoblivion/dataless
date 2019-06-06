@@ -17,6 +17,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/google/uuid"
+
+	"github.com/watersofoblivion/dataless/lib/rest"
 )
 
 const DateFormat = "2006-01-02"
@@ -29,25 +31,25 @@ var (
 func Handler(ctx context.Context, evt events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	req, err := RequestFromEvent(evt)
 	if err != nil {
-		return APIGWResponse(http.StatusBadRequest, err, nil)
+		return rest.Respond(http.StatusBadRequest, err, nil)
 	}
 
 	input, err := req.Query(tableName)
 	if err != nil {
-		return APIGWResponse(http.StatusBadRequest, err, nil)
+		return rest.Respond(http.StatusBadRequest, err, nil)
 	}
 
 	output, err := ddb.QueryWithContext(ctx, input)
 	if err != nil {
-		return APIGWResponse(http.StatusInternalServerError, err, nil)
+		return rest.Respond(http.StatusInternalServerError, err, nil)
 	}
 
 	response, err := ResponseFromOutput(output)
 	if err != nil {
-		return APIGWResponse(http.StatusInternalServerError, err, nil)
+		return rest.Respond(http.StatusInternalServerError, err, nil)
 	}
 
-	return APIGWResponse(http.StatusOK, response, nil)
+	return rest.Respond(http.StatusOK, response, nil)
 }
 
 type Request struct {

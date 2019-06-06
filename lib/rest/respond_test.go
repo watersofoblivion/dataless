@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/watersofoblivion/dataless/lib/svc/rest/restassert"
+	"github.com/watersofoblivion/dataless/lib/rest/restassert"
 )
 
 func TestRespond(t *testing.T) {

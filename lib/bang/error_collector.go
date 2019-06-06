@@ -5,6 +5,12 @@ import (
 	"sync"
 )
 
+type Errors <-chan error
+
+type Errorser interface {
+	Errors() Errors
+}
+
 type ErrorCollector struct {
 	errors chan error
 	close  chan struct{}

@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/watersofoblivion/dataless/lib/bang"
 )
 
 func TestMockLogger(t *testing.T) {
@@ -20,7 +22,7 @@ func TestMockLogger(t *testing.T) {
 	})
 
 	t.Run("Errors", func(t *testing.T) {
-		errors := (<-chan error)(make(chan error))
+		errors := make(bang.Errors)
 		mock := new(MockLogger)
 		mock.On("Errors").Return(errors)
 

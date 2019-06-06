@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/watersofoblivion/dataless/lib/amzmock"
+	"github.com/watersofoblivion/dataless/lib/amz/amzmock"
 )
 
 func TestLogger(t *testing.T) {
@@ -30,6 +30,7 @@ func TestLogger(t *testing.T) {
 		assert.Equal(t, time.Duration(0), logger.Timeout)
 		assert.Equal(t, FirehoseMaxBatchSize, logger.BatchSize)
 		assert.NotNil(t, logger.Ticker)
+		assert.Equal(t, deliveryStream, logger.DeliveryStream)
 	})
 
 	go logger.Go(ctx)

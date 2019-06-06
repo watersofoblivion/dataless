@@ -96,6 +96,10 @@ Globals:
     DeploymentPreference:
       Enabled: true
       Type: !Ref DeploymentPreference
+    Environment:
+      Variables:
+        EVENTS_DELIVERY_STREAM_NAME: !Ref EventsDeliveryStream
+        ADVERTISING_INFO_TABLE_NAME: !Ref AdvertisingInfoTable
   Api:
     TracingEnabled: true
     EndpointConfiguration: EDGE

@@ -11,6 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/firehose"
+
+	"github.com/watersofoblivion/dataless/lib/rest"
 )
 
 var (
@@ -22,15 +24,15 @@ var (
 func Handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	batch := make(map[string][]json.RawMessage)
 	if err := json.Unmarshal([]byte(req.Body), &batch); err != nil {
-		return APIGWResponse(http.StatusBadRequest, err, nil)
+		return rest.Respond(http.StatusBadRequest, err, nil)
 	}
 
 	records, found := batch[batchKey]
 	if numKeys := len(batch); numKeys != 1 {
-		return APIGWResponse(http.StatusBadRequest, fmt.Errorf("expected exactly 1 key, found %d", numKeys), nil)
+		return rest.Respond(http.StatusBadRequest, fmt.Errorf("expected exactly 1 key, found %d", numKeys), nil)
 	}
 	if !found {
-		return APIGWResponse(http.StatusBadRequest, fmt.Errorf("expected batch key %q", batchKey), nil)
+		return rest.Respond(http.StatusBadRequest, fmt.Errorf("expected batch key %q", batchKey), nil)
 	}
 
 	inputRecords := make([]*firehose.Record, len(records))
@@ -43,7 +45,7 @@ func Handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.API
 	input.SetRecords(inputRecords)
 	resp, err := kf.PutRecordBatchWithContext(ctx, input)
 	if err != nil {
-		return APIGWResponse(http.StatusInternalServerError, err, nil)
+		return rest.Respond(http.StatusInternalServerError, err, nil)
 	}
 
 	responseRecords := make([]map[string]interface{}, len(resp.RequestResponses))
@@ -56,7 +58,7 @@ func Handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.API
 		}
 	}
 
-	return APIGWResponse(http.StatusOK, map[string]interface{}{
+	return rest.Respond(http.StatusOK, map[string]interface{}{
 		"failed_count": aws.Int64Value(resp.FailedPutCount),
 		"records":      responseRecords,
 	}, nil)

@@ -4,15 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
-	"log"
 	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/firehose/firehoseiface"
-	"github.com/cenkalti/backoff"
 )
 
 const (
@@ -23,8 +21,8 @@ type FirehoseLogger struct {
 	Timeout            time.Duration
 	BatchSize          int
 	Ticker             *time.Ticker
-	fh                 firehoseiface.FirehoseAPI
-	deliveryStreamName string
+	DeliveryStreamName string
+	Firehose           firehoseiface.FirehoseAPI
 	wg                 *sync.WaitGroup
 	values             chan interface{}
 	errors             chan error
@@ -35,8 +33,8 @@ func NewFirehoseLogger(deliveryStreamName string, fh firehoseiface.FirehoseAPI) 
 	return &FirehoseLogger{
 		BatchSize:          FirehoseMaxBatchSize,
 		Ticker:             time.NewTicker(48 * time.Hour),
-		fh:                 fh,
-		deliveryStreamName: deliveryStreamName,
+		DeliveryStreamName: deliveryStreamName,
+		Firehose:           fh,
 		wg:                 new(sync.WaitGroup),
 		values:             make(chan interface{}),
 		errors:             make(chan error),
@@ -131,45 +129,20 @@ func (logger *FirehoseLogger) flush(ctx context.Context, batches <-chan []*fireh
 	defer logger.wg.Done()
 
 	input := new(firehose.PutRecordBatchInput)
-	input.SetDeliveryStreamName(logger.deliveryStreamName)
+	input.SetDeliveryStreamName(logger.DeliveryStreamName)
 
-	var batch []*firehose.Record
+	for batch := range batches {
+		input.SetRecords(batch)
 
-	publishBatch := func() error {
-		resp, err := logger.fh.PutRecordBatchWithContext(ctx, input)
+		resp, err := logger.Firehose.PutRecordBatchWithContext(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		failed := aws.Int64Value(resp.FailedPutCount)
-		if failed == 0 {
-			return nil
-		}
-
-		newBatch := make([]*firehose.Record, 0, failed)
 		for i, record := range resp.RequestResponses {
 			if aws.StringValue(record.ErrorCode) != "" || aws.StringValue(record.ErrorMessage) != "" {
-				newBatch = append(newBatch, batch[i])
+				errors <- awserr.New(record.ErrorCode, record.ErrorMessage, nil)
 			}
-		}
-		batch = newBatch
-		return fmt.Errorf("retrying %d records", len(batch))
-	}
-
-	notifyBackoff := func(err error, bo time.Duration) {
-		log.Printf("%s.  Backing off %s", err, bo)
-	}
-
-	for batch = range batches {
-		input.SetRecords(batch)
-
-		eb := backoff.NewExponentialBackOff()
-		eb.InitialInterval = 100 * time.Millisecond
-		eb.MaxElapsedTime = logger.Timeout
-		ebCtx := backoff.WithContext(eb, ctx)
-
-		if err := backoff.RetryNotify(publishBatch, ebCtx, notifyBackoff); err != nil {
-			errors <- fmt.Errorf("%d events dropped: %s", len(batch), err)
 		}
 	}
 }
