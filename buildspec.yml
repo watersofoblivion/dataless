@@ -30,7 +30,7 @@ phases:
       - aws cloudformation package --template app.yaml --s3-bucket "${BUCKET}" --output-template template.yaml
   post_build:
     commands:
-      - if [ ! -f ./config/${BRANCH}.json ]; then exit "No config file found"; fi
+      - if [ ! -f "./config/${BRANCH}.json" ]; then exit "No config file found"; fi
       - |
         cat ./config/${BRANCH}.json \
         | jq -f config.jq \

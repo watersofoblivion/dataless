@@ -197,6 +197,9 @@ Resources:
             Name: BUCKET
             Value: !Ref Bucket
           - Type: PLAINTEXT
+            Name: BRANCH
+            Value: !Ref Branch
+          - Type: PLAINTEXT
             Name: GO111MODULE
             Value: "on"
           - Type: PLAINTEXT

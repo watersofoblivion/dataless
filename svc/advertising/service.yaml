@@ -792,7 +792,7 @@ Resources:
       Role: !GetAtt ETLJobRole.Arn
       Command:
         Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/glue/impressions_etl.py"
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/impressions_etl.py"
       DefaultArguments:
         "--enable-glue-datacatalog": ""
         "--job-bookmark-option": "job-bookmark-enable"
@@ -809,7 +809,7 @@ Resources:
       Role: !GetAtt ETLJobRole.Arn
       Command:
         Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/glue/impressions_etl.scala"
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/impressions_etl.scala"
       DefaultArguments:
         "--job-language": scala
         "--class": GlueApp
@@ -828,7 +828,7 @@ Resources:
       Role: !GetAtt ETLJobRole.Arn
       Command:
         Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/glue/clicks_etl.py"
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/clicks_etl.py"
       DefaultArguments:
         "--enable-glue-datacatalog": ""
         "--job-bookmark-option": "job-bookmark-enable"
@@ -845,7 +845,7 @@ Resources:
       Role: !GetAtt ETLJobRole.Arn
       Command:
         Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/glue/clicks_etl.scala"
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/clicks_etl.scala"
       DefaultArguments:
         "--job-language": scala
         "--class": GlueApp
@@ -1132,7 +1132,7 @@ Resources:
             - Key: type
               StringValue: HiveActivity
             - Key: scriptUri
-              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/hive/extract_advertising_data.hql"
+              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/extract_advertising_data.hql"
             - !If
                 - EMREnabled
                 - Key: workerGroup
@@ -1228,7 +1228,7 @@ Resources:
             - Key: dependsOn
               RefValue: ExtractAdvertisingData
             - Key: scriptUri
-              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/hive/stage_data_for_ad_traffic.hql"
+              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/stage_data_for_ad_traffic.hql"
             - !If
                 - EMREnabled
                 - Key: workerGroup
@@ -1518,7 +1518,7 @@ Resources:
             - Key: type
               StringValue: HiveActivity
             - Key: scriptUri
-              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/hive/stage_data_for_redshift.hql"
+              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/stage_data_for_redshift.hql"
             - !If
                 - EMREnabled
                 - Key: workerGroup
@@ -1630,7 +1630,7 @@ Resources:
               - Key: runsOn
                 RefValue: EC2Instance
             - Key: scriptUri
-              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/redshift/load_advertising_from_spectrum.sql"
+              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/load_advertising_from_spectrum.sql"
             - Key: scriptArgument
               StringValue: "#{year(@scheduledStartTime)}"
             - Key: scriptArgument
