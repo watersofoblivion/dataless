@@ -463,8 +463,7 @@ Resources:
                   - s3:List*
                 Effect: Allow
                 Resource:
-                  - !Sub "${Bucket.Arn}/data/lake/events/*"
-                  - !Sub "${Bucket.Arn}/data/lake/advertising/*"
+                  - !Sub "${Bucket.Arn}/data/lake/*"
               - Action:
                   - glue:*
                   - athena:*
@@ -507,8 +506,8 @@ Resources:
           - !GetAtt VPC.DefaultSecurityGroup
         IamRoles:
           - !GetAtt RedshiftRole.Arn
-          - !GetAtt PipelineRole.Arn
-          - !GetAtt PipelineResourceRole.Arn
+          # - !GetAtt PipelineRole.Arn
+          # - !GetAtt PipelineResourceRole.Arn
         PubliclyAccessible: true
         AvailabilityZone: !GetAtt Subnet.AvailabilityZone
 
