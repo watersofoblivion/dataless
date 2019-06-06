@@ -753,7 +753,7 @@ Resources:
         - Name: hive
         - Name: pig
         - Name: spark
-      BootstrapActions:
+      # BootstrapActions:
         # TODO: Broken :(
         # - Name: Install Task Runner
         #   ScriptBootstrapAction:
