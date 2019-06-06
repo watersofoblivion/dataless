@@ -497,7 +497,7 @@ Resources:
         INSERT INTO "metrics"
         SELECT STREAM
           'Warehouse/Advertising'                                                                             AS "namespace",
-          "Impressions"                                                                                       AS "name",
+          'Impressions'                                                                                       AS "name",
           CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "impressions".ROWTIME)) AS "at",
           CAST(COUNT(1) AS DOUBLE)                                                                            AS "value"
         FROM
@@ -519,12 +519,12 @@ Resources:
                 JSONMappingParameters:
                   RecordRowPath: "$"
             RecordColumns:
-              - Name: impression_id
-                SqlType: VARCHAR(64)
-                Mapping: "$.impression_id"
               - Name: ad_id
                 SqlType: VARCHAR(64)
                 Mapping: "$.ad_id"
+              - Name: impression_id
+                SqlType: VARCHAR(64)
+                Mapping: "$.impression_id"
               - Name: occurred_at
                 SqlType: TIMESTAMP
                 Mapping: "$.occurred_at"
@@ -556,7 +556,7 @@ Resources:
         INSERT INTO "metrics"
         SELECT STREAM
           'Warehouse/Advertising'                                                                        AS "namespace",
-          "Clicks"                                                                                       AS "name",
+          'Clicks'                                                                                       AS "name",
           CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "clicks".ROWTIME)) AS "at",
           CAST(COUNT(1) AS DOUBLE)                                                                       AS "value"
         FROM
@@ -578,15 +578,15 @@ Resources:
                 JSONMappingParameters:
                   RecordRowPath: "$"
             RecordColumns:
+              - Name: ad_id
+                SqlType: VARCHAR(64)
+                Mapping: "$.ad_id"
               - Name: impression_id
                 SqlType: VARCHAR(64)
                 Mapping: "$.impression_id"
               - Name: click_id
                 SqlType: VARCHAR(64)
                 Mapping: "$.click_id"
-              - Name: ad_id
-                SqlType: VARCHAR(64)
-                Mapping: "$.ad_id"
               - Name: occurred_at
                 SqlType: TIMESTAMP
                 Mapping: "$.occurred_at"
