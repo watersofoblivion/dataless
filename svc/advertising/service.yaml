@@ -482,126 +482,126 @@ Resources:
                   - !GetAtt ImpressionsDeliveryStream.Arn
                   - !GetAtt ClicksDeliveryStream.Arn
 
-  # RealTimeImpressionsApplication:
-  #   Type: AWS::KinesisAnalytics::Application
-  #   Properties:
-  #     ApplicationCode: |
-  #       CREATE OR REPLACE STREAM "metrics" (
-  #         "namespace" VARCHAR(255),
-  #         "name"      VARCHAR(255),
-  #         "at"        TIMESTAMP,
-  #         "value"     DOUBLE
-  #       );
-  #
-  #       CREATE OR REPLACE PUMP "counter" AS
-  #       INSERT INTO "metrics"
-  #       SELECT STREAM
-  #         'Warehouse/Advertising'                                                                             AS "namespace",
-  #         'Impressions'                                                                                       AS "name",
-  #         CHAR_TO_TIMESTAMP('yyyy-MM-dd HH:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd HH:mm', "impressions".ROWTIME)) AS "at",
-  #         CAST(COUNT(1) AS DOUBLE)                                                                            AS "value"
-  #       FROM
-  #         "impressions_001" AS "impressions"
-  #       GROUP BY
-  #         CHAR_TO_TIMESTAMP('yyyy-MM-dd HH:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd HH:mm', "impressions".ROWTIME)),
-  #         STEP("impressions".ROWTIME BY INTERVAL '60' SECOND)
-  #       ;
-  #     Inputs:
-  #       - NamePrefix: impressions
-  #         KinesisFirehoseInput:
-  #           ResourceARN: !GetAtt ImpressionsDeliveryStream.Arn
-  #           RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
-  #         InputSchema:
-  #           RecordEncoding: UTF-8
-  #           RecordFormat:
-  #             RecordFormatType: JSON
-  #             MappingParameters:
-  #               JSONMappingParameters:
-  #                 RecordRowPath: "$"
-  #           RecordColumns:
-  #             - Name: ad_id
-  #               SqlType: VARCHAR(64)
-  #               Mapping: "$.ad_id"
-  #             - Name: impression_id
-  #               SqlType: VARCHAR(64)
-  #               Mapping: "$.impression_id"
-  #             - Name: occurred_at
-  #               SqlType: TIMESTAMP
-  #               Mapping: "$.occurred_at"
-  #
-  # RealTimeImpressionsOutputs:
-  #   Type: AWS::KinesisAnalytics::ApplicationOutput
-  #   Properties:
-  #     ApplicationName: !Ref RealTimeImpressionsApplication
-  #     Output:
-  #       Name: metrics
-  #       DestinationSchema:
-  #         RecordFormatType: JSON
-  #       LambdaOutput:
-  #         ResourceARN: !GetAtt RealTimeAdvertisingLambda.Arn
-  #         RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
-  #
-  # RealTimeClicksApplication:
-  #   Type: AWS::KinesisAnalytics::Application
-  #   Properties:
-  #     ApplicationCode: |
-  #       CREATE OR REPLACE STREAM "metrics" (
-  #         "namespace" VARCHAR(255),
-  #         "name"      VARCHAR(255),
-  #         "at"        TIMESTAMP,
-  #         "value"     DOUBLE
-  #       );
-  #
-  #       CREATE OR REPLACE PUMP "counter" AS
-  #       INSERT INTO "metrics"
-  #       SELECT STREAM
-  #         'Warehouse/Advertising'                                                                        AS "namespace",
-  #         'Clicks'                                                                                       AS "name",
-  #         CHAR_TO_TIMESTAMP('yyyy-MM-dd HH:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd HH:mm', "clicks".ROWTIME)) AS "at",
-  #         CAST(COUNT(1) AS DOUBLE)                                                                       AS "value"
-  #       FROM
-  #         "clicks_001" AS "clicks"
-  #       GROUP BY
-  #         CHAR_TO_TIMESTAMP('yyyy-MM-dd HH:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd HH:mm', "clicks".ROWTIME)),
-  #         STEP("clicks".ROWTIME BY INTERVAL '60' SECOND)
-  #       ;
-  #     Inputs:
-  #       - NamePrefix: clicks
-  #         KinesisFirehoseInput:
-  #           ResourceARN: !GetAtt ClicksDeliveryStream.Arn
-  #           RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
-  #         InputSchema:
-  #           RecordEncoding: UTF-8
-  #           RecordFormat:
-  #             RecordFormatType: JSON
-  #             MappingParameters:
-  #               JSONMappingParameters:
-  #                 RecordRowPath: "$"
-  #           RecordColumns:
-  #             - Name: ad_id
-  #               SqlType: VARCHAR(64)
-  #               Mapping: "$.ad_id"
-  #             - Name: impression_id
-  #               SqlType: VARCHAR(64)
-  #               Mapping: "$.impression_id"
-  #             - Name: click_id
-  #               SqlType: VARCHAR(64)
-  #               Mapping: "$.click_id"
-  #             - Name: occurred_at
-  #               SqlType: TIMESTAMP
-  #               Mapping: "$.occurred_at"
-  #
-  # RealTimeClicksOutputs:
-  #   Type: AWS::KinesisAnalytics::ApplicationOutput
-  #   Properties:
-  #     ApplicationName: !Ref RealTimeClicksApplication
-  #     Output:
-  #       Name: metrics
-  #       DestinationSchema:
-  #         RecordFormatType: JSON
-  #       LambdaOutput:
-  #         ResourceARN: !GetAtt RealTimeAdvertisingLambda.Arn
-  #         RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
+  RealTimeImpressionsApplication:
+    Type: AWS::KinesisAnalytics::Application
+    Properties:
+      ApplicationCode: |
+        CREATE OR REPLACE STREAM "metrics" (
+          "namespace" VARCHAR(255),
+          "name"      VARCHAR(255),
+          "at"        TIMESTAMP,
+          "value"     DOUBLE
+        );
+
+        CREATE OR REPLACE PUMP "counter" AS
+        INSERT INTO "metrics"
+        SELECT STREAM
+          'Warehouse/Advertising'                                                                             AS "namespace",
+          'Impressions'                                                                                       AS "name",
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd HH:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd HH:mm', "impressions".ROWTIME)) AS "at",
+          CAST(COUNT(1) AS DOUBLE)                                                                            AS "value"
+        FROM
+          "impressions_001" AS "impressions"
+        GROUP BY
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd HH:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd HH:mm', "impressions".ROWTIME)),
+          STEP("impressions".ROWTIME BY INTERVAL '60' SECOND)
+        ;
+      Inputs:
+        - NamePrefix: impressions
+          KinesisFirehoseInput:
+            ResourceARN: !GetAtt ImpressionsDeliveryStream.Arn
+            RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
+          InputSchema:
+            RecordEncoding: UTF-8
+            RecordFormat:
+              RecordFormatType: JSON
+              MappingParameters:
+                JSONMappingParameters:
+                  RecordRowPath: "$"
+            RecordColumns:
+              - Name: ad_id
+                SqlType: VARCHAR(64)
+                Mapping: "$.ad_id"
+              - Name: impression_id
+                SqlType: VARCHAR(64)
+                Mapping: "$.impression_id"
+              - Name: occurred_at
+                SqlType: TIMESTAMP
+                Mapping: "$.occurred_at"
+
+  RealTimeImpressionsOutputs:
+    Type: AWS::KinesisAnalytics::ApplicationOutput
+    Properties:
+      ApplicationName: !Ref RealTimeImpressionsApplication
+      Output:
+        Name: metrics
+        DestinationSchema:
+          RecordFormatType: JSON
+        LambdaOutput:
+          ResourceARN: !GetAtt RealTimeAdvertisingLambda.Arn
+          RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
+
+  RealTimeClicksApplication:
+    Type: AWS::KinesisAnalytics::Application
+    Properties:
+      ApplicationCode: |
+        CREATE OR REPLACE STREAM "metrics" (
+          "namespace" VARCHAR(255),
+          "name"      VARCHAR(255),
+          "at"        TIMESTAMP,
+          "value"     DOUBLE
+        );
+
+        CREATE OR REPLACE PUMP "counter" AS
+        INSERT INTO "metrics"
+        SELECT STREAM
+          'Warehouse/Advertising'                                                                        AS "namespace",
+          'Clicks'                                                                                       AS "name",
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd HH:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd HH:mm', "clicks".ROWTIME)) AS "at",
+          CAST(COUNT(1) AS DOUBLE)                                                                       AS "value"
+        FROM
+          "clicks_001" AS "clicks"
+        GROUP BY
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd HH:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd HH:mm', "clicks".ROWTIME)),
+          STEP("clicks".ROWTIME BY INTERVAL '60' SECOND)
+        ;
+      Inputs:
+        - NamePrefix: clicks
+          KinesisFirehoseInput:
+            ResourceARN: !GetAtt ClicksDeliveryStream.Arn
+            RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
+          InputSchema:
+            RecordEncoding: UTF-8
+            RecordFormat:
+              RecordFormatType: JSON
+              MappingParameters:
+                JSONMappingParameters:
+                  RecordRowPath: "$"
+            RecordColumns:
+              - Name: ad_id
+                SqlType: VARCHAR(64)
+                Mapping: "$.ad_id"
+              - Name: impression_id
+                SqlType: VARCHAR(64)
+                Mapping: "$.impression_id"
+              - Name: click_id
+                SqlType: VARCHAR(64)
+                Mapping: "$.click_id"
+              - Name: occurred_at
+                SqlType: TIMESTAMP
+                Mapping: "$.occurred_at"
+
+  RealTimeClicksOutputs:
+    Type: AWS::KinesisAnalytics::ApplicationOutput
+    Properties:
+      ApplicationName: !Ref RealTimeClicksApplication
+      Output:
+        Name: metrics
+        DestinationSchema:
+          RecordFormatType: JSON
+        LambdaOutput:
+          ResourceARN: !GetAtt RealTimeAdvertisingLambda.Arn
+          RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
 
   ####################
   # ETL To Data Lake #
