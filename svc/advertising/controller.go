@@ -97,16 +97,13 @@ func (controller *Controller) CaptureClicks(ctx context.Context, req events.APIG
 }
 
 func (controller *Controller) PublishToCloudWatch(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEvent) (events.KinesisAnalyticsOutputDeliveryResponse, error) {
-	resp := events.KinesisAnalyticsOutputDeliveryResponse{}
+	results := map[string]string{}
 
 	for _, record := range input.Records {
 		metric := new(inst.Metric)
 		if err := json.Unmarshal(record.Data, metric); err != nil {
 			log.Printf("error unmarshaling record %s (dropped): %s", record.RecordID, err)
-			resp.Records = append(resp.Records, events.KinesisAnalyticsOutputDeliveryResponseRecord{
-				RecordID: record.RecordID,
-				Result:   events.KinesisAnalyticsOutputDeliveryOK,
-			})
+			results[record.RecordID] = events.KinesisAnalyticsOutputDeliveryOK
 			continue
 		}
 
@@ -115,7 +112,18 @@ func (controller *Controller) PublishToCloudWatch(ctx context.Context, input eve
 
 	controller.Metrics.Flush(ctx)
 
-	resp.Records = append(resp.Records, controller.Metrics.Records()...)
+	for _, record := range controller.Metrics.Records() {
+		results[record.RecordID] = record.Result
+	}
+
+	resp := events.KinesisAnalyticsOutputDeliveryResponse{}
+	for _, record := range input.Records {
+		resp.Records = append(resp.Records, events.KinesisAnalyticsOutputDeliveryResponseRecord{
+			RecordID: record.RecordID,
+			Result:   results[record.RecordID],
+		})
+	}
+
 	return resp, nil
 }
 
