@@ -19,14 +19,14 @@ import (
 )
 
 type Controller struct {
-	Clock                clockwork.Clock
-	Events               *rest.CaptureController
-	AdvertisingInfoTable AdvertisingInfoTable
+	Clock          clockwork.Clock
+	Events         *rest.CaptureController
+	AdTrafficTable AdTrafficTable
 }
 
 const (
 	EnvVarEventsDeliveryStreamName string = "EVENTS_DELIVERY_STREAM_NAME"
-	EnvVarAdvertisingInfoTableName string = "ADVERTISING_INFO_TABLE_NAME"
+	EnvVarAdTrafficTableName       string = "AD_TRAFFIC_TABLE_NAME"
 )
 
 const (
@@ -40,23 +40,23 @@ func EnvController() *Controller {
 	fh := firehose.New(sess)
 	events := rest.NewCaptureController(BatchKeyEvents, deliveryStreamName, fh)
 
-	tableName := os.Getenv(EnvVarAdvertisingInfoTableName)
+	tableName := os.Getenv(EnvVarAdTrafficTableName)
 	ddb := dynamodb.New(sess)
-	advertisingInfo := NewAdvertisingInfoTable(tableName, ddb)
+	advertisingInfo := NewAdTrafficTable(tableName, ddb)
 
 	return NewController(events, advertisingInfo)
 }
 
-func NewController(events *rest.CaptureController, advertisingInfo AdvertisingInfoTable) *Controller {
+func NewController(events *rest.CaptureController, advertisingInfo AdTrafficTable) *Controller {
 	return &Controller{
-		Clock:                clockwork.NewRealClock(),
-		Events:               events,
-		AdvertisingInfoTable: advertisingInfo,
+		Clock:          clockwork.NewRealClock(),
+		Events:         events,
+		AdTrafficTable: advertisingInfo,
 	}
 }
 
-func MockedController(t *testing.T, eventsDeliveryStreamName string, fn func(controller *Controller, clock clockwork.Clock, fh *amzmock.Firehose, advertisingInfo *MockAdvertisingInfoTable)) {
-	advertisingInfo := new(MockAdvertisingInfoTable)
+func MockedController(t *testing.T, eventsDeliveryStreamName string, fn func(controller *Controller, clock clockwork.Clock, fh *amzmock.Firehose, advertisingInfo *MockAdTrafficTable)) {
+	advertisingInfo := new(MockAdTrafficTable)
 	fh := new(amzmock.Firehose)
 	events := rest.NewCaptureController(BatchKeyEvents, eventsDeliveryStreamName, fh)
 	controller := NewController(events, advertisingInfo)
@@ -76,6 +76,6 @@ func (controller *Controller) PublishToCloudWatch(ctx context.Context, input eve
 	return events.KinesisAnalyticsOutputDeliveryResponse{}
 }
 
-func (controller *Controller) AdvertisingInfo(ctx context.Context, evt events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func (controller *Controller) AdTraffic(ctx context.Context, evt events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	return rest.Respond(http.StatusInternalServerError, fmt.Errorf("not implemented"), nil)
 }

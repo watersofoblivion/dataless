@@ -99,7 +99,7 @@ Globals:
     Environment:
       Variables:
         EVENTS_DELIVERY_STREAM_NAME: !Ref EventsDeliveryStream
-        ADVERTISING_INFO_TABLE_NAME: !Ref AdvertisingInfoTable
+        AD_TRAFFIC_TABLE_NAME: !Ref AdTrafficTable
   Api:
     TracingEnabled: true
     EndpointConfiguration: EDGE
@@ -694,7 +694,7 @@ Resources:
               - Name: click_at
                 Type: timestamp
 
-  AdvertisingInfoTable:
+  AdTrafficTable:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
@@ -948,14 +948,14 @@ Resources:
               StringValue: DATE_START=#{format(@scheduledStartTime, 'YYYY-MM-dd')}
             - Key: scriptVariable
               StringValue: DATE_END=#{format(@scheduledEndTime, 'YYYY-MM-dd')}
-        - Id: AdvertisingInfoTableExists
+        - Id: AdTrafficTableExists
           Name: Advertising Info Table Exists
           Fields:
             - Key: type
               StringValue: DynamoDBTableExists
             - Key: tableName
-              StringValue: !Ref AdvertisingInfoTable
-        - Id: AdvertisingInfoStagingTableFormat
+              StringValue: !Ref AdTrafficTable
+        - Id: AdTrafficStagingTableFormat
           Name: Advertising Info Staging Table Format
           Fields:
             - Key: type
@@ -970,7 +970,7 @@ Resources:
               StringValue: clicks BIGINT
             - Key: column
               StringValue: clickthrough_rate DOUBLE
-        - Id: AdvertisingInfoStagingTable
+        - Id: AdTrafficStagingTable
           Name: Advertising Info Staging Table
           Fields:
             - Key: type
@@ -978,7 +978,7 @@ Resources:
             - Key: directoryPath
               StringValue: !Sub "s3://${Bucket}/data/tmp/advertising-info-staging-table/"
             - Key: dataFormat
-              RefValue: AdvertisingInfoStagingTableFormat
+              RefValue: AdTrafficStagingTableFormat
         - Id: DummyInputTableFormat
           Name: Dummy Input Table Format
           Fields:
@@ -1003,23 +1003,23 @@ Resources:
               StringValue: !Sub "s3://${Bucket}/data/raw/events/"
             - Key: dataFormat
               RefValue: DummyInputTableFormat
-        - Id: AdvertisingInfoTableFormat
+        - Id: AdTrafficTableFormat
           Name: Advertising Info Table Format
           Fields:
             - Key: type
               StringValue: DynamoDBExportDataFormat
-        - Id: AdvertisingInfoTable
+        - Id: AdTrafficTable
           Name: Advertising Info Table
           Fields:
             - Key: type
               StringValue: DynamoDBDataNode
             - Key: tableName
-              StringValue: !Ref AdvertisingInfoTable
+              StringValue: !Ref AdTrafficTable
             - Key: dataFormat
-              RefValue: AdvertisingInfoTableFormat
+              RefValue: AdTrafficTableFormat
             - Key: precondition
-              RefValue: AdvertisingInfoTableExists
-        - Id: StageDataForAdvertisingInfo
+              RefValue: AdTrafficTableExists
+        - Id: StageDataForAdTraffic
           Name: Stage Data for Advertising Info
           Fields:
             - Key: type
@@ -1037,7 +1037,7 @@ Resources:
             - Key: input
               RefValue: DummyInputTable
             - Key: output
-              RefValue: AdvertisingInfoStagingTable
+              RefValue: AdTrafficStagingTable
             - Key: scriptVariable
               StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
             - Key: scriptVariable
@@ -1046,17 +1046,17 @@ Resources:
               StringValue: DATE_START=#{format(@scheduledStartTime, 'YYYY-MM-dd')}
             - Key: scriptVariable
               StringValue: DATE_END=#{format(@scheduledEndTime, 'YYYY-MM-dd')}
-        - Id: LoadAdvertisingInfoTable
+        - Id: LoadAdTrafficTable
           Name: Load Advertising Info Into DynamoDB Table
           Fields:
             - Key: type
               StringValue: HiveCopyActivity
             - Key: dependsOn
-              RefValue: StageDataForAdvertisingInfo
+              RefValue: StageDataForAdTraffic
             - Key: input
-              RefValue: AdvertisingInfoStagingTable
+              RefValue: AdTrafficStagingTable
             - Key: output
-              RefValue: AdvertisingInfoTable
+              RefValue: AdTrafficTable
             - !If
                 - EMREnabled
                 - Key: workerGroup
@@ -1079,13 +1079,13 @@ Resources:
               StringValue: !Sub "s3://${Bucket}/data/tmp/dummy/"
             - Key: dataFormat
               RefValue: DummyOutputTableFormat
-        - Id: TruncateAdvertisingInfoStagingTable
+        - Id: TruncateAdTrafficStagingTable
           Name: Truncate Advertising Info Staging Table
           Fields:
             - Key: type
               StringValue: HiveActivity
             - Key: dependsOn
-              RefValue: LoadAdvertisingInfoTable
+              RefValue: LoadAdTrafficTable
             - Key: hiveScript
               StringValue: TRUNCATE TABLE ${input1}
             - !If
@@ -1095,7 +1095,7 @@ Resources:
                 - Key: runsOn
                   RefValue: EMRCluster
             - Key: input
-              RefValue: AdvertisingInfoStagingTable
+              RefValue: AdTrafficStagingTable
             - Key: output
               RefValue: DummyOutputTable
 
@@ -1549,7 +1549,7 @@ Resources:
                   - dynamodb:Query
                 Effect: Allow
                 Resource:
-                  - !GetAtt AdvertisingInfoTable.Arn
+                  - !GetAtt AdTrafficTable.Arn
 
   IngestEventsLambda:
     Type: AWS::Serverless::Function
@@ -1562,7 +1562,7 @@ Resources:
           BATCH_KEY: events
           DELIVERY_STREAM_NAME: !Ref EventsDeliveryStream
 
-  QueryAdvertisingInfoTableLambda:
+  QueryAdTrafficTableLambda:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: lambdas.zip
@@ -1570,7 +1570,7 @@ Resources:
       Role: !GetAtt APILambdaRole.Arn
       Environment:
         Variables:
-          TABLE_NAME: !Ref AdvertisingInfoTable
+          TABLE_NAME: !Ref AdTrafficTable
 
   APIRole:
     Type: AWS::IAM::Role
@@ -1594,7 +1594,7 @@ Resources:
                 Effect: Allow
                 Resource:
                   - !GetAtt IngestEventsLambda.Arn
-                  - !GetAtt QueryAdvertisingInfoTableLambda.Arn
+                  - !GetAtt QueryAdTrafficTableLambda.Arn
 
   API:
     Type: AWS::Serverless::Api
