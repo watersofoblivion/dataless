@@ -142,45 +142,14 @@ components:
     Impression:
       type: object
       properties:
-        session_id:
-          type: string
-          format: uuid
-        context_id:
-          type: string
-          format: uuid
-        parent_id:
-          type: string
-          format: uuid
-        actor_type:
-          type:
-            $ref: "#/components/schemas/Type"
-        actor_id:
-          type: string
-          format: uuid
-        event_type:
-          type:
-            $ref: "#/components/schemas/Type"
-        event_id:
-          type: string
-          format: uuid
-        object_type:
-          type:
-            $ref: "#/components/schemas/Type"
-        object_id:
+        ad_id:
           type: string
           format: uuid
         occurred_at:
           type:
             $ref: "#/components/schemas/Timestamp"
       required:
-        - session_id
-        - context_id
-        - actor_type
-        - actor_id
-        - event_type
-        - event_id
-        - object_type
-        - object_id
+        - ad_id
         - occurred_at
       additionalProperties: false
     Clicks:
@@ -198,45 +167,18 @@ components:
     Click:
       type: object
       properties:
-        session_id:
+        impression_id:
           type: string
           format: uuid
-        context_id:
-          type: string
-          format: uuid
-        parent_id:
-          type: string
-          format: uuid
-        actor_type:
-          type:
-            $ref: "#/components/schemas/Type"
-        actor_id:
-          type: string
-          format: uuid
-        event_type:
-          type:
-            $ref: "#/components/schemas/Type"
-        event_id:
-          type: string
-          format: uuid
-        object_type:
-          type:
-            $ref: "#/components/schemas/Type"
-        object_id:
+        ad_id:
           type: string
           format: uuid
         occurred_at:
           type:
             $ref: "#/components/schemas/Timestamp"
       required:
-        - session_id
-        - context_id
-        - actor_type
-        - actor_id
-        - event_type
-        - event_id
-        - object_type
-        - object_id
+        - impression_id
+        - ad_id
         - occurred_at
       additionalProperties: false
     CaptureResponse:

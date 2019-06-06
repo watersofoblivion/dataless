@@ -636,23 +636,9 @@ Resources:
               SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
             OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
             Columns:
-              - Name: session_id
+              - Name: impression_id
                 Type: string
-              - Name: context_id
-                Type: string
-              - Name: parent_id
-                Type: string
-              - Name: actor_type
-                Type: string
-              - Name: actor_id
-                Type: string
-              - Name: event_type
-                Type: string
-              - Name: event_id
-                Type: string
-              - Name: object_type
-                Type: string
-              - Name: object_id
+              - Name: ad_id
                 Type: string
               - Name: occurred_at
                 Type: timestamp
@@ -683,23 +669,11 @@ Resources:
               SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
             OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
             Columns:
-              - Name: session_id
+              - Name: impression_id
                 Type: string
-              - Name: context_id
+              - Name: click_id
                 Type: string
-              - Name: parent_id
-                Type: string
-              - Name: actor_type
-                Type: string
-              - Name: actor_id
-                Type: string
-              - Name: event_type
-                Type: string
-              - Name: event_id
-                Type: string
-              - Name: object_type
-                Type: string
-              - Name: object_id
+              - Name: ad_id
                 Type: string
               - Name: occurred_at
                 Type: timestamp

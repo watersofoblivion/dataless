@@ -13,18 +13,11 @@ object GlueApp {
   val argNames = Seq("JOB_NAME", "database_name", "raw_table_name", "table_name")
 
   val mappings = Seq(
-    MappingSpec("session_id",  "string", "session_id",  "string"),
-    MappingSpec("context_id",  "string", "context_id",  "string"),
-    MappingSpec("parent_id",   "string", "parent_id",   "string"),
-    MappingSpec("actor_type",  "string", "actor_type",  "string"),
-    MappingSpec("actor_id",    "string", "actor_id",    "string"),
-    MappingSpec("object_type", "string", "object_type", "string"),
-    MappingSpec("object_id",   "string", "object_id",   "string"),
-    MappingSpec("event_type",  "string", "event_type",  "string"),
-    MappingSpec("event_id",    "string", "event_id",    "string"),
-    MappingSpec("occurred_at", "string", "occurred_at", "timestamp"),
-    MappingSpec("partition_0", "string", "year",        "int"),
-    MappingSpec("partition_1", "string", "month",       "int")
+    MappingSpec("impression_id", "string", "impression_id", "string"),
+    MappingSpec("ad_id",         "string", "ad_id",         "string"),
+    MappingSpec("occurred_at",   "string", "occurred_at",   "timestamp"),
+    MappingSpec("partition_0",   "string", "year",          "int"),
+    MappingSpec("partition_1",   "string", "month",         "int")
   )
 
   def main(sysArgs: Array[String]) {
