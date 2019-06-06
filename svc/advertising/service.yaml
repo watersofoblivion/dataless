@@ -1649,7 +1649,8 @@ Resources:
                   - firehose:PutRecordBatch
                 Effect: Allow
                 Resource:
-                  - !GetAtt EventsDeliveryStream.Arn
+                  - !GetAtt ImpressionsDeliveryStream.Arn
+                  - !GetAtt ClicksDeliveryStream.Arn
               - Action:
                   - dynamodb:Query
                 Effect: Allow
@@ -1698,7 +1699,8 @@ Resources:
                   - lambda:InvokeFunction
                 Effect: Allow
                 Resource:
-                  - !GetAtt IngestEventsLambda.Arn
+                  - !GetAtt CaptureImpressionsLambda.Arn
+                  - !GetAtt CaptureClicksLambda.Arn
                   - !GetAtt QueryAdTrafficTableLambda.Arn
 
   API:
