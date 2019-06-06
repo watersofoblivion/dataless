@@ -23,7 +23,7 @@ phases:
             go build -o "./bin/$(basename "${LAMBDA}")" "${LAMBDA}"
           done
           zip -rqDm "${SVC}/lambdas.zip" ./bin/
-          mkdir -p "${STAGING_DIR}/$(basename ${SVC})/"
+          mkdir -p "${STAGING_DIR}/svc/$(basename "${SVC}")/"
           cp -r "${SVC}/scripts/" "${STAGING_DIR}/svc/$(basename "${SVC}")/"
         done
       - cp -r scripts/ "${STAGING_DIR}/"
