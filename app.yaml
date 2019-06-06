@@ -926,7 +926,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"Count\" ApiName=\"${APIName}\" Stage=\"${Stage}\"', 'Sum', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"Count\" Stage=\"${Stage}\"', 'Sum', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Request Rate",
@@ -944,7 +944,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"Latency\" ApiName=\"${APIName}\" Stage=\"${Stage}\"', 'p95', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"Latency\" Stage=\"${Stage}\"', 'p95', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Latency",
@@ -962,7 +962,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"IntegrationLatency\" ApiName=\"${APIName}\" Stage=\"${Stage}\"', 'p95', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=\"IntegrationLatency\" Stage=\"${Stage}\"', 'p95', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Integration Latency",
@@ -980,7 +980,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=XXError ApiName=\"${APIName}\" Stage=\"${Stage}\"', 'Sum', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/ApiGateway,ApiName,Resource,Method,Stage} MetricName=XXError Stage=\"${Stage}\"', 'Sum', 60)" } ]
                 ],
                 "region": "${AWS::Region}",
                 "title": "Errors",
@@ -1120,10 +1120,8 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "Success", "Application", "${RealTimeAdvertisingApplication}"]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application} MetricName=\"Success\"', 'Average', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Average",
                 "title": "Success",
                 "region": "${AWS::Region}",
                 "liveData": false,
@@ -1140,10 +1138,8 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  ["AWS/KinesisAnalytics", "KPUs", "Application", "${RealTimeAdvertisingApplication}"]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application} MetricName=\"KPUs\"', 'Average', 60)" } ]
                 ],
-                "period": 60,
-                "stat": "Average",
                 "region": "${AWS::Region}",
                 "title": "KPUs",
                 "liveData": false,
@@ -1160,7 +1156,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"MillisBehindLatest\" Application=\"${RealTimeAdvertisingApplication}\" Flow=\"Input\"', 'Maximum', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"MillisBehindLatest\" Flow=\"Input\"', 'Maximum', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Maximum",
@@ -1180,7 +1176,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"Records\" Application=\"${RealTimeAdvertisingApplication}\" Flow=\"Input\"', 'Maximum', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"Records\" Flow=\"Input\"', 'Maximum', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1200,7 +1196,7 @@ Resources:
               "height": 4,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"Bytes\" Application=\"${RealTimeAdvertisingApplication}\" Flow=\"Input\"', 'Maximum', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"Bytes\" Flow=\"Input\"', 'Maximum', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1220,7 +1216,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"Bytes\" Application=\"${RealTimeAdvertisingApplication}\" Flow=\"Output\"', 'Average', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"Bytes\" Flow=\"Output\"', 'Average', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1240,7 +1236,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"Records\" Application=\"${RealTimeAdvertisingApplication}\" Flow=\"Output\"', 'Average', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"Records\" Flow=\"Output\"', 'Average', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1260,7 +1256,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"Bytes\" Application=\"${RealTimeAdvertisingApplication}\" Flow=\"Output\"', 'Average', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"Bytes\" Flow=\"Output\"', 'Average', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Average",
@@ -1280,7 +1276,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"LambdaDelivery.OkRecords\" Application=\"${RealTimeAdvertisingApplication}\" Flow=\"Output\"', 'Average', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"LambdaDelivery.OkRecords\" Flow=\"Output\"', 'Average', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1300,7 +1296,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"LambdaDelivery.FailedRecords\" Application=\"${RealTimeAdvertisingApplication}\" Flow=\"Output\"', 'Average', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"LambdaDelivery.FailedRecords\" Flow=\"Output\"', 'Average', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Sum",
@@ -1320,7 +1316,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"LambdaDelivery.Duration\" Application=\"${RealTimeAdvertisingApplication}\" Flow=\"Output\"', 'Average', 60)" } ]
+                  [ { "expression": "SEARCH('{AWS/KinesisAnalytics,Application,Flow,Id} MetricName=\"LambdaDelivery.Duration\" Flow=\"Output\"', 'Average', 60)" } ]
                 ],
                 "period": 60,
                 "stat": "Average",
