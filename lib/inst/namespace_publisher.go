@@ -2,7 +2,9 @@ package inst
 
 import (
 	"context"
+	"encoding/json"
 	"log"
+	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
@@ -80,11 +82,14 @@ func (publisher *NamespacePublisher) Flush(ctx context.Context) {
 	if numMetrics > 0 {
 		publisher.putMetricDataInput.SetMetricData(publisher.metrics)
 
+		log.Printf("Publishing batch to CloudWatch")
+		json.NewEncoder(os.Stdout).Encode(publisher.putMetricDataInput)
 		status := events.KinesisAnalyticsOutputDeliveryOK
 		if _, err := publisher.cw.PutMetricDataWithContext(ctx, publisher.putMetricDataInput); err != nil {
 			log.Printf("metric delivery failed for %d metrics: %s", numMetrics, err)
 			status = events.KinesisAnalyticsOutputDeliveryFailed
 		}
+		log.Printf("Status: %q", status)
 
 		for _, recordID := range publisher.recordIDs {
 			publisher.records = append(publisher.records, events.KinesisAnalyticsOutputDeliveryResponseRecord{

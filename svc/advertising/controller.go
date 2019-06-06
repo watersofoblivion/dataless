@@ -117,6 +117,10 @@ func (controller *Controller) PublishToCloudWatch(ctx context.Context, input eve
 	controller.Metrics.Flush(ctx)
 
 	resp.Records = append(resp.Records, controller.Metrics.Records()...)
+	log.Printf("Records:")
+	for _, record := range resp.Records {
+		json.NewEncoder(os.Stdout).Encode(record)
+	}
 	return resp, nil
 }
 
