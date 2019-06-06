@@ -832,7 +832,7 @@ Resources:
         SourceVersion: !Ref SourceVersion
         Build: !Ref Build
         CodeBucket: !Ref CodeBucket
-        CodePrefix: !Sub "${CodePrefix}/advertising"
+        CodePrefix: !Sub "${CodePrefix}/svc/advertising"
         KeyPair: !Ref KeyPair
         Stage: !Ref Stage
         DeploymentPreference: !Ref DeploymentPreference
