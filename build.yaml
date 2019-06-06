@@ -274,8 +274,8 @@ Resources:
                 RoleArn: !GetAtt Role.Arn
                 StackName: !Sub "${AWS::StackName}-${Branch}"
                 ChangeSetName: !Sub "${AWS::StackName}-${Branch}-change-set"
-                TemplatePath: Package::cloudformation.yaml
-                TemplateConfiguration: Package::config.json
+                TemplatePath: Package::template.yaml
+                TemplateConfiguration: Package::template-config.json
                 Capabilities: CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
               InputArtifacts:
                 - Name: Package
