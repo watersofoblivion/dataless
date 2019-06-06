@@ -3,22 +3,22 @@ info:
   version: 0.1.0
   title: !Ref APIName
 paths:
-  /data/events:
+  /impressions:
     post:
-      summary: Record a batch of events
-      operationId: data-events
+      summary: Record a batch of impressions
+      operationId: capture-impressions
       requestBody:
-        description: A batch of ad events
+        description: A batch of impressions
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DataEvents"
+              $ref: "#/components/schemas/Impressions"
       x-amazon-apigateway-integration:
         type: AWS_PROXY
         httpMethod: POST
         uri:
-          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IngestEventsLambda.Arn}/invocations"
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CaptureImpressionsLambda.Arn}/invocations"
         credentials:
           Fn::GetAtt:
             - APIRole
@@ -34,13 +34,45 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BatchWriteResponse"
-  /info/ads/{id}:
+                $ref: "#/components/schemas/CaptureResponse"
+  /clicks:
+    post:
+      summary: Record a batch of clicks
+      operationId: capture-clicks
+      requestBody:
+        description: A batch of clicks
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Clicks"
+      x-amazon-apigateway-integration:
+        type: AWS_PROXY
+        httpMethod: POST
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CaptureClicksLambda.Arn}/invocations"
+        credentials:
+          Fn::GetAtt:
+            - APIRole
+            - Arn
+        passthroughBehavior: when_no_match
+      responses:
+        '200':
+          description: |
+            The batch was processed.  Some events may not have been
+            processed.  The response contains a list of events in the
+            same order submitted, indicating which succeeded and which
+            failed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaptureResponse"
+  /traffic/{ad-id}:
     get:
-      summary: Get info about events
-      operationId: info-events
+      summary: Get traffic for an ad
+      operationId: ad-traffic
       parameters:
-        - name: id
+        - name: ad-id
           in: path
           description: ID of the ad
           required: true
@@ -77,7 +109,7 @@ paths:
       x-amazon-apigateway-integration:
         type: AWS_PROXY
         httpMethod: POST
-        uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${QueryAdvertisingInfoTableLambda.Arn}/invocations"
+        uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${QueryAdTrafficTableLambda.Arn}/invocations"
         credentials: !GetAtt APIRole.Arn
         passthroughBehavior: when_no_match
       responses:
@@ -87,7 +119,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AdvertisingInfo"
+                $ref: "#/components/schemas/AdTraffic"
 x-amazon-apigateway-request-validators:
   all:
     validateRequestBody: true
@@ -95,19 +127,19 @@ x-amazon-apigateway-request-validators:
 x-amazon-apigateway-request-validator: all
 components:
   schemas:
-    DataEvents:
+    Impressions:
       type: object
       properties:
-        events:
+        impressions:
           type: array
           items:
-            $ref: "#/components/schemas/DataEvent"
+            $ref: "#/components/schemas/Impression"
           minItems: 1
           maxItems: 500
       required:
-        - events
+        - impressions
       additionalProperties: false
-    DataEvent:
+    Impression:
       type: object
       properties:
         session_id:
@@ -151,19 +183,75 @@ components:
         - object_id
         - occurred_at
       additionalProperties: false
-    BatchWriteResponse:
+    Clicks:
+      type: object
+      properties:
+        clicks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Click"
+          minItems: 1
+          maxItems: 500
+      required:
+        - clicks
+      additionalProperties: false
+    Click:
+      type: object
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        context_id:
+          type: string
+          format: uuid
+        parent_id:
+          type: string
+          format: uuid
+        actor_type:
+          type:
+            $ref: "#/components/schemas/Type"
+        actor_id:
+          type: string
+          format: uuid
+        event_type:
+          type:
+            $ref: "#/components/schemas/Type"
+        event_id:
+          type: string
+          format: uuid
+        object_type:
+          type:
+            $ref: "#/components/schemas/Type"
+        object_id:
+          type: string
+          format: uuid
+        occurred_at:
+          type:
+            $ref: "#/components/schemas/Timestamp"
+      required:
+        - session_id
+        - context_id
+        - actor_type
+        - actor_id
+        - event_type
+        - event_id
+        - object_type
+        - object_id
+        - occurred_at
+      additionalProperties: false
+    CaptureResponse:
       type: object
       properties:
         records:
           type: array
           items:
-            $ref: "#/components/schemas/BatchWriteRecord"
+            $ref: "#/components/schemas/CaptureRecord"
           minItems: 1
           maxItems: 500
       required:
         - records
       additionalProperties: false
-    BatchWriteRecord:
+    CaptureRecord:
       type: object
       properties:
         failed:
@@ -175,7 +263,7 @@ components:
       required:
         - failed
       additionalProperties: false
-    AdvertisingInfo:
+    AdTraffic:
       type: object
       properties:
         next:
@@ -187,12 +275,12 @@ components:
         days:
           type: array
           items:
-            $ref: "#/components/schemas/AdvertisingDay"
+            $ref: "#/components/schemas/AdDay"
       required:
         - count
         - days
       additionalProperties: false
-    AdvertisingDay:
+    AdDay:
       type: object
       properties:
         day:
@@ -216,14 +304,10 @@ components:
     Error:
       type: object
       properties:
-        code:
-          type: integer
-          format: int32
-        message:
+        error:
           type: string
       required:
-        - code
-        - message
+        - error
       additionalProperties: false
     Type:
       type: string

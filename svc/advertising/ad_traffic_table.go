@@ -1,4 +1,4 @@
-package events
+package advertising
 
 import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"

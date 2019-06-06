@@ -1,11 +1,15 @@
-package events
+package advertising
 
 import (
 	"testing"
 )
 
 func TestController(t *testing.T) {
-	t.Run("Capture", func(t *testing.T) {
+	t.Run("Impressions", func(t *testing.T) {
+
+	})
+
+	t.Run("Clicks", func(t *testing.T) {
 
 	})
 

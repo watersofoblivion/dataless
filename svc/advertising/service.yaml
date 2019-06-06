@@ -98,7 +98,8 @@ Globals:
       Type: !Ref DeploymentPreference
     Environment:
       Variables:
-        EVENTS_DELIVERY_STREAM_NAME: !Ref EventsDeliveryStream
+        IMPRESSIONS_DELIVERY_STREAM_NAME: !Ref ImpressionsDeliveryStream
+        CLICKS_DELIVERY_STREAM_NAME: !Ref ClicksDeliveryStream
         AD_TRAFFIC_TABLE_NAME: !Ref AdTrafficTable
   Api:
     TracingEnabled: true
@@ -135,22 +136,22 @@ Resources:
                   - s3:PutObject*
                 Effect: Allow
                 Resource:
-                  - !Sub "${Bucket.Arn}/data/raw/events/*"
+                  - !Sub "${Bucket.Arn}/data/raw/*"
 
-  EventsDeliveryStream:
+  ImpressionsDeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
     Properties:
       DeliveryStreamType: DirectPut
       S3DestinationConfiguration:
         BucketARN: !GetAtt Bucket.Arn
-        Prefix: data/raw/events/
+        Prefix: data/raw/ad/impressions/
         BufferingHints:
           IntervalInSeconds: 900
           SizeInMBs: 128
         CompressionFormat: GZIP
         RoleARN: !GetAtt DeliveryStreamRole.Arn
 
-  EventsDeliveryStreamRecordsPerSecondAlarm:
+  ImpressionsDeliveryStreamRecordsPerSecondAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       Statistic: Average
@@ -158,14 +159,14 @@ Resources:
       MetricName: IncomingRecords
       Dimensions:
         - Name: DeliveryStreamName
-          Value: !Ref EventsDeliveryStream
+          Value: !Ref ImpressionsDeliveryStream
       ComparisonOperator: GreaterThanThreshold
       Threshold: 4000
       DatapointsToAlarm: 3
       EvaluationPeriods: 5
       Period: 60
 
-  EventsDeliveryStreamTransactionsPerSecondAlarm:
+  ImpressionsDeliveryStreamTransactionsPerSecondAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       Statistic: Average
@@ -173,14 +174,14 @@ Resources:
       MetricName: PutRecordBatch.Requests
       Dimensions:
         - Name: DeliveryStreamName
-          Value: !Ref EventsDeliveryStream
+          Value: !Ref ImpressionsDeliveryStream
       ComparisonOperator: GreaterThanThreshold
       Threshold: 1600
       DatapointsToAlarm: 3
       EvaluationPeriods: 5
       Period: 60
 
-  EventsDeliveryStreamDataThroughputAlarm:
+  ImpressionsDeliveryStreamDataThroughputAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       Statistic: Average
@@ -188,7 +189,65 @@ Resources:
       MetricName: IncomingBytes
       Dimensions:
         - Name: DeliveryStreamName
-          Value: !Ref EventsDeliveryStream
+          Value: !Ref ImpressionsDeliveryStream
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 4194304
+      DatapointsToAlarm: 3
+      EvaluationPeriods: 5
+      Period: 60
+
+  ClicksDeliveryStream:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      DeliveryStreamType: DirectPut
+      S3DestinationConfiguration:
+        BucketARN: !GetAtt Bucket.Arn
+        Prefix: data/raw/ad/clicks/
+        BufferingHints:
+          IntervalInSeconds: 900
+          SizeInMBs: 128
+        CompressionFormat: GZIP
+        RoleARN: !GetAtt DeliveryStreamRole.Arn
+
+  ClicksDeliveryStreamRecordsPerSecondAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      Statistic: Average
+      Namespace: "AWS/Firehose"
+      MetricName: IncomingRecords
+      Dimensions:
+        - Name: DeliveryStreamName
+          Value: !Ref ClicksDeliveryStream
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 4000
+      DatapointsToAlarm: 3
+      EvaluationPeriods: 5
+      Period: 60
+
+  ClicksDeliveryStreamTransactionsPerSecondAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      Statistic: Average
+      Namespace: "AWS/Firehose"
+      MetricName: PutRecordBatch.Requests
+      Dimensions:
+        - Name: DeliveryStreamName
+          Value: !Ref ClicksDeliveryStream
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 1600
+      DatapointsToAlarm: 3
+      EvaluationPeriods: 5
+      Period: 60
+
+  ClicksDeliveryStreamDataThroughputAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      Statistic: Average
+      Namespace: "AWS/Firehose"
+      MetricName: IncomingBytes
+      Dimensions:
+        - Name: DeliveryStreamName
+          Value: !Ref ClicksDeliveryStream
       ComparisonOperator: GreaterThanThreshold
       Threshold: 4194304
       DatapointsToAlarm: 3
@@ -323,9 +382,10 @@ Resources:
                   - firehose:Get*
                 Effect: Allow
                 Resource:
-                  - !GetAtt EventsDeliveryStream.Arn
+                  - !GetAtt ImpressionsDeliveryStream.Arn
+                  - !GetAtt ClicksDeliveryStream.Arn
 
-  RealTimeAdvertisingApplication:
+  RealTimeImpressionsApplication:
     Type: AWS::KinesisAnalytics::Application
     Properties:
       ApplicationCode: |
@@ -420,9 +480,9 @@ Resources:
         FROM "clickthrough_rates"
         ;
       Inputs:
-        - NamePrefix: events
+        - NamePrefix: impressions
           KinesisFirehoseInput:
-            ResourceARN: !GetAtt EventsDeliveryStream.Arn
+            ResourceARN: !GetAtt ImpressionsDeliveryStream.Arn
             RoleARN: !GetAtt RealTimeAdvertisingApplicationRole.Arn
           InputSchema:
             RecordEncoding: UTF-8
@@ -463,10 +523,10 @@ Resources:
                 SqlType: TIMESTAMP
                 Mapping: "$.occurred_at"
 
-  RealTimeEventsOutputs:
+  RealTimeImpressionsOutputs:
     Type: AWS::KinesisAnalytics::ApplicationOutput
     Properties:
-      ApplicationName: !Ref RealTimeAdvertisingApplication
+      ApplicationName: !Ref RealTimeImpressionsApplication
       Output:
         Name: metrics
         DestinationSchema:
@@ -484,7 +544,7 @@ Resources:
     Properties:
       CatalogId: !Ref AWS::AccountId
       DatabaseInput:
-        Name: warehouse
+        Name: advertising
 
   CrawlerRole:
     Type: AWS::IAM::Role
@@ -510,23 +570,24 @@ Resources:
                   - s3:PutObject*
                 Effect: Allow
                 Resource:
-                  - !Sub "${Bucket.Arn}/data/raw/events/*"
+                  - !Sub "${Bucket.Arn}/data/raw/*"
               - Action:
                   - s3:ListBucket*
                 Effect: Allow
                 Resource:
                   - !GetAtt Bucket.Arn
 
-  RawEventsCrawler:
+  RawCrawler:
     Type: AWS::Glue::Crawler
     Properties:
-      Name: raw_events_crawler
-      Description: Crawls the raw event data
+      Name: raw_crawler
+      Description: Crawls the raw data
       Role: !GetAtt CrawlerRole.Arn
       DatabaseName: !Ref Database
       Targets: # CloudFormation does not seem to support targeting an existing table.  Console does, at least.
         S3Targets:
-          - Path: !Sub "s3://${Bucket}/data/raw/events/"
+          - Path: !Sub "s3://${Bucket}/data/raw/ad/impressions/"
+          - Path: !Sub "s3://${Bucket}/data/raw/ad/clicks/"
       TablePrefix: raw_
       SchemaChangePolicy:
         UpdateBehavior: UPDATE_IN_DATABASE
@@ -549,7 +610,7 @@ Resources:
           }
         }
 
-  EventsTable:
+  ImpressionsTable:
     Type: AWS::Glue::Table
     DependsOn:
       - Database
@@ -557,8 +618,8 @@ Resources:
       CatalogId: !Ref AWS::AccountId
       DatabaseName: !Ref Database
       TableInput:
-          Name: events
-          Description: Events
+          Name: impressions
+          Description: Ad Impressions
           TableType: EXTERNAL_TABLE
           Parameters:
             classification: orc
@@ -568,7 +629,54 @@ Resources:
             - Name: month
               Type: int
           StorageDescriptor:
-            Location: !Sub "s3://${Bucket}/data/lake/events/"
+            Location: !Sub "s3://${Bucket}/data/lake/ad/impressions/"
+            StoredAsSubDirectories: true
+            InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+            SerdeInfo:
+              SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
+            OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
+            Columns:
+              - Name: session_id
+                Type: string
+              - Name: context_id
+                Type: string
+              - Name: parent_id
+                Type: string
+              - Name: actor_type
+                Type: string
+              - Name: actor_id
+                Type: string
+              - Name: event_type
+                Type: string
+              - Name: event_id
+                Type: string
+              - Name: object_type
+                Type: string
+              - Name: object_id
+                Type: string
+              - Name: occurred_at
+                Type: timestamp
+
+  ClicksTable:
+    Type: AWS::Glue::Table
+    DependsOn:
+      - Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref Database
+      TableInput:
+          Name: clicks
+          Description: Ad Clicks
+          TableType: EXTERNAL_TABLE
+          Parameters:
+            classification: orc
+          PartitionKeys:
+            - Name: year
+              Type: int
+            - Name: month
+              Type: int
+          StorageDescriptor:
+            Location: !Sub "s3://${Bucket}/data/lake/ad/clicks/"
             StoredAsSubDirectories: true
             InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
             SerdeInfo:
@@ -617,38 +725,74 @@ Resources:
                 Effect: Allow
                 Resource: "*"
 
-  EventsPythonETLJob:
+  ImpressionsPythonETLJob:
     Type: AWS::Glue::Job
     Properties:
       Role: !GetAtt ETLJobRole.Arn
       Command:
         Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/events_etl.py"
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/impressions_etl.py"
       DefaultArguments:
         "--enable-glue-datacatalog": ""
         "--job-bookmark-option": "job-bookmark-enable"
         "--database_name": !Ref Database
-        "--raw_table_name": raw_events # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
-        "--table_name": !Ref EventsTable
+        "--raw_table_name": raw_impressions # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
+        "--table_name": !Ref ImpressionsTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
       MaxRetries: 0
 
-  EventsScalaETLJob:
+  ImpressionsScalaETLJob:
     Type: AWS::Glue::Job
     Properties:
       Role: !GetAtt ETLJobRole.Arn
       Command:
         Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/events_etl.scala"
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/impressions_etl.scala"
       DefaultArguments:
         "--job-language": scala
         "--class": GlueApp
         "--enable-glue-datacatalog": ""
         "--job-bookmark-option": "job-bookmark-enable"
         "--database_name": !Ref Database
-        "--raw_table_name": raw_events # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
-        "--table_name": !Ref EventsTable
+        "--raw_table_name": raw_impressions # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
+        "--table_name": !Ref ImpressionsTable
+      ExecutionProperty:
+        MaxConcurrentRuns: 1
+      MaxRetries: 0
+
+  ClicksPythonETLJob:
+    Type: AWS::Glue::Job
+    Properties:
+      Role: !GetAtt ETLJobRole.Arn
+      Command:
+        Name: glueetl
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/clicks_etl.py"
+      DefaultArguments:
+        "--enable-glue-datacatalog": ""
+        "--job-bookmark-option": "job-bookmark-enable"
+        "--database_name": !Ref Database
+        "--raw_table_name": raw_clicks # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
+        "--table_name": !Ref ClicksTable
+      ExecutionProperty:
+        MaxConcurrentRuns: 1
+      MaxRetries: 0
+
+  ClicksScalaETLJob:
+    Type: AWS::Glue::Job
+    Properties:
+      Role: !GetAtt ETLJobRole.Arn
+      Command:
+        Name: glueetl
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/clicks_etl.scala"
+      DefaultArguments:
+        "--job-language": scala
+        "--class": GlueApp
+        "--enable-glue-datacatalog": ""
+        "--job-bookmark-option": "job-bookmark-enable"
+        "--database_name": !Ref Database
+        "--raw_table_name": raw_clicks # Hard-coded because CloudFormation-based Crawlers can't crawl an existing table
+        "--table_name": !Ref ClicksTable
       ExecutionProperty:
         MaxConcurrentRuns: 1
       MaxRetries: 0
@@ -1551,16 +1695,25 @@ Resources:
                 Resource:
                   - !GetAtt AdTrafficTable.Arn
 
-  IngestEventsLambda:
+  CaptureImpressionsLambda:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: lambdas.zip
-      Handler: bin/publish-records-to-kinesis-firehose
+      Handler: bin/capture-impressions
       Role: !GetAtt APILambdaRole.Arn
       Environment:
         Variables:
-          BATCH_KEY: events
-          DELIVERY_STREAM_NAME: !Ref EventsDeliveryStream
+          BATCH_KEY: impressions
+
+  CaptureClicksLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambdas.zip
+      Handler: bin/capture-clicks
+      Role: !GetAtt APILambdaRole.Arn
+      Environment:
+        Variables:
+          BATCH_KEY: impressions
 
   QueryAdTrafficTableLambda:
     Type: AWS::Serverless::Function

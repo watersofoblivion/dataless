@@ -1,4 +1,4 @@
-package events
+package advertising
 
 import (
 	"testing"
