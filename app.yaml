@@ -481,7 +481,7 @@ Resources:
       MasterUsername: "warehouse"
       MasterUserPassword: "War340u5e!"
       NodeType: !Ref RedshiftNodeType
-      NumberOfNodes: !If [RedshiftSingleNode, !Ref AWS::NoValue, !Ref RedshiftNumberOfNodes]
+      NumberOfNodes: !If [RedshiftSingleNode, !Ref 'AWS::NoValue', !Ref RedshiftNumberOfNodes]
       ClusterSubnetGroupName: !Ref RedshiftClusterSubnetGroup
       VpcSecurityGroupIds:
         - !Ref SecurityGroup
