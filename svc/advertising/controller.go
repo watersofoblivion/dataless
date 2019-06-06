@@ -96,7 +96,7 @@ func (controller *Controller) CaptureClicks(ctx context.Context, req events.APIG
 	return controller.Clicks.Capture(ctx, req)
 }
 
-func (controller *Controller) PublishToCloudWatch(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEvent) events.KinesisAnalyticsOutputDeliveryResponse {
+func (controller *Controller) PublishToCloudWatch(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEvent) (events.KinesisAnalyticsOutputDeliveryResponse, error) {
 	resp := events.KinesisAnalyticsOutputDeliveryResponse{}
 
 	for _, record := range input.Records {
@@ -116,7 +116,7 @@ func (controller *Controller) PublishToCloudWatch(ctx context.Context, input eve
 	controller.Metrics.Flush(ctx)
 
 	resp.Records = append(resp.Records, controller.Metrics.Records()...)
-	return resp
+	return resp, nil
 }
 
 func (controller *Controller) GetAdTraffic(ctx context.Context, evt events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
