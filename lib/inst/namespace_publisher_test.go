@@ -1,4 +1,4 @@
-package main
+package inst
 
 import (
 	"context"
@@ -7,24 +7,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/aws/aws-sdk-go/service/cloudwatch/cloudwatchiface"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	"github.com/watersofoblivion/dataless/lib/amz/amzmock"
 )
-
-type mockCloudWatch struct {
-	mock.Mock
-	cloudwatchiface.CloudWatchAPI
-}
-
-func (mock *mockCloudWatch) PutMetricDataWithContext(ctx aws.Context, data *cloudwatch.PutMetricDataInput, options ...request.Option) (*cloudwatch.PutMetricDataOutput, error) {
-	args := mock.Called(ctx, data)
-	return nil, args.Error(1)
-}
 
 func TestNamespacePublisher(t *testing.T) {
 	ctx := context.Background()
@@ -46,7 +33,7 @@ func TestNamespacePublisher(t *testing.T) {
 	}
 
 	t.Run("Publish", func(t *testing.T) {
-		cw := new(mockCloudWatch)
+		cw := new(amzmock.CloudWatch)
 		publisher := NewNamespacePublisher(cw, namespace)
 
 		publisher.Publish(ctx, recordIDOne, metricOne)
@@ -65,7 +52,7 @@ func TestNamespacePublisher(t *testing.T) {
 		assert.Equal(t, events.KinesisAnalyticsOutputDeliveryOK, records[1].Result)
 
 		t.Run("when PutMetricData returns an error", func(t *testing.T) {
-			cw := new(mockCloudWatch)
+			cw := new(amzmock.CloudWatch)
 			publisher := NewNamespacePublisher(cw, namespace)
 
 			publisher.Publish(ctx, recordIDOne, metricOne)
@@ -87,7 +74,7 @@ func TestNamespacePublisher(t *testing.T) {
 		t.Run("flushes on a full batch", func(t *testing.T) {
 			ids := make([]string, MetricDataLimit+1)
 
-			cw := new(mockCloudWatch)
+			cw := new(amzmock.CloudWatch)
 			publisher := NewNamespacePublisher(cw, namespace)
 
 			cw.On("PutMetricDataWithContext", ctx, publisher.putMetricDataInput).Return(nil, nil)

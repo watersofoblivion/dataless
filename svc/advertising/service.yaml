@@ -21,6 +21,24 @@ Metadata:
         Parameters:
           - Stage
           - DeploymentPreference
+      - Label: Task Runner
+        Parameters:
+          - AccessKeyID
+          - SecretAccessKey
+      - Label: VPC
+        Parameters:
+          - Subnet
+          - SecurityGroup
+      - Label: Data Infrastructure
+        Parameters:
+          - EnableEC2Instance
+          - EnableEMRCluster
+      - Label: Redshift
+        Parameters:
+          - RedshiftClusterId
+          - RedshiftDatabase
+          - RedshiftUsername
+          - RedshiftPassword
     ParameterLabels:
       CodePipeline:
         default: The CodePipeline pipeline that build this app
@@ -40,6 +58,22 @@ Metadata:
         default: Stage to deploy
       DeploymentPreference:
         default: CodeDeploy deployment preference
+      AccessKeyID:
+        default: AWS Access Key ID
+      SecretAccessKey:
+        default: AWS Secret Access Key
+      EnableEC2Instance:
+        default: The EC2 instance is enabled when non-nil
+      EnableEMRCluster:
+        default: The EMR instance is enabled when non-nil
+      RedshiftClusterId:
+        default: The Redshift cluster ID when non-nil
+      RedshiftDatabase:
+        default: The default Redshift database
+      RedshiftUsername:
+        default: The Redshift username
+      RedshiftPassword:
+        default: The Redshift password
 
 Parameters:
   CodePipeline:
@@ -81,12 +115,69 @@ Parameters:
       - Linear10PercentEvery3Minutes
       - Linear10PercentEvery10Minutes
       - AllAtOnce
+  Subnet:
+    Type: String
+    Description: The subnet external resources are running in
+  SecurityGroup:
+    Type: String
+    Description: A security group to access the external resources
+  AccessKeyID:
+    Type: String
+    Description: The AWS Access Key ID to use for the Data Pipeline Task Runner
+    Default: ''
+  SecretAccessKey:
+    Type: String
+    Description: The AWS Secret Access Key to use for the Data Pipeline Task Runner
+    Default: ''
+    NoEcho: true
+  EnableEC2Instance:
+    Type: String
+    Description: If non-empty, the parent created an EC2 instance for use by Data Pipeline.
+    Default: ''
+  EnableEMRCluster:
+    Type: String
+    Description: If non-empty, the parent created an EMR cluster.
+    Default: ''
+  RedshiftClusterId:
+    Type: String
+    Description: The ID of the Redshift cluster to use.
+    Default: ''
+  RedshiftDatabase:
+    Type: String
+    Description: The name of the default Redshift database
+    Default: dataless
+  RedshiftUsername:
+    Type: String
+    Description: The username of the default Redshift user
+    Default: dataless
+  RedshiftPassword:
+    Type: String
+    Description: The password of the default Redshift user
+    Default: dataless
+    NoEcho: true
+
+Conditions:
+  EC2InstanceEnabled: !And
+    - !Not [!Equals [!Ref EnableEC2Instance, ""]]
+    - !Not [!Equals [!Ref AccessKeyID, ""]]
+    - !Not [!Equals [!Ref SecretAccessKey, ""]]
+  EMREnabled: !And
+    - !Not [!Equals [!Ref EnableEMRCluster, ""]]
+    - !Not [!Equals [!Ref AccessKeyID, ""]]
+    - !Not [!Equals [!Ref SecretAccessKey, ""]]
+  RedshiftEnabled: !And
+    - !Not [!Equals [!Ref RedshiftClusterId, ""]]
+    - !Not [!Equals [!Ref RedshiftDatabase, ""]]
+    - !Not [!Equals [!Ref RedshiftUsername, ""]]
+    - !Not [!Equals [!Ref RedshiftPassword, ""]]
 
 Outputs:
   API:
     Value: !Ref API
   Stage:
     Value: !Ref API.Stage
+  BaseURL:
+    Value: !Sub "https://${API}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
 
 Globals:
   Function:
@@ -109,6 +200,34 @@ Globals:
       SSEEnabled: true
 
 Resources:
+  ##########
+  # Bucket #
+  ##########
+
+  Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+      MetricsConfigurations:
+        - Id: raw-ad-impressions
+          Prefix: data/raw/ad/impressions/
+        - Id: raw-ad-clicks
+          Prefix: data/raw/ad/clicks/
+        - Id: ad-impressions
+          Prefix: data/lake/ad/impressions/
+        - Id: ad-clicks
+          Prefix: data/lake/ad/clicks/
+        - Id: advertising
+          Prefix: data/lake/advertising/
+        - Id: temp
+          Prefix: data/temp/
+
   ####################
   # Delivery Streams #
   ####################
@@ -346,11 +465,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: lambdas.zip
-      Handler: bin/publish-cloudwatch-metrics-from-kinesis-analytics
+      Handler: bin/publish-to-cloudwatch
       Role: !GetAtt RealTimeAdvertisingLambdaRole.Arn
-      Environment:
-        Variables:
-          METRIC_NAMESPACE: Warehouse/Advertising
 
   RealTimeAdvertisingApplicationRole:
     Type: AWS::IAM::Role
@@ -456,12 +572,12 @@ Resources:
         );
 
         CREATE OR REPLACE PUMP "counter" AS
-        INSERT INTO "clicks"
+        INSERT INTO "metrics"
         SELECT STREAM
-          'Warehouse/Advertising'                                                                             AS "namespace",
-          "Clicks"                                                                                            AS "name",
-          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "impressions".ROWTIME)) AS "at",
-          CAST(COUNT(1) AS DOUBLE)                                                                            AS "value"
+          'Warehouse/Advertising'                                                                        AS "namespace",
+          "Clicks"                                                                                       AS "name",
+          CHAR_TO_TIMESTAMP('yyyy-MM-dd hh:mm', TIMESTAMP_TO_CHAR('yyyy-MM-dd hh:mm', "clicks".ROWTIME)) AS "at",
+          CAST(COUNT(1) AS DOUBLE)                                                                       AS "value"
         FROM
           "clicks_001" AS "clicks"
         GROUP BY
@@ -676,7 +792,7 @@ Resources:
       Role: !GetAtt ETLJobRole.Arn
       Command:
         Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/impressions_etl.py"
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/glue/impressions_etl.py"
       DefaultArguments:
         "--enable-glue-datacatalog": ""
         "--job-bookmark-option": "job-bookmark-enable"
@@ -693,7 +809,7 @@ Resources:
       Role: !GetAtt ETLJobRole.Arn
       Command:
         Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/impressions_etl.scala"
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/glue/impressions_etl.scala"
       DefaultArguments:
         "--job-language": scala
         "--class": GlueApp
@@ -712,7 +828,7 @@ Resources:
       Role: !GetAtt ETLJobRole.Arn
       Command:
         Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/clicks_etl.py"
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/glue/clicks_etl.py"
       DefaultArguments:
         "--enable-glue-datacatalog": ""
         "--job-bookmark-option": "job-bookmark-enable"
@@ -729,7 +845,7 @@ Resources:
       Role: !GetAtt ETLJobRole.Arn
       Command:
         Name: glueetl
-        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/glue/clicks_etl.scala"
+        ScriptLocation: !Sub "s3://${CodeBucket}/${CodePrefix}/glue/clicks_etl.scala"
       DefaultArguments:
         "--job-language": scala
         "--class": GlueApp
@@ -835,9 +951,9 @@ Resources:
                   - s3:List*
                 Effect: Allow
                 Resource:
-                  - !Sub "${Bucket.Arn}/data/raw/events/*"
-                  - !Sub "${Bucket.Arn}/data/lake/events/*"
-                  - !Sub "${Bucket.Arn}/data/lake/advertising/*"
+                  - !Sub "${Bucket.Arn}/data/raw/*"
+                  - !Sub "${Bucket.Arn}/data/lake/*"
+                  - !Sub "${Bucket.Arn}/data/temp/*"
 
   PipelineProfile:
     Type: AWS::IAM::InstanceProfile
@@ -885,9 +1001,9 @@ Resources:
                   - s3:List*
                 Effect: Allow
                 Resource:
-                  - !Sub "${Bucket.Arn}/data/raw/events/*"
-                  - !Sub "${Bucket.Arn}/data/lake/events/*"
-                  - !Sub "${Bucket.Arn}/data/lake/advertising/*"
+                  - !Sub "${Bucket.Arn}/data/raw/*"
+                  - !Sub "${Bucket.Arn}/data/lake/*"
+                  - !Sub "${Bucket.Arn}/data/temp/*"
 
   PipelineResourceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -991,13 +1107,13 @@ Resources:
             - Key: keyPair
               StringValue: !Ref KeyPair
             - Key: masterInstanceType
-              StringValue: !Ref EMRMasterInstanceType
+              StringValue: m1.medium
             - Key: coreInstanceType
-              StringValue: !Ref EMRCoreInstanceType
+              StringValue: m1.medium
             - Key: coreInstanceCount
               StringValue: 10
             - Key: releaseLabel
-              StringValue: !Ref EMRRelease
+              StringValue: emr-5.23.0
             - Key: applications
               StringValue: hive
             - Key: applications
@@ -1016,7 +1132,7 @@ Resources:
             - Key: type
               StringValue: HiveActivity
             - Key: scriptUri
-              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/extract_advertising_data.hql"
+              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/hive/extract_advertising_data.hql"
             - !If
                 - EMREnabled
                 - Key: workerGroup
@@ -1034,14 +1150,14 @@ Resources:
             - Key: scriptVariable
               StringValue: DATE_END=#{format(@scheduledEndTime, 'YYYY-MM-dd')}
         - Id: AdTrafficTableExists
-          Name: Advertising Info Table Exists
+          Name: Ad Traffic Table Exists
           Fields:
             - Key: type
               StringValue: DynamoDBTableExists
             - Key: tableName
               StringValue: !Ref AdTrafficTable
         - Id: AdTrafficStagingTableFormat
-          Name: Advertising Info Staging Table Format
+          Name: Ad Traffic Staging Table Format
           Fields:
             - Key: type
               StringValue: DynamoDBExportDataFormat
@@ -1056,12 +1172,12 @@ Resources:
             - Key: column
               StringValue: clickthrough_rate DOUBLE
         - Id: AdTrafficStagingTable
-          Name: Advertising Info Staging Table
+          Name: Ad Traffic Staging Table
           Fields:
             - Key: type
               StringValue: S3DataNode
             - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/tmp/advertising-info-staging-table/"
+              StringValue: !Sub "s3://${Bucket}/data/temp/advertising-info-staging-table/"
             - Key: dataFormat
               RefValue: AdTrafficStagingTableFormat
         - Id: DummyInputTableFormat
@@ -1085,16 +1201,16 @@ Resources:
             - Key: type
               StringValue: S3DataNode
             - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/raw/events/"
+              StringValue: !Sub "s3://${Bucket}/data/temp/dummy/"
             - Key: dataFormat
               RefValue: DummyInputTableFormat
         - Id: AdTrafficTableFormat
-          Name: Advertising Info Table Format
+          Name: Ad Traffic Table Format
           Fields:
             - Key: type
               StringValue: DynamoDBExportDataFormat
         - Id: AdTrafficTable
-          Name: Advertising Info Table
+          Name: Ad Traffic Table
           Fields:
             - Key: type
               StringValue: DynamoDBDataNode
@@ -1105,14 +1221,14 @@ Resources:
             - Key: precondition
               RefValue: AdTrafficTableExists
         - Id: StageDataForAdTraffic
-          Name: Stage Data for Advertising Info
+          Name: Stage Data for Ad Traffic
           Fields:
             - Key: type
               StringValue: HiveActivity
             - Key: dependsOn
               RefValue: ExtractAdvertisingData
             - Key: scriptUri
-              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/stage_data_for_advertising_info.hql"
+              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/hive/stage_data_for_ad_traffic.hql"
             - !If
                 - EMREnabled
                 - Key: workerGroup
@@ -1132,7 +1248,7 @@ Resources:
             - Key: scriptVariable
               StringValue: DATE_END=#{format(@scheduledEndTime, 'YYYY-MM-dd')}
         - Id: LoadAdTrafficTable
-          Name: Load Advertising Info Into DynamoDB Table
+          Name: Load Ad Traffic Into DynamoDB Table
           Fields:
             - Key: type
               StringValue: HiveCopyActivity
@@ -1161,11 +1277,11 @@ Resources:
             - Key: type
               StringValue: S3DataNode
             - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/tmp/dummy/"
+              StringValue: !Sub "s3://${Bucket}/data/temp/dummy/"
             - Key: dataFormat
               RefValue: DummyOutputTableFormat
         - Id: TruncateAdTrafficStagingTable
-          Name: Truncate Advertising Info Staging Table
+          Name: Truncate Ad Traffic Staging Table
           Fields:
             - Key: type
               StringValue: HiveActivity
@@ -1303,13 +1419,13 @@ Resources:
             - Key: keyPair
               StringValue: !Ref KeyPair
             - Key: masterInstanceType
-              StringValue: !Ref EMRMasterInstanceType
+              StringValue: m1.medium
             - Key: coreInstanceType
-              StringValue: !Ref EMRCoreInstanceType
+              StringValue: m1.medium
             - Key: coreInstanceCount
               StringValue: 10
             - Key: releaseLabel
-              StringValue: !Ref EMRRelease
+              StringValue: emr-5.23.0
             - Key: applications
               StringValue: hive
             - Key: applications
@@ -1328,13 +1444,13 @@ Resources:
             - Key: type
               StringValue: RedshiftDatabase
             - Key: clusterId
-              StringValue: !Ref Redshift
+              StringValue: !Ref RedshiftClusterId
             - Key: username
-              StringValue: warehouse
+              StringValue: !Ref RedshiftUsername
             - Key: "*password"
-              StringValue: "War340u5e!"
+              StringValue: !Ref RedshiftPassword
             - Key: databaseName
-              StringValue: warehouse
+              StringValue: !Ref RedshiftDatabase
             - Key: region
               StringValue: !Ref AWS::Region
         - Id: RedshiftAdvertisingAdTable
@@ -1402,7 +1518,7 @@ Resources:
             - Key: type
               StringValue: HiveActivity
             - Key: scriptUri
-              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/stage_data_for_redshift.hql"
+              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/hive/stage_data_for_redshift.hql"
             - !If
                 - EMREnabled
                 - Key: workerGroup
@@ -1453,7 +1569,7 @@ Resources:
             - Key: type
               StringValue: S3DataNode
             - Key: directoryPath
-              StringValue: !Sub "s3://${Bucket}/data/tmp/dummy/"
+              StringValue: !Sub "s3://${Bucket}/data/temp/dummy/"
             - Key: dataFormat
               RefValue: DummyOutputTableFormat
         - Id: TruncateRedshiftStagingTable
@@ -1514,7 +1630,7 @@ Resources:
               - Key: runsOn
                 RefValue: EC2Instance
             - Key: scriptUri
-              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/load_advertising_from_spectrum.sql"
+              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/redshift/load_advertising_from_spectrum.sql"
             - Key: scriptArgument
               StringValue: "#{year(@scheduledStartTime)}"
             - Key: scriptArgument
@@ -1565,9 +1681,6 @@ Resources:
       CodeUri: lambdas.zip
       Handler: bin/capture-impressions
       Role: !GetAtt APILambdaRole.Arn
-      Environment:
-        Variables:
-          BATCH_KEY: impressions
 
   CaptureClicksLambda:
     Type: AWS::Serverless::Function
@@ -1575,19 +1688,13 @@ Resources:
       CodeUri: lambdas.zip
       Handler: bin/capture-clicks
       Role: !GetAtt APILambdaRole.Arn
-      Environment:
-        Variables:
-          BATCH_KEY: impressions
 
   QueryAdTrafficTableLambda:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: lambdas.zip
-      Handler: bin/query-advertising-info-table
+      Handler: bin/get-ad-traffic
       Role: !GetAtt APILambdaRole.Arn
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref AdTrafficTable
 
   APIRole:
     Type: AWS::IAM::Role

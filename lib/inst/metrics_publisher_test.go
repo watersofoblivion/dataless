@@ -1,4 +1,4 @@
-package main
+package inst
 
 import (
 	"context"
@@ -8,6 +8,8 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/watersofoblivion/dataless/lib/amz/amzmock"
 )
 
 func TestMetricsPublisher(t *testing.T) {
@@ -18,7 +20,7 @@ func TestMetricsPublisher(t *testing.T) {
 	metrics := make([]*Metric, 4)
 
 	ctx := context.Background()
-	cw := new(mockCloudWatch)
+	cw := new(amzmock.CloudWatch)
 	publisher := NewMetricsPublisher(cw)
 
 	for namespace := 0; namespace < numNamespaces; namespace++ {

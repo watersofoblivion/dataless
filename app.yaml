@@ -51,6 +51,9 @@ Metadata:
           - EnableRedshift
           - RedshiftNodeType
           - RedshiftNumberOfNodes
+          - RedshiftDatabase
+          - RedshiftUsername
+          - RedshiftPassword
     ParameterLabels:
       CodePipeline:
         default: The CodePipeline pipeline that build this app
@@ -104,6 +107,12 @@ Metadata:
         default: Type of Redshift instance nodes
       RedshiftNumberOfNodes:
         default: Number of Redshift nodes
+      RedshiftDatabase:
+        default: The default Redshift database
+      RedshiftUsername:
+        default: The Redshift username
+      RedshiftPassword:
+        default: The Redshift password
 
 Parameters:
   CodePipeline:
@@ -231,6 +240,19 @@ Parameters:
     MinValue: 1
     MaxValue: 100
     Default: 1
+  RedshiftDatabase:
+    Type: String
+    Description: The name of the default Redshift database
+    Default: dataless
+  RedshiftUsername:
+    Type: String
+    Description: The username of the default Redshift user
+    Default: dataless
+  RedshiftPassword:
+    Type: String
+    Description: The password of the default Redshift user
+    Default: dataless
+    NoEcho: true
 
 Conditions:
   DNSEnabled: !And
@@ -250,7 +272,11 @@ Conditions:
     - !Not [!Equals [!Ref EnableEMRCluster, ""]]
     - !Not [!Equals [!Ref AccessKeyID, ""]]
     - !Not [!Equals [!Ref SecretAccessKey, ""]]
-  RedshiftEnabled: !Not [!Equals [!Ref EnableRedshift, ""]]
+  RedshiftEnabled: !And
+    - !Not [!Equals [!Ref EnableRedshift, ""]]
+    - !Not [!Equals [!Ref RedshiftDatabase, ""]]
+    - !Not [!Equals [!Ref RedshiftUsername, ""]]
+    - !Not [!Equals [!Ref RedshiftPassword, ""]]
   RedshiftSingleNode: !Equals [!Ref RedshiftNumberOfNodes, 1]
   VPCEnabled: !Or
     - !Not [!Equals [!Ref EnableVPC, ""]]
@@ -279,26 +305,6 @@ Mappings:
       PV64Instance: ami-0f16a2ca7efacfa65
 
 Resources:
-  ##########
-  # Bucket #
-  ##########
-
-  Bucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    Properties:
-      VersioningConfiguration:
-        Status: Enabled
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: aws:kms
-      MetricsConfigurations:
-        - Id: raw
-          Prefix: data/raw/
-        - Id: lake
-          Prefix: data/lake/
-
   #######
   # VPC #
   #######
@@ -795,10 +801,10 @@ Resources:
   # Events Service #
   ##################
 
-  EventsService:
+  AdvertisingService:
     Type: AWS::Serverless::Application
     Properties:
-      Location: svc/events/service.yaml
+      Location: svc/advertising/service.yaml
       Parameters:
         CodePipeline: !Ref CodePipeline
         BuildRegion: !Ref BuildRegion
@@ -809,6 +815,19 @@ Resources:
         KeyPair: !Ref KeyPair
         Stage: !Ref Stage
         DeploymentPreference: !Ref DeploymentPreference
+        Subnet: !Ref Subnet
+        SecurityGroup: !Ref SecurityGroup
+        AccessKeyID: !Ref AccessKeyID
+        SecretAccessKey: !Ref SecretAccessKey
+        EnableEC2Instance: !Ref EnableEC2Instance
+        EnableEMRCluster: !Ref EnableEMRCluster
+        RedshiftClusterId: !If
+          - RedshiftEnabled
+          - !Ref Redshift
+          - !Ref AWS::NoValue
+        RedshiftDatabase: !Ref RedshiftDatabase
+        RedshiftUsername: !Ref RedshiftUsername
+        RedshiftPassword: !Ref RedshiftPassword
 
   ##########
   # Router #
@@ -835,8 +854,8 @@ Resources:
     Condition: DNSEnabled
     Properties:
       DomainName: !Ref DomainName
-      RestApiId: !GetAtt EventsService.Outputs.API
-      Stage: !GetAtt EventsService.Outputs.Stage
+      RestApiId: !GetAtt AdvertisingService.Outputs.API
+      Stage: !GetAtt AdvertisingService.Outputs.Stage
 
   #######
   # DNS #

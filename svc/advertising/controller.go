@@ -2,7 +2,9 @@ package advertising
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"testing"
@@ -10,11 +12,13 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/jonboulle/clockwork"
 
 	"github.com/watersofoblivion/dataless/lib/amz/amzmock"
+	"github.com/watersofoblivion/dataless/lib/inst"
 	"github.com/watersofoblivion/dataless/lib/rest"
 )
 
@@ -22,6 +26,7 @@ type Controller struct {
 	Clock          clockwork.Clock
 	Impressions    *rest.CaptureController
 	Clicks         *rest.CaptureController
+	Metrics        *inst.MetricsPublisher
 	AdTrafficTable AdTrafficTable
 }
 
@@ -47,18 +52,22 @@ func EnvController() *Controller {
 	clicksDeliveryStreamName := os.Getenv(EnvVarClicksDeliveryStreamName)
 	clicks := rest.NewCaptureController(BatchKeyClicks, clicksDeliveryStreamName, fh)
 
+	cw := cloudwatch.New(sess)
+	metrics := inst.NewMetricsPublisher(cw)
+
 	tableName := os.Getenv(EnvVarAdTrafficTableName)
 	ddb := dynamodb.New(sess)
 	adTraffic := NewAdTrafficTable(tableName, ddb)
 
-	return NewController(impressions, clicks, adTraffic)
+	return NewController(impressions, clicks, metrics, adTraffic)
 }
 
-func NewController(impressions, clicks *rest.CaptureController, adTraffic AdTrafficTable) *Controller {
+func NewController(impressions, clicks *rest.CaptureController, metrics *inst.MetricsPublisher, adTraffic AdTrafficTable) *Controller {
 	return &Controller{
 		Clock:          clockwork.NewRealClock(),
 		Impressions:    impressions,
 		Clicks:         clicks,
+		Metrics:        metrics,
 		AdTrafficTable: adTraffic,
 	}
 }
@@ -68,7 +77,9 @@ func MockedController(t *testing.T, impressionsDeliveryStreamName, clicksDeliver
 	fh := new(amzmock.Firehose)
 	impressions := rest.NewCaptureController(BatchKeyImpressions, impressionsDeliveryStreamName, fh)
 	clicks := rest.NewCaptureController(BatchKeyClicks, clicksDeliveryStreamName, fh)
-	controller := NewController(impressions, clicks, adTraffic)
+	cw := new(amzmock.CloudWatch)
+	metrics := inst.NewMetricsPublisher(cw)
+	controller := NewController(impressions, clicks, metrics, adTraffic)
 	controller.Clock = clockwork.NewFakeClockAt(time.Now())
 
 	fn(controller, controller.Clock, fh, adTraffic)
@@ -86,9 +97,28 @@ func (controller *Controller) CaptureClicks(ctx context.Context, req events.APIG
 }
 
 func (controller *Controller) PublishToCloudWatch(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEvent) events.KinesisAnalyticsOutputDeliveryResponse {
-	return events.KinesisAnalyticsOutputDeliveryResponse{}
+	resp := events.KinesisAnalyticsOutputDeliveryResponse{}
+
+	for _, record := range input.Records {
+		metric := new(inst.Metric)
+		if err := json.Unmarshal(record.Data, metric); err != nil {
+			log.Printf("error unmarshaling record %s (dropped): %s", record.RecordID, err)
+			resp.Records = append(resp.Records, events.KinesisAnalyticsOutputDeliveryResponseRecord{
+				RecordID: record.RecordID,
+				Result:   events.KinesisAnalyticsOutputDeliveryOK,
+			})
+			continue
+		}
+
+		controller.Metrics.Publish(ctx, record.RecordID, metric)
+	}
+
+	controller.Metrics.Flush(ctx)
+
+	resp.Records = append(resp.Records, controller.Metrics.Records()...)
+	return resp
 }
 
-func (controller *Controller) AdTraffic(ctx context.Context, evt events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func (controller *Controller) GetAdTraffic(ctx context.Context, evt events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	return rest.Respond(http.StatusInternalServerError, fmt.Errorf("not implemented"), nil)
 }
