@@ -33,6 +33,11 @@ WITH
 INSERT OVERWRITE
   TABLE ${output1}
 SELECT
+  impressions.ad_id, AS "ad_id",
+  impressions.day, AS "day",
+  impressions.count, AS "impressions",
+  clicks.count, AS "clicks",
+  (CAST(clicks.count AS float) / CAST(impressions.count AS float)) AS "clickthrough_rate",
   MAP(
     "ad_id",             impressions.ad_id,
     "day",               impressions.day,

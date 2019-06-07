@@ -126,6 +126,10 @@ git push aws master
 Architecture
 ===
 
+The warehouse is designed to capture real-time tracking data and use it to serve
+three customers: the business as a whole, engineering specifically, and the end
+customer that generated the data.
+
 There are three main components to the warehouse: the main pipe, the batch
 component, and the real-time component.
 
