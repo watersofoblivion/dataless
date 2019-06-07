@@ -1,7 +1,6 @@
 {
   "Parameters": {
     "KeyPair": "temp",
-    "Stage": "Prod",
     "DeploymentPreference": "AllAtOnce",
     "DNSDomainName": "microlith-framework.com",
     "BaseDNSName": "dataless.microlith-framework.com",

@@ -55,11 +55,28 @@ The `Owner`, `Repo`, and `Branch` properties configure where the build pipeline 
 
 ### Config
 
-Optionally, set up DNS in `config.json`:
+The app is configured via the `config/master.json` file.  Set the `KeyPair`
+property to the name of a valid keypair:
 
 ```json
 {
   "Parameters": {
+    "KeyPair": "my-keypair"
+  }
+}
+```
+
+Optionally, set up DNS in `config.json` by adding the following parameters:
+
+* `DNSDomainName`: A domain name hosted in Route53
+* `ValidationDomain`: A domain set up for ACM validation via either [DNS](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate-dns.html) or [email](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate-email.html)
+* `BaseDNSName`: The DNS name that the examples will be available at
+* `HostedZoneID`: (Conditional) If provided, DNS records will be added in this hosted zone.  If not provided, a hosted zone will be created.  If the domain name already has a hosted zone attached, this must be set to the ID of that hosted zone.
+
+```json
+{
+  "Parameters": {
+    "KeyPair": "my-keypair",
     "DNSDomainName": "example.com",
     "ValidationDomain": "example.com",
     "HostedZoneID": "Z1234567890",
@@ -67,13 +84,6 @@ Optionally, set up DNS in `config.json`:
   }
 }
 ```
-
-Parameters:
-
-* `DNSDomainName`: A domain name hosted in Route53
-* `ValidationDomain`: A domain set up for ACM validation via either [DNS](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate-dns.html) or [email](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate-email.html)
-* `BaseDNSName`: The DNS name that the examples will be available at
-* `HostedZoneID`: (Conditional) If provided, DNS records will be added in this hosted zone.  If not provided, a hosted zone will be created.  If the domain name already has a hosted zone attached, this must be set to the ID of that hosted zone.
 
 On the first deploy with these options set, Route53 DNS will be set up.  The
 contact listed for email validation will receive an email to confirm a
@@ -88,8 +98,6 @@ prefix.
 
 For example, `https://dataless.example.com/advertising/impressions` turns into
 `https://a1b2c3d4e5f6.execute-api.us-east-1.amazonaws.com/Prod/impressions`.
-
-All examples will assume that DNS is configured.
 
 ### Push
 
