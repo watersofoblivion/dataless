@@ -66,6 +66,8 @@ property to the name of a valid keypair:
 }
 ```
 
+### Recommended: DNS
+
 Optionally, set up DNS by adding the following parameters:
 
 * `DNSDomainName`: A domain name hosted in Route53
@@ -89,7 +91,7 @@ On the first deploy with these options set, Route53 DNS will be set up.  The
 contact listed for email validation will receive an email to confirm a
 certificate.  The deploy will block until the certificate is approved.
 
-### Without DNS
+#### Without DNS
 
 If these parameters are not included, Route53 will not be set up.  The base URL
 for the Advertising service is exposed via the `BaseURL` output of the nested
@@ -98,6 +100,9 @@ prefix.
 
 For example, `https://dataless.example.com/advertising` turns into
 `https://a1b2c3d4e5f6.execute-api.us-east-1.amazonaws.com/Prod`.
+
+DNS settings can be toggled on or off or altered at any time with a config
+change.  Changing the `BaseDNSName` will require a new certificate to be issued.
 
 ## 4. Push
 
