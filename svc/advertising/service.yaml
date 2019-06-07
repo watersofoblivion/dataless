@@ -1121,16 +1121,6 @@ Resources:
           Fields:
             - Key: type
               StringValue: DynamoDBExportDataFormat
-            - Key: column
-              StringValue: ad_id STRING
-            - Key: column
-              StringValue: day STRING
-            - Key: column
-              StringValue: impressions BIGINT
-            - Key: column
-              StringValue: clicks BIGINT
-            - Key: column
-              StringValue: clickthrough_rate DOUBLE
         - Id: AdTrafficStagingTable
           Name: Ad Traffic Staging Table
           Fields:
