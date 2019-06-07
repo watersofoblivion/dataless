@@ -27,7 +27,7 @@ phases:
           cp -r "${SVC}/scripts/" "${STAGING_DIR}/svc/$(basename "${SVC}")/"
         done
       - cp -r scripts/ "${STAGING_DIR}/"
-      - aws s3 sync "${STAGING_DIR}/" "s3://${BUCKET}/"
+      - aws s3 sync "${STAGING_DIR}/" "s3://${BUCKET}/build/${CODEBUILD_BUILD_ID}/"
       - aws cloudformation package --template app.yaml --s3-bucket "${BUCKET}" --output-template template.yaml
   post_build:
     commands:
