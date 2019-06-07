@@ -251,7 +251,7 @@ Parameters:
   RedshiftPassword:
     Type: String
     Description: The password of the default Redshift user
-    Default: dataless
+    Default: D4ta!3s5
     NoEcho: true
 
 Conditions:
