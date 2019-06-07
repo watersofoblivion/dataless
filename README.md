@@ -66,12 +66,12 @@ property to the name of a valid keypair:
 }
 ```
 
-Optionally, set up DNS in `config.json` by adding the following parameters:
+Optionally, set up DNS by adding the following parameters:
 
 * `DNSDomainName`: A domain name hosted in Route53
 * `ValidationDomain`: A domain set up for ACM validation via either [DNS](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate-dns.html) or [email](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate-email.html)
-* `BaseDNSName`: The DNS name that the examples will be available at
-* `HostedZoneID`: (Conditional) If provided, DNS records will be added in this hosted zone.  If not provided, a hosted zone will be created.  If the domain name already has a hosted zone attached, this must be set to the ID of that hosted zone.
+* `BaseDNSName`: The DNS name where the warehouse will be mounted
+* `HostedZoneID`: (Conditional) If provided, DNS records will be added in this hosted zone.  If not provided, a hosted zone will be created.  If the domain name already has a hosted zone attached, this must be set to that hosted zone ID.
 
 ```json
 {
