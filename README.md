@@ -189,5 +189,9 @@ Data Pipeline Task Runner can be created by setting `EnableEMRCluster` and
 `EnableEC2Instance` respectively to `yes` in `config/master.json`.  They will be
 torn down when the options are unset.  Requires a multi-deploy rollout.
 
+Safe Lambda deploys are enabled with a 5 minute canary by default.  Set
+`DeploymentPreference` to `AllAtOnce` in the config for faster deploys during
+development.
+
 A handful of resources are retained on template deletion, namely the bucket
 containing the data lake, and the source code repository if CodeCommit was used.
