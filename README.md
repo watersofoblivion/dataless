@@ -128,7 +128,8 @@ Architecture
 
 The warehouse is designed to capture real-time tracking data and use it to serve
 three customers: the business as a whole, engineering specifically, and the end
-customer that generated the data.
+customer that generated the data.  It has additional hook points for scheduled
+data ingestion.
 
 There are three main components to the warehouse: the main pipe, the batch
 component, and the real-time component.
@@ -149,9 +150,10 @@ Firehose and persisted to S3 raw as GZipped JSON.
 
 A daily ETL has been created with Glue.  A crawler and a pair of ETL jobs have
 been configured.  The crawler scans the raw data and makes it available via the
-Glue Catalog.  The ETL jobs (one per datatype) pick up the raw data and write it
+Glue Catalog.  The ETL jobs -one per datatype- pick up the raw data and write it
 back down into Hive-partitioned ORC tables in S3, and make those tables
-available via the Glue Catalog.
+available via the Glue Catalog.  (Note: duplicate jobs have been provided in
+Python and Scala.  Running both will double ETL.)
 
 Once the data is in the Glue Catalog, it is automatically available in Athena
 and QuickSight to serve business customers, and throughout the AWS data tools.
@@ -159,18 +161,18 @@ and QuickSight to serve business customers, and throughout the AWS data tools.
 Batch
 ---
 
+The batch component sits on top of the data lake and primarily serves the
+business and end customers.
+
 A pair of Data Pipeline batch pipelines have been built, one for Hive and one
 for Redshift.
 
 ### Hive
 
-The Hive pipeline does two things.  First, it joins the impressions and clicks
-tables in Glue to populate an advertising derived table, also managed by Glue.
-This table is available to business customers.
-
-Second, it derives per-ad traffic data by day and populates a DynamoDB table.
-An endpoint has been set up to query this data.  This endpoint would be called
-by a service to serve data to end customers.
+The Hive pipeline does two things.  First, it materializes an advertising view
+managed by Glue.  This table is available to business customers.  Second, it
+derives per-ad traffic data by day and populates a DynamoDB table. An endpoint
+has been set up for services to query this data to serve end customers.
 
 ### Redshift
 
@@ -185,11 +187,14 @@ same data directly from the data lake using Redshift Spectrum.
 Real-Time
 ---
 
-A pair of Kinesis Analytics apps provide real-time functionality.  Each app
+The real-time component sits on top of the real-time capture infrastructure and
+serves primarily engineering.
+
+A pair of Kinesis Analytics apps read the real-time capture firehoses.  Each app
 counts events by minute and outputs them to a single Lambda function.  The
-Lambda publishes the metrics to CloudWatch.  A CloudWatch dashboard has been
-built showing impressions, clicks, and clickthrough rate.  This would allow
-engineering to rapidly iterate on features based on user behavior.
+Lambda then publishes the metrics to CloudWatch.  A CloudWatch dashboard has
+been built showing impressions, clicks, and clickthrough rate.  This would allow
+rapid iteration on features based on user behavior.
 
 Misc.
 ---
