@@ -999,7 +999,7 @@ Resources:
             - Key: period
               StringValue: 1 days
             - Key: startDateTime
-              StringValue: "2019-05-21T00:00:00"
+              StringValue: "2019-06-06T01:00:00"
             - Key: occurrences
               StringValue: 1
         - Id: Default
@@ -1161,7 +1161,7 @@ Resources:
             - Key: type
               StringValue: S3DataNode
             - Key: directoryPath
-              StringValue: !Sub "s3://${BucketName}/data/temp/dummy/"
+              StringValue: !Sub "s3://${BucketName}/data/raw/ad/impressions/"
             - Key: dataFormat
               RefValue: DummyInputTableFormat
         - Id: AdTrafficTableFormat
@@ -1288,7 +1288,7 @@ Resources:
             - Key: period
               StringValue: 1 days
             - Key: startDateTime
-              StringValue: "2019-05-21T00:00:00"
+              StringValue: "2019-06-06T01:00:00"
             - Key: occurrences
               StringValue: 1
         - Id: Default
