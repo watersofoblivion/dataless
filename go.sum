@@ -2,6 +2,8 @@ github.com/aws/aws-lambda-go v1.11.1 h1:wuOnhS5aqzPOWns71FO35PtbtBKHr4MYsPVt5qXL
 github.com/aws/aws-lambda-go v1.11.1/go.mod h1:Rr2SMTLeSMKgD45uep9V/NP8tnbCcySgu04cx0k/6cw=
 github.com/aws/aws-sdk-go v1.19.44 h1:5MoLvCkdpSGZkMSZSBXqq7WLodttWYu4SxLn/jr2y2g=
 github.com/aws/aws-sdk-go v1.19.44/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
+github.com/aws/aws-sdk-go v1.19.46 h1:lRqljzjkGmEeiawkw4z1QgtCnU/S5Jw8lNeUuvmydUQ=
+github.com/aws/aws-sdk-go v1.19.46/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/cenkalti/backoff v2.1.1+incompatible h1:tKJnvO2kl0zmb/jA5UKAt4VoEVw1qxKWjE/Bpp46npY=
 github.com/cenkalti/backoff v2.1.1+incompatible/go.mod h1:90ReRw6GdpyfrHakVjL/QHaoyV4aDUVVkXQJJJ3NXXM=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
@@ -19,6 +21,9 @@ github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+
 github.com/stretchr/testify v1.2.1/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0Q=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
+github.com/watersofoblivion/dataless v0.0.0-20190608002214-5c88806dbed2/go.mod h1:DkdXuVDbS/hPpbB088P4Hxh1xDVFLG5uC+2PDu1XuQQ=
+github.com/watersofoblivion/sam v0.0.0-20190608021729-aaa30e314bd4 h1:SEPyhna/HKuBjzuWEhHyn833rT/UW/Eqwitzw7lapPI=
+github.com/watersofoblivion/sam v0.0.0-20190608021729-aaa30e314bd4/go.mod h1:0s6LpsjoQowKVHg0Pddaxox9+atFJPqc2NHIlGrkmkI=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/microlith.v0 v0.2.0 h1:R6rQR/2M+UjDKCwcujcYsqyV9aTJJhLGo2b0nJU7fB4=
 gopkg.in/microlith.v0 v0.2.0/go.mod h1:1wiUGk5EMov1ZLoMrMfia7A2silKIJjF8e8NUrLQ5GQ=

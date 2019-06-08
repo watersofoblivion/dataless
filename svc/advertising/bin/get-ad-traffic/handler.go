@@ -18,7 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/google/uuid"
 
-	"github.com/watersofoblivion/dataless/lib/rest"
+	"github.com/watersofoblivion/sam/rest"
 )
 
 const DateFormat = "2006-01-02"

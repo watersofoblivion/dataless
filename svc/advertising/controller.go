@@ -17,9 +17,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/jonboulle/clockwork"
 
-	"github.com/watersofoblivion/dataless/lib/amz/amzmock"
-	"github.com/watersofoblivion/dataless/lib/inst"
-	"github.com/watersofoblivion/dataless/lib/rest"
+	"github.com/watersofoblivion/sam/amz/amzmock"
+	"github.com/watersofoblivion/sam/inst"
+	"github.com/watersofoblivion/sam/rest"
 )
 
 type Controller struct {
