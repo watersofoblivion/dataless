@@ -1230,25 +1230,25 @@ Resources:
               StringValue: !Sub "s3://${BucketName}/data/temp/dummy/"
             - Key: dataFormat
               RefValue: DummyOutputTableFormat
-        - Id: TruncateAdTrafficStagingTable
-          Name: Truncate Ad Traffic Staging Table
-          Fields:
-            - Key: type
-              StringValue: HiveActivity
-            - Key: dependsOn
-              RefValue: LoadAdTrafficTable
-            - Key: hiveScript
-              StringValue: TRUNCATE TABLE ${input1}
-            - !If
-                - EMREnabled
-                - Key: workerGroup
-                  StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
-                - Key: runsOn
-                  RefValue: EMRCluster
-            - Key: input
-              RefValue: AdTrafficStagingTable
-            - Key: output
-              RefValue: DummyOutputTable
+        # - Id: TruncateAdTrafficStagingTable
+        #   Name: Truncate Ad Traffic Staging Table
+        #   Fields:
+        #     - Key: type
+        #       StringValue: HiveActivity
+        #     - Key: dependsOn
+        #       RefValue: LoadAdTrafficTable
+        #     - Key: hiveScript
+        #       StringValue: TRUNCATE TABLE ${input1}
+        #     - !If
+        #         - EMREnabled
+        #         - Key: workerGroup
+        #           StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+        #         - Key: runsOn
+        #           RefValue: EMRCluster
+        #     - Key: input
+        #       RefValue: AdTrafficStagingTable
+        #     - Key: output
+        #       RefValue: DummyOutputTable
 
   RedshiftPipeline:
     Type: AWS::DataPipeline::Pipeline
