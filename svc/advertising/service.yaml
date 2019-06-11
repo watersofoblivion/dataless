@@ -165,6 +165,9 @@ Parameters:
     NoEcho: true
 
 Conditions:
+  VPCEnabled: !And
+    - !Not [!Equals [!Ref Subnet, ""]]
+    - !Not [!Equals [!Ref SecurityGroup, ""]]
   EC2InstanceEnabled: !And
     - !Not [!Equals [!Ref EnableEC2Instance, ""]]
     - !Not [!Equals [!Ref AccessKeyID, ""]]
@@ -1020,7 +1023,9 @@ Resources:
             - Key: failureAndRerunMode
               StringValue: cascade
         - !If
-          - EC2InstanceEnabled
+          - !Or
+            - EC2InstanceEnabled
+            - !Not RedshiftEnabled
           - !Ref AWS::NoValue
           - Id: EC2Instance
             Name: EC2 Instance
@@ -1035,10 +1040,16 @@ Resources:
                 StringValue: 1
               - Key: instanceType
                 StringValue: m1.medium
-              - Key: subnetId
-                StringValue: !Ref Subnet
-              - Key: securityGroupIds
-                StringValue: !Ref SecurityGroup
+              - !If
+                - VPCEnabled
+                - Key: subnetId
+                  StringValue: !Ref Subnet
+                - !Ref AWS::NoValue
+              - !If
+                - VPCEnabled
+                - Key: securityGroupIds
+                  StringValue: !Ref SecurityGroup
+                - !Ref AWS::NoValue
               - Key: associatePublicIpAddress
                 StringValue: true
               - Key: keyPair
