@@ -1165,6 +1165,14 @@ Resources:
           Fields:
             - Key: type
               StringValue: DynamoDBExportDataFormat
+            - Key: column
+              StringValue: ad_id STRING
+            - Key: column
+              StringValue: day STRING
+            - Key: column
+              StringValue: impressions BIGINT
+            - Key: column
+              StringValue: clicks BIGINT
         - Id: AdTrafficTable
           Name: Ad Traffic Table
           Fields:
