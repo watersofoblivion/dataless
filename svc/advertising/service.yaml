@@ -1109,38 +1109,6 @@ Resources:
               StringValue: DATE_START=#{format(@scheduledStartTime, 'YYYY-MM-dd')}
             - Key: scriptVariable
               StringValue: DATE_END=#{format(@scheduledEndTime, 'YYYY-MM-dd')}
-        - Id: AdTrafficTableExists
-          Name: Ad Traffic Table Exists
-          Fields:
-            - Key: type
-              StringValue: DynamoDBTableExists
-            - Key: tableName
-              StringValue: !Ref AdTrafficTable
-        - Id: AdTrafficStagingTableFormat
-          Name: Ad Traffic Staging Table Format
-          Fields:
-            - Key: type
-              # StringValue: DynamoDBExportDataFormat
-              StringValue: CSV
-            - Key: column
-              StringValue: ad_id STRING
-            - Key: column
-              StringValue: day STRING
-            - Key: column
-              StringValue: impressions BIGINT
-            - Key: column
-              StringValue: clicks BIGINT
-            - Key: column
-              StringValue: clickthrough_rate DOUBLE
-        - Id: AdTrafficStagingTable
-          Name: Ad Traffic Staging Table
-          Fields:
-            - Key: type
-              StringValue: S3DataNode
-            - Key: directoryPath
-              StringValue: !Sub "s3://${BucketName}/data/temp/advertising-info-staging-table/"
-            - Key: dataFormat
-              RefValue: AdTrafficStagingTableFormat
         - Id: DummyInputTableFormat
           Name: Dummy Input Table Format
           Fields:
@@ -1154,8 +1122,6 @@ Resources:
               StringValue: impressions BIGINT
             - Key: column
               StringValue: clicks BIGINT
-            - Key: column
-              StringValue: clickthrough_rate DOUBLE
         - Id: DummyInputTable
           Name: Dummy Input Table
           Fields:
@@ -1165,6 +1131,35 @@ Resources:
               StringValue: !Sub "s3://${BucketName}/data/raw/ad/impressions/"
             - Key: dataFormat
               RefValue: DummyInputTableFormat
+        - Id: AdTrafficStagingTableFormat
+          Name: Ad Traffic Staging Table Format
+          Fields:
+            - Key: type
+              StringValue: CSV
+            - Key: column
+              StringValue: ad_id STRING
+            - Key: column
+              StringValue: day STRING
+            - Key: column
+              StringValue: impressions BIGINT
+            - Key: column
+              StringValue: clicks BIGINT
+        - Id: AdTrafficStagingTable
+          Name: Ad Traffic Staging Table
+          Fields:
+            - Key: type
+              StringValue: S3DataNode
+            - Key: directoryPath
+              StringValue: !Sub "s3://${BucketName}/data/temp/advertising-info-staging-table/"
+            - Key: dataFormat
+              RefValue: AdTrafficStagingTableFormat
+        - Id: AdTrafficTableExists
+          Name: Ad Traffic Table Exists
+          Fields:
+            - Key: type
+              StringValue: DynamoDBTableExists
+            - Key: tableName
+              StringValue: !Ref AdTrafficTable
         - Id: AdTrafficTableFormat
           Name: Ad Traffic Table Format
           Fields:

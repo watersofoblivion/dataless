@@ -36,15 +36,7 @@ SELECT
   impressions.ad_id                                                AS ad_id,
   impression.day                                                   AS day,
   impressions.count                                                AS impressions,
-  clicks.count                                                     AS clicks,
-  (CAST(clicks.count AS float) / CAST(impressions.count AS float)) AS clickthrough_rate,
-  MAP(
-    "ad_id",             impressions.ad_id,
-    "day",               impressions.day,
-    "impressions",       impressions.count,
-    "clicks",            clicks.count,
-    "clickthrough_rate", (CAST(clicks.count AS float) / CAST(impressions.count AS float))
-  ) AS item
+  clicks.count                                                     AS clicks
 FROM
   impressions
 JOIN clicks
