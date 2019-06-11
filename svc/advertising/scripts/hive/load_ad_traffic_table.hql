@@ -30,7 +30,7 @@ WITH
     WHERE clicked
     GROUP BY ad_id, day
   )
-INSERT INTO
+INSERT OVERWRITE
   TABLE ${output1}
 SELECT
   impressions.ad_id AS ad_id,
