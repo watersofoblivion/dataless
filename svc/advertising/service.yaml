@@ -972,234 +972,234 @@ Resources:
       Roles:
         - !Ref PipelineResourceRole
 
-  # EMRPipeline:
-  #   Type: AWS::DataPipeline::Pipeline
-  #   DependsOn:
-  #     - PipelineProfile
-  #     - PipelineResourceProfile
-  #   Properties:
-  #     Name: EMR Pipeline
-  #     Activate: false
-  #     ParameterObjects:
-  #       - Id: myRegion
-  #         Attributes:
-  #           - Key: type
-  #             StringValue: String
-  #           - Key: default
-  #             StringValue: !Ref AWS::Region
-  #     ParameterValues:
-  #       - Id: myRegion
-  #         StringValue: !Ref AWS::Region
-  #     PipelineObjects:
-  #       - Id: DailySchedule
-  #         Name: Daily Schedule
-  #         Fields:
-  #           - Key: type
-  #             StringValue: Schedule
-  #           - Key: period
-  #             StringValue: 1 days
-  #           - Key: startDateTime
-  #             StringValue: "2019-06-06T01:00:00"
-  #           - Key: occurrences
-  #             StringValue: 1
-  #       - Id: Default
-  #         Name: Default
-  #         Fields:
-  #           - Key: type
-  #             StringValue: Default
-  #           - Key: schedule
-  #             RefValue: DailySchedule
-  #           - Key: scheduleType
-  #             StringValue: timeseries
-  #           - Key: role
-  #             StringValue: !Ref PipelineRole
-  #           - Key: resourceRole
-  #             StringValue: !Ref PipelineResourceRole
-  #           - Key: pipelineLogUri
-  #             StringValue: !Sub "s3://${BucketName}/logs/data-pipeline/"
-  #           - Key: failureAndRerunMode
-  #             StringValue: cascade
-  #       - Id: HiveMetastoreClientFactoryClass
-  #         Name: Hive Metastore Client Factory Class
-  #         Fields:
-  #           - Key: type
-  #             StringValue: Property
-  #           - Key: key
-  #             StringValue: hive.metastore.client.factory.class
-  #           - Key: value
-  #             StringValue: com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory
-  #       - Id: HiveMetastoreCatalog
-  #         Name: Hive Metastore Catalog
-  #         Fields:
-  #           - Key: type
-  #             StringValue: Property
-  #           - Key: key
-  #             StringValue: hive.metastore.glue.catalogid
-  #           - Key: value
-  #             StringValue: !Ref AWS::AccountId
-  #       - Id: UseMRInsteadOfTez
-  #         Name: Use MapReduce instead of Tez
-  #         Fields:
-  #           - Key: type
-  #             StringValue: Property
-  #           - Key: key
-  #             StringValue: hive.execution.engine
-  #           - Key: value
-  #             StringValue: mr
-  #       - Id: HiveSite
-  #         Name: Configure hive-site.xml
-  #         Fields:
-  #           - Key: type
-  #             StringValue: EmrConfiguration
-  #           - Key: classification
-  #             StringValue: hive-site
-  #           - Key: property
-  #             RefValue: HiveMetastoreClientFactoryClass
-  #           - Key: property
-  #             RefValue: HiveMetastoreCatalog
-  #           - Key: property
-  #             RefValue: UseMRInsteadOfTez
-  #       - Id: SparkHiveSite
-  #         Name: Configure spark-hive-site.xml
-  #         Fields:
-  #           - Key: type
-  #             StringValue: EmrConfiguration
-  #           - Key: classification
-  #             StringValue: spark-hive-site
-  #           - Key: property
-  #             RefValue: HiveMetastoreClientFactoryClass
-  #           - Key: property
-  #             RefValue: HiveMetastoreCatalog
-  #       - Id: EMRCluster
-  #         Name: EMR Cluster
-  #         Fields:
-  #           - Key: type
-  #             StringValue: EmrCluster
-  #           - Key: keyPair
-  #             StringValue: !Ref KeyPair
-  #           - Key: masterInstanceType
-  #             StringValue: m1.medium
-  #           - Key: coreInstanceType
-  #             StringValue: m1.medium
-  #           - Key: coreInstanceCount
-  #             StringValue: 10
-  #           - Key: releaseLabel
-  #             StringValue: emr-5.23.0
-  #           - Key: applications
-  #             StringValue: hive
-  #           - Key: applications
-  #             StringValue: pig
-  #           - Key: applications
-  #             StringValue: spark
-  #           - Key: terminateAfter
-  #             StringValue: 1 hours
-  #           - Key: configuration
-  #             RefValue: GlueCatalogAsHiveMetastore
-  #           - Key: configuration
-  #             RefValue: GlueCatalogAsSparkMetastore
-  #       - Id: ExtractAdvertisingData
-  #         Name: Extract Advertising Data
-  #         Fields:
-  #           - Key: type
-  #             StringValue: HiveActivity
-  #           - Key: scriptUri
-  #             StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/extract_advertising_data.hql"
-  #           - !If
-  #               - EMREnabled
-  #               - Key: workerGroup
-  #                 StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
-  #               - Key: runsOn
-  #                 RefValue: EMRCluster
-  #           - Key: stage
-  #             StringValue: false
-  #           - Key: scriptVariable
-  #             StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
-  #           - Key: scriptVariable
-  #             StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
-  #           - Key: scriptVariable
-  #             StringValue: DATE_START=#{format(@scheduledStartTime, 'YYYY-MM-dd')}
-  #           - Key: scriptVariable
-  #             StringValue: DATE_END=#{format(@scheduledEndTime, 'YYYY-MM-dd')}
-  #       - Id: DummyInputTableFormat
-  #         Name: Dummy Input Table Format
-  #         Fields:
-  #           - Key: type
-  #             StringValue: CSV
-  #           - Key: column
-  #             StringValue: ad_id STRING
-  #           - Key: column
-  #             StringValue: day STRING
-  #           - Key: column
-  #             StringValue: impressions BIGINT
-  #           - Key: column
-  #             StringValue: clicks BIGINT
-  #       - Id: DummyInputTable
-  #         Name: Dummy Input Table
-  #         Fields:
-  #           - Key: type
-  #             StringValue: S3DataNode
-  #           - Key: directoryPath
-  #             StringValue: !Sub "s3://${BucketName}/data/raw/ad/impressions/"
-  #           - Key: dataFormat
-  #             RefValue: DummyInputTableFormat
-  #       - Id: AdTrafficTableExists
-  #         Name: Ad Traffic Table Exists
-  #         Fields:
-  #           - Key: type
-  #             StringValue: DynamoDBTableExists
-  #           - Key: tableName
-  #             StringValue: !Ref AdTrafficTable
-  #       - Id: AdTrafficTableFormat
-  #         Name: Ad Traffic Table Format
-  #         Fields:
-  #           - Key: type
-  #             StringValue: DynamoDBDataFormat
-  #           - Key: column
-  #             StringValue: ad_id STRING
-  #           - Key: column
-  #             StringValue: day STRING
-  #           - Key: column
-  #             StringValue: impressions BIGINT
-  #           - Key: column
-  #             StringValue: clicks BIGINT
-  #       - Id: AdTrafficTable
-  #         Name: Ad Traffic Table
-  #         Fields:
-  #           - Key: type
-  #             StringValue: DynamoDBDataNode
-  #           - Key: tableName
-  #             StringValue: !Ref AdTrafficTable
-  #           - Key: dataFormat
-  #             RefValue: AdTrafficTableFormat
-  #           - Key: precondition
-  #             RefValue: AdTrafficTableExists
-  #       - Id: LoadAdTrafficData
-  #         Name: Load Ad Traffic Into DynamoDB Table
-  #         Fields:
-  #           - Key: type
-  #             StringValue: HiveActivity
-  #           - Key: dependsOn
-  #             RefValue: ExtractAdvertisingData
-  #           - Key: scriptUri
-  #             StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/load_ad_traffic_table.hql"
-  #           - !If
-  #               - EMREnabled
-  #               - Key: workerGroup
-  #                 StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
-  #               - Key: runsOn
-  #                 RefValue: EMRCluster
-  #           - Key: input
-  #             RefValue: DummyInputTable
-  #           - Key: output
-  #             RefValue: AdTrafficTable
-  #           - Key: scriptVariable
-  #             StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
-  #           - Key: scriptVariable
-  #             StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
-  #           - Key: scriptVariable
-  #             StringValue: DATE_START=#{format(@scheduledStartTime, 'YYYY-MM-dd')}
-  #           - Key: scriptVariable
-  #             StringValue: DATE_END=#{format(@scheduledEndTime, 'YYYY-MM-dd')}
+  EMRPipeline:
+    Type: AWS::DataPipeline::Pipeline
+    DependsOn:
+      - PipelineProfile
+      - PipelineResourceProfile
+    Properties:
+      Name: EMR Pipeline
+      Activate: false
+      ParameterObjects:
+        - Id: myRegion
+          Attributes:
+            - Key: type
+              StringValue: String
+            - Key: default
+              StringValue: !Ref AWS::Region
+      ParameterValues:
+        - Id: myRegion
+          StringValue: !Ref AWS::Region
+      PipelineObjects:
+        - Id: DailySchedule
+          Name: Daily Schedule
+          Fields:
+            - Key: type
+              StringValue: Schedule
+            - Key: period
+              StringValue: 1 days
+            - Key: startDateTime
+              StringValue: "2019-06-06T01:00:00"
+            - Key: occurrences
+              StringValue: 1
+        - Id: Default
+          Name: Default
+          Fields:
+            - Key: type
+              StringValue: Default
+            - Key: schedule
+              RefValue: DailySchedule
+            - Key: scheduleType
+              StringValue: timeseries
+            - Key: role
+              StringValue: !Ref PipelineRole
+            - Key: resourceRole
+              StringValue: !Ref PipelineResourceRole
+            - Key: pipelineLogUri
+              StringValue: !Sub "s3://${BucketName}/logs/data-pipeline/"
+            - Key: failureAndRerunMode
+              StringValue: cascade
+        - Id: HiveMetastoreClientFactoryClass
+          Name: Hive Metastore Client Factory Class
+          Fields:
+            - Key: type
+              StringValue: Property
+            - Key: key
+              StringValue: hive.metastore.client.factory.class
+            - Key: value
+              StringValue: com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory
+        - Id: HiveMetastoreCatalog
+          Name: Hive Metastore Catalog
+          Fields:
+            - Key: type
+              StringValue: Property
+            - Key: key
+              StringValue: hive.metastore.glue.catalogid
+            - Key: value
+              StringValue: !Ref AWS::AccountId
+        - Id: UseMRInsteadOfTez
+          Name: Use MapReduce instead of Tez
+          Fields:
+            - Key: type
+              StringValue: Property
+            - Key: key
+              StringValue: hive.execution.engine
+            - Key: value
+              StringValue: mr
+        - Id: HiveSite
+          Name: Configure hive-site.xml
+          Fields:
+            - Key: type
+              StringValue: EmrConfiguration
+            - Key: classification
+              StringValue: hive-site
+            - Key: property
+              RefValue: HiveMetastoreClientFactoryClass
+            - Key: property
+              RefValue: HiveMetastoreCatalog
+            - Key: property
+              RefValue: UseMRInsteadOfTez
+        - Id: SparkHiveSite
+          Name: Configure spark-hive-site.xml
+          Fields:
+            - Key: type
+              StringValue: EmrConfiguration
+            - Key: classification
+              StringValue: spark-hive-site
+            - Key: property
+              RefValue: HiveMetastoreClientFactoryClass
+            - Key: property
+              RefValue: HiveMetastoreCatalog
+        - Id: EMRCluster
+          Name: EMR Cluster
+          Fields:
+            - Key: type
+              StringValue: EmrCluster
+            - Key: keyPair
+              StringValue: !Ref KeyPair
+            - Key: masterInstanceType
+              StringValue: m1.medium
+            - Key: coreInstanceType
+              StringValue: m1.medium
+            - Key: coreInstanceCount
+              StringValue: 10
+            - Key: releaseLabel
+              StringValue: emr-5.23.0
+            - Key: applications
+              StringValue: hive
+            - Key: applications
+              StringValue: pig
+            - Key: applications
+              StringValue: spark
+            - Key: terminateAfter
+              StringValue: 1 hours
+            - Key: configuration
+              RefValue: GlueCatalogAsHiveMetastore
+            - Key: configuration
+              RefValue: GlueCatalogAsSparkMetastore
+        - Id: ExtractAdvertisingData
+          Name: Extract Advertising Data
+          Fields:
+            - Key: type
+              StringValue: HiveActivity
+            - Key: scriptUri
+              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/extract_advertising_data.hql"
+            - !If
+                - EMREnabled
+                - Key: workerGroup
+                  StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+                - Key: runsOn
+                  RefValue: EMRCluster
+            - Key: stage
+              StringValue: false
+            - Key: scriptVariable
+              StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
+            - Key: scriptVariable
+              StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
+            - Key: scriptVariable
+              StringValue: DATE_START=#{format(@scheduledStartTime, 'YYYY-MM-dd')}
+            - Key: scriptVariable
+              StringValue: DATE_END=#{format(@scheduledEndTime, 'YYYY-MM-dd')}
+        - Id: DummyInputTableFormat
+          Name: Dummy Input Table Format
+          Fields:
+            - Key: type
+              StringValue: CSV
+            - Key: column
+              StringValue: ad_id STRING
+            - Key: column
+              StringValue: day STRING
+            - Key: column
+              StringValue: impressions BIGINT
+            - Key: column
+              StringValue: clicks BIGINT
+        - Id: DummyInputTable
+          Name: Dummy Input Table
+          Fields:
+            - Key: type
+              StringValue: S3DataNode
+            - Key: directoryPath
+              StringValue: !Sub "s3://${BucketName}/data/raw/ad/impressions/"
+            - Key: dataFormat
+              RefValue: DummyInputTableFormat
+        - Id: AdTrafficTableExists
+          Name: Ad Traffic Table Exists
+          Fields:
+            - Key: type
+              StringValue: DynamoDBTableExists
+            - Key: tableName
+              StringValue: !Ref AdTrafficTable
+        - Id: AdTrafficTableFormat
+          Name: Ad Traffic Table Format
+          Fields:
+            - Key: type
+              StringValue: DynamoDBDataFormat
+            - Key: column
+              StringValue: ad_id STRING
+            - Key: column
+              StringValue: day STRING
+            - Key: column
+              StringValue: impressions BIGINT
+            - Key: column
+              StringValue: clicks BIGINT
+        - Id: AdTrafficTable
+          Name: Ad Traffic Table
+          Fields:
+            - Key: type
+              StringValue: DynamoDBDataNode
+            - Key: tableName
+              StringValue: !Ref AdTrafficTable
+            - Key: dataFormat
+              RefValue: AdTrafficTableFormat
+            - Key: precondition
+              RefValue: AdTrafficTableExists
+        - Id: LoadAdTrafficData
+          Name: Load Ad Traffic Into DynamoDB Table
+          Fields:
+            - Key: type
+              StringValue: HiveActivity
+            - Key: dependsOn
+              RefValue: ExtractAdvertisingData
+            - Key: scriptUri
+              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/load_ad_traffic_table.hql"
+            - !If
+                - EMREnabled
+                - Key: workerGroup
+                  StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+                - Key: runsOn
+                  RefValue: EMRCluster
+            - Key: input
+              RefValue: DummyInputTable
+            - Key: output
+              RefValue: AdTrafficTable
+            - Key: scriptVariable
+              StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
+            - Key: scriptVariable
+              StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
+            - Key: scriptVariable
+              StringValue: DATE_START=#{format(@scheduledStartTime, 'YYYY-MM-dd')}
+            - Key: scriptVariable
+              StringValue: DATE_END=#{format(@scheduledEndTime, 'YYYY-MM-dd')}
 
   RedshiftPipeline:
     Type: AWS::DataPipeline::Pipeline
