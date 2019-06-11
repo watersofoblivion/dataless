@@ -1094,9 +1094,9 @@ Resources:
             - Key: terminateAfter
               StringValue: 1 hours
             - Key: configuration
-              RefValue: GlueCatalogAsHiveMetastore
+              RefValue: HiveSite
             - Key: configuration
-              RefValue: GlueCatalogAsSparkMetastore
+              RefValue: SparkHiveSite
         - Id: ExtractAdvertisingData
           Name: Extract Advertising Data
           Fields:
