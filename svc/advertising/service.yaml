@@ -1131,28 +1131,6 @@ Resources:
               StringValue: !Sub "s3://${BucketName}/data/raw/ad/impressions/"
             - Key: dataFormat
               RefValue: DummyInputTableFormat
-        # - Id: AdTrafficStagingTableFormat
-        #   Name: Ad Traffic Staging Table Format
-        #   Fields:
-        #     - Key: type
-        #       StringValue: DynamoDBExportDataFormat
-        #     - Key: column
-        #       StringValue: ad_id STRING
-        #     - Key: column
-        #       StringValue: day STRING
-        #     - Key: column
-        #       StringValue: impressions BIGINT
-        #     - Key: column
-        #       StringValue: clicks BIGINT
-        # - Id: AdTrafficStagingTable
-        #   Name: Ad Traffic Staging Table
-        #   Fields:
-        #     - Key: type
-        #       StringValue: S3DataNode
-        #     - Key: directoryPath
-        #       StringValue: !Sub "s3://${BucketName}/data/temp/advertising-info-staging-table/"
-        #     - Key: dataFormat
-        #       RefValue: AdTrafficStagingTableFormat
         - Id: AdTrafficTableExists
           Name: Ad Traffic Table Exists
           Fields:
@@ -1184,8 +1162,6 @@ Resources:
               RefValue: AdTrafficTableFormat
             - Key: precondition
               RefValue: AdTrafficTableExists
-        # - Id: StageDataForAdTraffic
-        #   Name: Stage Data for Ad Traffic
         - Id: LoadAdTrafficData
           Name: Load Ad Traffic Into DynamoDB Table
           Fields:
@@ -1194,7 +1170,7 @@ Resources:
             - Key: dependsOn
               RefValue: ExtractAdvertisingData
             - Key: scriptUri
-              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/stage_data_for_ad_traffic.hql"
+              StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/load_ad_traffic_table.hql"
             - !If
                 - EMREnabled
                 - Key: workerGroup
@@ -1204,7 +1180,6 @@ Resources:
             - Key: input
               RefValue: DummyInputTable
             - Key: output
-              # RefValue: AdTrafficStagingTable
               RefValue: AdTrafficTable
             - Key: scriptVariable
               StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
@@ -1214,23 +1189,6 @@ Resources:
               StringValue: DATE_START=#{format(@scheduledStartTime, 'YYYY-MM-dd')}
             - Key: scriptVariable
               StringValue: DATE_END=#{format(@scheduledEndTime, 'YYYY-MM-dd')}
-        # - Id: LoadAdTrafficTable
-        #   Name: Load Ad Traffic Into DynamoDB Table
-        #   Fields:
-        #     - Key: type
-        #       StringValue: HiveCopyActivity
-        #     - Key: dependsOn
-        #       RefValue: StageDataForAdTraffic
-        #     - Key: input
-        #       RefValue: AdTrafficStagingTable
-        #     - Key: output
-        #       RefValue: AdTrafficTable
-        #     - !If
-        #         - EMREnabled
-        #         - Key: workerGroup
-        #           StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
-        #         - Key: runsOn
-        #           RefValue: EMRCluster
 
   RedshiftPipeline:
     Type: AWS::DataPipeline::Pipeline
