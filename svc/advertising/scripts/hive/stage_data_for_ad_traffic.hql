@@ -34,7 +34,7 @@ INSERT OVERWRITE
   TABLE ${output1}
 SELECT
   impressions.ad_id AS ad_id,
-  impression.day    AS day,
+  impressiona.day   AS day,
   impressions.count AS impressions,
   clicks.count      AS clicks,
   MAP(
