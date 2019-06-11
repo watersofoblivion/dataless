@@ -1135,7 +1135,7 @@ Resources:
           Name: Ad Traffic Staging Table Format
           Fields:
             - Key: type
-              StringValue: CSV
+              StringValue: DynamoDBExportDataFormat
             - Key: column
               StringValue: ad_id STRING
             - Key: column
