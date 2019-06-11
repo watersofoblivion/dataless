@@ -1142,7 +1142,7 @@ Resources:
           Name: Ad Traffic Table Format
           Fields:
             - Key: type
-              StringValue: DynamoDBExportDataFormat
+              StringValue: DynamoDBDataFormat
             - Key: column
               StringValue: ad_id STRING
             - Key: column
@@ -1158,8 +1158,8 @@ Resources:
               StringValue: DynamoDBDataNode
             - Key: tableName
               StringValue: !Ref AdTrafficTable
-            - Key: region
-              StringValue: !Ref AWS::Region
+            # - Key: region
+            #   StringValue: !Ref AWS::Region
             - Key: dataFormat
               RefValue: AdTrafficTableFormat
             - Key: precondition
