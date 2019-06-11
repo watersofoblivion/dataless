@@ -1158,6 +1158,8 @@ Resources:
               StringValue: DynamoDBDataNode
             - Key: tableName
               StringValue: !Ref AdTrafficTable
+            - Key: region
+              StringValue: !Ref AWS::Region
             - Key: dataFormat
               RefValue: AdTrafficTableFormat
             - Key: precondition
