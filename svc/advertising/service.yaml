@@ -77,7 +77,8 @@ Metadata:
         default: The Redshift username
       RedshiftPassword:
         default: The Redshift password
-      EnablePipeline: The daily pipeline is enabled when non-nil
+      EnablePipeline:
+        default: The daily pipeline is enabled when non-nil
 
 Parameters:
   CodePipeline:

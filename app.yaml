@@ -54,6 +54,9 @@ Metadata:
           - RedshiftDatabase
           - RedshiftUsername
           - RedshiftPassword
+      - Label: Data Pipeline
+        Parameters:
+          - EnablePipeline
     ParameterLabels:
       CodePipeline:
         default: The CodePipeline pipeline that build this app
@@ -113,6 +116,8 @@ Metadata:
         default: The Redshift username
       RedshiftPassword:
         default: The Redshift password
+      EnablePipeline:
+        default: The daily pipeline is enabled when non-nil
 
 Parameters:
   CodePipeline:
@@ -254,6 +259,13 @@ Parameters:
     Description: The password of the default Redshift user
     Default: D4ta!3s5
     NoEcho: true
+  EnablePipeline:
+    Type: String
+    Description: |
+      If non-empty, the daily pipeline is enabled.  Useful for deleting and
+      re-creating the pipeline on backwards-incompatible changes.  Defaults to
+      enabled.
+    Default: yes
 
 Conditions:
   DNSEnabled: !And
@@ -844,6 +856,7 @@ Resources:
         RedshiftDatabase: !Ref RedshiftDatabase
         RedshiftUsername: !Ref RedshiftUsername
         RedshiftPassword: !Ref RedshiftPassword
+        EnablePipeline: !Ref EnablePipeline
 
   ##########
   # Router #
