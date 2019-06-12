@@ -39,6 +39,9 @@ Metadata:
           - RedshiftDatabase
           - RedshiftUsername
           - RedshiftPassword
+      - Label: Data Pipeline
+        Parameters:
+          - EnablePipeline
     ParameterLabels:
       CodePipeline:
         default: The CodePipeline pipeline that build this app
@@ -74,6 +77,7 @@ Metadata:
         default: The Redshift username
       RedshiftPassword:
         default: The Redshift password
+      EnablePipeline: The daily pipeline is enabled when non-nil
 
 Parameters:
   CodePipeline:
@@ -163,6 +167,13 @@ Parameters:
     Description: The password of the default Redshift user
     Default: dataless
     NoEcho: true
+  EnablePipeline:
+    Type: String
+    Description: |
+      If non-empty, the daily pipeline is enabled.  Useful for deleting and
+      re-creating the pipeline on backwards-incompatible changes.  Defaults to
+      enabled.
+    Default: yes
 
 Conditions:
   VPCEnabled: !And
@@ -181,6 +192,7 @@ Conditions:
     - !Not [!Equals [!Ref RedshiftDatabase, ""]]
     - !Not [!Equals [!Ref RedshiftUsername, ""]]
     - !Not [!Equals [!Ref RedshiftPassword, ""]]
+  PipelineEnabled: !Not [!Equals [!Ref EnablePipeline, ""]]
 
 Outputs:
   API:
@@ -977,11 +989,12 @@ Resources:
 
   EMRPipeline:
     Type: AWS::DataPipeline::Pipeline
+    Condition: PipelineEnabled
     DependsOn:
       - PipelineProfile
       - PipelineResourceProfile
     Properties:
-      Name: EMR Pipeline
+      Name: Daily Pipeline
       Activate: false
       ParameterObjects:
         - Id: myRegion
@@ -1025,7 +1038,7 @@ Resources:
         - !If
           - !Or
             - EC2InstanceEnabled
-            - !Not RedshiftEnabled
+            - !Not [RedshiftEnabled]
           - !Ref AWS::NoValue
           - Id: EC2Instance
             Name: EC2 Instance
@@ -1238,7 +1251,7 @@ Resources:
             - Key: scriptArgument
               StringValue: !Ref AdTrafficTable
             - Key: scriptArgument
-              StringValue: 100
+              StringValue: "16"
         - Id: DecreaseAdTrafficWriteCapacity
           Name: Decrease Ad Traffic Table Write Capacity
           Fields:
@@ -1249,7 +1262,7 @@ Resources:
             - Key: scriptArgument
               StringValue: !Ref AdTrafficTable
             - Key: scriptArgument
-              StringValue: 1
+              StringValue: "-16"
         - Id: LoadAdTrafficData
           Name: Load Ad Traffic Into DynamoDB Table
           Fields:
