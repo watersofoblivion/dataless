@@ -1,3 +1,5 @@
+SET dynamodb.throughput.write.percent=1.5
+
 WITH
   events AS (
     SELECT

@@ -1267,7 +1267,7 @@ Resources:
             - Key: scriptArgument
               StringValue: !Ref AdTrafficTable
             - Key: scriptArgument
-              StringValue: "16"
+              StringValue: "100"
         - Id: DecreaseAdTrafficWriteCapacity
           Name: Decrease Ad Traffic Table Write Capacity
           Fields:
@@ -1278,7 +1278,7 @@ Resources:
             - Key: scriptArgument
               StringValue: !Ref AdTrafficTable
             - Key: scriptArgument
-              StringValue: "-16"
+              StringValue: "-100"
         - Id: LoadAdTrafficData
           Name: Load Ad Traffic Into DynamoDB Table
           Fields:
