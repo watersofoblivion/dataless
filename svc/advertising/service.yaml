@@ -42,6 +42,10 @@ Metadata:
       - Label: Data Pipeline
         Parameters:
           - EnablePipeline
+          - PipelineRole
+          - PipelineRoleARN
+          - PipelineResourceRole
+          - PipelineResourceRoleARN
     ParameterLabels:
       CodePipeline:
         default: The CodePipeline pipeline that build this app
@@ -79,6 +83,14 @@ Metadata:
         default: The Redshift password
       EnablePipeline:
         default: The daily pipeline is enabled when non-nil
+      PipelineRole:
+        default: The name of the role for the data pipeline
+      PipelineRoleARN:
+        default: The ARN of the role for the data pipeline
+      PipelineResourceRole:
+        default: The name of the resource role for the data pipeline
+      PipelineResourceRoleARN:
+        default: The ARN of the resource role for the data pipeline
 
 Parameters:
   CodePipeline:
@@ -176,6 +188,18 @@ Parameters:
       re-creating the pipeline on backwards-incompatible changes.  Defaults to
       enabled.
     Default: yes
+  PipelineRole:
+    Type: String
+    Description: The name of the role for the data pipeline
+  PipelineRoleARN:
+    Type: String
+    Description: The ARN of the role for the data pipeline
+  PipelineResourceRole:
+    Type: String
+    Description: The name of the resource role for the data pipeline
+  PipelineResourceRoleARN:
+    Type: String
+    Description: The ARN of the resource role for the data pipeline
 
 Conditions:
   VPCEnabled: !And
@@ -903,98 +927,12 @@ Resources:
       SSESpecification:
         SSEEnabled: true
 
-  PipelineRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Action:
-              - sts:AssumeRole
-            Effect: Allow
-            Principal:
-              Service:
-                - !Sub "logs.${AWS::Region}.${AWS::URLSuffix}"
-                - !Sub "datapipeline.${AWS::URLSuffix}"
-                - !Sub "dynamodb.${AWS::URLSuffix}"
-                - !Sub "ec2.${AWS::URLSuffix}"
-                - !Sub "elasticmapreduce.${AWS::URLSuffix}"
-                - !Sub "iam.${AWS::URLSuffix}"
-                - !Sub "rds.${AWS::URLSuffix}"
-                - !Sub "redshift.${AWS::URLSuffix}"
-                - !Sub "s3.${AWS::URLSuffix}"
-                - !Sub "sns.${AWS::URLSuffix}"
-                - !Sub "sqs.${AWS::URLSuffix}"
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSDataPipelineRole
-      Policies:
-        - PolicyName: SpectrumAccess
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Action:
-                  - glue:*
-                  - athena:*
-                Effect: Allow
-                Resource: "*"
-              - Action:
-                  - s3:Get*
-                  - s3:List*
-                Effect: Allow
-                Resource:
-                  - !Sub "${BucketARN}/data/raw/*"
-                  - !Sub "${BucketARN}/data/lake/*"
-                  - !Sub "${BucketARN}/data/temp/*"
-
   PipelineProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       InstanceProfileName: !Ref PipelineRole
       Roles:
         - !Ref PipelineRole
-
-  PipelineResourceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Action:
-              - sts:AssumeRole
-            Effect: Allow
-            Principal:
-              Service:
-                - !Sub "logs.${AWS::Region}.${AWS::URLSuffix}"
-                - !Sub "datapipeline.${AWS::URLSuffix}"
-                - !Sub "dynamodb.${AWS::URLSuffix}"
-                - !Sub "ec2.${AWS::URLSuffix}"
-                - !Sub "elasticmapreduce.${AWS::URLSuffix}"
-                - !Sub "iam.${AWS::URLSuffix}"
-                - !Sub "rds.${AWS::URLSuffix}"
-                - !Sub "redshift.${AWS::URLSuffix}"
-                - !Sub "s3.${AWS::URLSuffix}"
-                - !Sub "sns.${AWS::URLSuffix}"
-                - !Sub "sqs.${AWS::URLSuffix}"
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforDataPipelineRole
-      Policies:
-        - PolicyName: SpectrumAccess
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Action:
-                  - glue:*
-                  - athena:*
-                Effect: Allow
-                Resource: "*"
-              - Action:
-                  - s3:Get*
-                  - s3:List*
-                Effect: Allow
-                Resource:
-                  - !Sub "${BucketARN}/data/raw/*"
-                  - !Sub "${BucketARN}/data/lake/*"
-                  - !Sub "${BucketARN}/data/temp/*"
 
   PipelineResourceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -1452,7 +1390,7 @@ Resources:
                   CREATE EXTERNAL SCHEMA IF NOT EXISTS advertising
                   FROM DATA CATALOG
                   DATABASE '${Database}'
-                  IAM_ROLE '${PipelineRole.Arn}'
+                  IAM_ROLE '${PipelineRoleARN}'
                   CREATE EXTERNAL DATABASE
                   IF NOT EXISTS;
           - !Ref AWS::NoValue

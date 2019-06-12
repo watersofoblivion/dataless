@@ -341,6 +341,96 @@ Resources:
         - Id: temp
           Prefix: data/temp/
 
+  #################
+  # Data Pipeline #
+  #################
+
+  PipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "logs.${AWS::Region}.${AWS::URLSuffix}"
+                - !Sub "datapipeline.${AWS::URLSuffix}"
+                - !Sub "dynamodb.${AWS::URLSuffix}"
+                - !Sub "ec2.${AWS::URLSuffix}"
+                - !Sub "elasticmapreduce.${AWS::URLSuffix}"
+                - !Sub "iam.${AWS::URLSuffix}"
+                - !Sub "rds.${AWS::URLSuffix}"
+                - !Sub "redshift.${AWS::URLSuffix}"
+                - !Sub "s3.${AWS::URLSuffix}"
+                - !Sub "sns.${AWS::URLSuffix}"
+                - !Sub "sqs.${AWS::URLSuffix}"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSDataPipelineRole
+      Policies:
+        - PolicyName: SpectrumAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - glue:*
+                  - athena:*
+                Effect: Allow
+                Resource: "*"
+              - Action:
+                  - s3:Get*
+                  - s3:List*
+                Effect: Allow
+                Resource:
+                  - !Sub "${Bucket.Arn}/data/raw/*"
+                  - !Sub "${Bucket.Arn}/data/lake/*"
+                  - !Sub "${Bucket.Arn}/data/temp/*"
+
+  PipelineResourceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub "logs.${AWS::Region}.${AWS::URLSuffix}"
+                - !Sub "datapipeline.${AWS::URLSuffix}"
+                - !Sub "dynamodb.${AWS::URLSuffix}"
+                - !Sub "ec2.${AWS::URLSuffix}"
+                - !Sub "elasticmapreduce.${AWS::URLSuffix}"
+                - !Sub "iam.${AWS::URLSuffix}"
+                - !Sub "rds.${AWS::URLSuffix}"
+                - !Sub "redshift.${AWS::URLSuffix}"
+                - !Sub "s3.${AWS::URLSuffix}"
+                - !Sub "sns.${AWS::URLSuffix}"
+                - !Sub "sqs.${AWS::URLSuffix}"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforDataPipelineRole
+      Policies:
+        - PolicyName: SpectrumAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - glue:*
+                  - athena:*
+                Effect: Allow
+                Resource: "*"
+              - Action:
+                  - s3:Get*
+                  - s3:List*
+                Effect: Allow
+                Resource:
+                  - !Sub "${Bucket.Arn}/data/raw/*"
+                  - !Sub "${Bucket.Arn}/data/lake/*"
+                  - !Sub "${Bucket.Arn}/data/temp/*"
+
   #######
   # VPC #
   #######
@@ -454,36 +544,6 @@ Resources:
       SubnetIds:
         - !Ref Subnet
 
-  RedshiftRole:
-    Type: AWS::IAM::Role
-    Condition: RedshiftEnabled
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Action:
-              - sts:AssumeRole
-            Effect: Allow
-            Principal:
-              Service:
-                - !Sub "redshift.${AWS::URLSuffix}"
-      Policies:
-        - PolicyName: Spectrum
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Action:
-                  - s3:Get*
-                  - s3:List*
-                Effect: Allow
-                Resource:
-                  - !Sub "${Bucket.Arn}/data/lake/*"
-              - Action:
-                  - glue:*
-                  - athena:*
-                Effect: Allow
-                Resource: "*"
-
   Redshift:
     Type: AWS::Redshift::Cluster
     Condition: RedshiftEnabled
@@ -501,9 +561,8 @@ Resources:
         - !Ref SecurityGroup
         - !GetAtt VPC.DefaultSecurityGroup
       IamRoles:
-        - !GetAtt RedshiftRole.Arn
-        # - !GetAtt PipelineRole.Arn
-        # - !GetAtt PipelineResourceRole.Arn
+        - !GetAtt PipelineRole.Arn
+        - !GetAtt PipelineResourceRole.Arn
       PubliclyAccessible: true
       AvailabilityZone: !GetAtt Subnet.AvailabilityZone
 
@@ -857,6 +916,10 @@ Resources:
         RedshiftUsername: !Ref RedshiftUsername
         RedshiftPassword: !Ref RedshiftPassword
         EnablePipeline: !Ref EnablePipeline
+        PipelineRole: !Ref PipelineRole
+        PipelineRoleARN: !GetAtt PipelineRole.Arn
+        PipelineResourceRole: !Ref PipelineResourceRole
+        PipelineResourceRoleARN: !GetAtt PipelineResourceRole.Arn
 
   ##########
   # Router #
