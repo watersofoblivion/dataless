@@ -192,11 +192,16 @@ Conditions:
     - !Not [!Equals [!Ref RedshiftDatabase, ""]]
     - !Not [!Equals [!Ref RedshiftUsername, ""]]
     - !Not [!Equals [!Ref RedshiftPassword, ""]]
-  RedshiftDisabled: !Or
-    - !Equals [!Ref RedshiftClusterId, ""]
-    - !Equals [!Ref RedshiftDatabase, ""]
-    - !Equals [!Ref RedshiftUsername, ""]
-    - !Equals [!Ref RedshiftPassword, ""]
+  DisablePipelineInstance: !Or
+    - !Or
+      - !Equals [!Ref RedshiftClusterId, ""]
+      - !Equals [!Ref RedshiftDatabase, ""]
+      - !Equals [!Ref RedshiftUsername, ""]
+      - !Equals [!Ref RedshiftPassword, ""]
+    - !And
+      - !Not [!Equals [!Ref EnableEC2Instance, ""]]
+      - !Not [!Equals [!Ref AccessKeyID, ""]]
+      - !Not [!Equals [!Ref SecretAccessKey, ""]]
   PipelineEnabled: !Not [!Equals [!Ref EnablePipeline, ""]]
 
 Outputs:
@@ -1041,9 +1046,7 @@ Resources:
             - Key: failureAndRerunMode
               StringValue: cascade
         - !If
-          - !Or
-            - EC2InstanceEnabled
-            - RedshiftDisabled
+          - DisablePipelineInstance
           - !Ref AWS::NoValue
           - Id: EC2Instance
             Name: EC2 Instance
