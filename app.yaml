@@ -478,10 +478,10 @@ Resources:
     Properties:
       ClusterType: !If [RedshiftSingleNode, "single-node", "multi-node"]
       ClusterIdentifier: !Sub "${AWS::StackName}-${AWS::Region}-redshift-cluster"
-      DBName: "warehouse"
+      DBName: !Ref RedshiftDatabase
       Encrypted: true
-      MasterUsername: "warehouse"
-      MasterUserPassword: "War340u5e!"
+      MasterUsername: !Ref RedshiftUsername
+      MasterUserPassword: !Ref RedshiftPassword
       NodeType: !Ref RedshiftNodeType
       NumberOfNodes: !If [RedshiftSingleNode, !Ref 'AWS::NoValue', !Ref RedshiftNumberOfNodes]
       ClusterSubnetGroupName: !Ref RedshiftClusterSubnetGroup
