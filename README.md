@@ -209,8 +209,12 @@ Advanced
 
 The pipeline supports additional Redshift functionality and the ability to use
 a long-running EMR cluster and/or script instance.  This functionality is not
-enabled by default, as it incurs ongoing costs.  Enabling it requires a
-two-deploy rollout since it alters the structure of the pipeline.
+enabled by default, as it incurs ongoing costs.
+
+Enabling it requires a two-deploy rollout since it alters the structure of the
+pipeline.  (Note: If the pipeline has not yet been activated, the resources can
+be toggled ad libitum.  Once the pipeline has been activated, the multi-deploy
+rollout is required.)
 
 To enable or disable advanced functionality:
 
