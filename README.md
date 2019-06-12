@@ -159,13 +159,12 @@ Batch
 ---
 
 The batch component sits on top of the data lake and primarily serves the
-business and end customers.
-
-A Data Pipeline batch pipeline has been built to do this.
+business and end customers.  A batch pipeline has been built with Data Pipeline
+to do this.
 
 ### Hive
 
-Via Hive, the pipeline does two things.  First, it materializes an advertising
+Via Hive the pipeline does two things.  First, it materializes an advertising
 view managed by Glue.  This table is available to business customers.  Second,
 it derives per-ad traffic data by day and populates a DynamoDB table. An
 endpoint has been set up for services to query this data to serve end customers.
