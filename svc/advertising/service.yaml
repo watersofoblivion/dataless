@@ -1362,7 +1362,7 @@ Resources:
               - Key: output
                 RefValue: RedshiftAdvertisingTable
               - Key: insertMode
-                StringValue: OVERWRITE_EXISTING
+                StringValue: APPEND
               - !If
                 - EC2InstanceEnabled
                 - Key: workerGroup
