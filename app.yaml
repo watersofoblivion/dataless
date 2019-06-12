@@ -136,6 +136,7 @@ Parameters:
   KeyPair:
     Type: String
     Description: The EC2 KeyPair to use
+    Default: ''
   Stage:
     Type: String
     Description: The name for a project pipeline stage, such as Staging or Prod, for which resources are provisioned and deployed.
@@ -283,6 +284,7 @@ Conditions:
     - !Not [!Equals [!Ref EnableEC2Instance, ""]]
     - !Not [!Equals [!Ref EnableEMRCluster, ""]]
     - !Not [!Equals [!Ref EnableRedshift, ""]]
+  KeyPairGiven: !Not [!Equals [!Ref KeyPair, ""]]
 
 Outputs:
   BaseURL:
@@ -785,7 +787,10 @@ Resources:
         AdditionalSlaveSecurityGroups:
           - !Ref SecurityGroup
           - !GetAtt VPC.DefaultSecurityGroup
-        Ec2KeyName: !Ref KeyPair
+        Ec2KeyName: !If
+          - KeyPairGiven
+          - !Ref KeyPair
+          - !Ref AWS::NoValue
         Ec2SubnetId: !Ref Subnet
         MasterInstanceGroup:
           InstanceCount: !Ref EMRMasterInstanceCount

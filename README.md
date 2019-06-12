@@ -55,14 +55,12 @@ The `Owner`, `Repo`, and `Branch` properties configure where the build pipeline 
 
 ## 3. Config Warehouse
 
-The app is configured via the `config/master.json` file.  Set the `KeyPair`
-property to the name of a valid keypair:
+The app is configured via the `config/master.json` file.  By default, no
+configuration options are required.
 
 ```json
 {
-  "Parameters": {
-    "KeyPair": "my-keypair"
-  }
+  "Parameters": {}
 }
 ```
 
@@ -78,7 +76,6 @@ Optionally, set up DNS by adding the following parameters:
 ```json
 {
   "Parameters": {
-    "KeyPair": "my-keypair",
     "DNSDomainName": "example.com",
     "ValidationDomain": "example.com",
     "HostedZoneID": "Z1234567890",
@@ -164,25 +161,23 @@ Batch
 The batch component sits on top of the data lake and primarily serves the
 business and end customers.
 
-A pair of Data Pipeline batch pipelines have been built, one for Hive and one
-for Redshift.
+A Data Pipeline batch pipeline has been built to do this.
 
 ### Hive
 
-The Hive pipeline does two things.  First, it materializes an advertising view
-managed by Glue.  This table is available to business customers.  Second, it
-derives per-ad traffic data by day and populates a DynamoDB table. An endpoint
-has been set up for services to query this data to serve end customers.
+Via Hive, the pipeline does two things.  First, it materializes an advertising
+view managed by Glue.  This table is available to business customers.  Second,
+it derives per-ad traffic data by day and populates a DynamoDB table. An
+endpoint has been set up for services to query this data to serve end customers.
 
 ### Redshift
 
-**Note**: To get this pipeline, enable Redshift by setting the `EnableRedshift`
-property to `yes` in `config/master.json` and redeploy.  Unsetting the property
-and redeploying will tear down the Redshift instance.
+**Note**: To get this functionality, you must enable Redshift.  See "Advanced"
+below.
 
-The Redshift pipeline moves advertising data into Redshift.  It first exports
-the advertising table to CSV and loads it into the cluster.  Then, it loads the
-same data directly from the data lake using Redshift Spectrum.
+The pipeline also moves advertising data into Redshift.  It first exports the
+advertising table to CSV and loads it into the cluster.  Then, it loads the same
+data directly from the data lake using Redshift Spectrum.
 
 Real-Time
 ---
@@ -202,14 +197,78 @@ Misc.
 An CloudWatch dashboard provides operational visibility into the running of the
 warehouse.
 
-Advanced Feature: A long running EMR cluster and script instance running the
-Data Pipeline Task Runner can be created by setting `EnableEMRCluster` and
-`EnableEC2Instance` respectively to `yes` in `config/master.json`.  They will be
-torn down when the options are unset.  Requires a multi-deploy rollout.
-
 Safe Lambda deploys are enabled with a 5 minute canary by default.  Set
 `DeploymentPreference` to `AllAtOnce` in the config for faster deploys during
 development.
 
 A handful of resources are retained on template deletion, namely the bucket
 containing the data lake, and the source code repository if CodeCommit was used.
+
+Advanced
+---
+
+The pipeline supports additional Redshift functionality and the ability to use
+a long-running EMR cluster and/or script instance.  This functionality is not
+enabled by default, as it incurs ongoing costs.  Enabling it requires a
+two-deploy rollout since it alters the structure of the pipeline.
+
+To enable or disable advanced functionality:
+
+- Disable the pipeline, enable/disable the resources, and redeploy
+- Enable the pipeline and redeploy
+
+The pipeline can be disabled by setting the `EnablePipeline` config parameter to
+`""` (blank).
+
+The various resources can be enabled by setting the following config parameters
+to `yes`.  Additional parameters are available in the template to tune the
+resources' parameters (instance size, count, etc.).
+
+- `EnableEC2Instance`
+- `EnableEMRCluster`
+- `EnableRedshift`
+
+These resources are provisioned in a VPC, which is automatically enabled when
+any of the resources are enabled and disabled when all of them are disabled.  (Note: If the deploy hangs tearing down the VPC, it is safe to simply delete the
+VPC from the console to un-stick the teardown.)
+
+### Example: Enable Redshift
+
+To enable Redshift, first disable the pipeline and enable the Redshift cluster
+by setting `EnablePipeline` to `""` (blank) and `EnableRedshift` to `yes` in
+`config/master.json`:
+
+```json
+{
+  "Parameters": {
+    "EnablePipeline": "",
+    "EnableRedshift": "yes"
+  }
+}
+```
+
+Then deploy:
+
+```bash
+git add config/master.json
+git commit -m "Disabling pipeline and enabling Redshift"
+git push origin master
+```
+
+Next, re-enable the pipeline by removing the `EnablePipeline` configuration:
+
+```json
+{
+  "Parameters": {
+    "EnableRedshift": "yes"
+  }
+}
+```
+
+Then deploy:
+
+```bash
+git add config/master.json
+git commit -m "Re-enabling Pipeline"
+git push origin master
+```

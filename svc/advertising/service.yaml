@@ -101,6 +101,7 @@ Parameters:
   KeyPair:
     Type: String
     Description: The EC2 KeyPair to use
+    Default: ''
   Stage:
     Type: String
     Description: The name for a project pipeline stage, such as Staging or Prod, for which resources are provisioned and deployed.
@@ -202,6 +203,7 @@ Conditions:
       - !Not [!Equals [!Ref EnableEC2Instance, ""]]
       - !Not [!Equals [!Ref AccessKeyID, ""]]
       - !Not [!Equals [!Ref SecretAccessKey, ""]]
+  KeyPairGiven: !Not [!Equals [!Ref KeyPair, ""]]
   PipelineEnabled: !Not [!Equals [!Ref EnablePipeline, ""]]
 
 Outputs:
@@ -1073,8 +1075,11 @@ Resources:
                 - !Ref AWS::NoValue
               - Key: associatePublicIpAddress
                 StringValue: true
-              - Key: keyPair
-                StringValue: !Ref KeyPair
+              - !If
+                - KeyPairGiven
+                - Key: keyPair
+                  StringValue: !Ref KeyPair
+                - !Ref AWS::NoValue
               - Key: terminateAfter
                 StringValue: 3 hours
         - !If
@@ -1151,8 +1156,11 @@ Resources:
             Fields:
               - Key: type
                 StringValue: EmrCluster
-              - Key: keyPair
-                StringValue: !Ref KeyPair
+              - !If
+                - KeyPairGiven
+                - Key: keyPair
+                  StringValue: !Ref KeyPair
+                - !Ref AWS::NoValue
               - Key: masterInstanceType
                 StringValue: m1.medium
               - Key: coreInstanceType
