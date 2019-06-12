@@ -192,6 +192,11 @@ Conditions:
     - !Not [!Equals [!Ref RedshiftDatabase, ""]]
     - !Not [!Equals [!Ref RedshiftUsername, ""]]
     - !Not [!Equals [!Ref RedshiftPassword, ""]]
+  RedshiftDisabled: !Or
+    - !Equals [!Ref RedshiftClusterId, ""]
+    - !Equals [!Ref RedshiftDatabase, ""]
+    - !Equals [!Ref RedshiftUsername, ""]
+    - !Equals [!Ref RedshiftPassword, ""]
   PipelineEnabled: !Not [!Equals [!Ref EnablePipeline, ""]]
 
 Outputs:
@@ -1038,7 +1043,7 @@ Resources:
         - !If
           - !Or
             - EC2InstanceEnabled
-            - !Not [RedshiftEnabled]
+            - RedshiftDisabled
           - !Ref AWS::NoValue
           - Id: EC2Instance
             Name: EC2 Instance
