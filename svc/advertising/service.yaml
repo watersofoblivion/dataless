@@ -895,7 +895,10 @@ Resources:
           KeyType: HASH
         - AttributeName: day
           KeyType: RANGE
-      BillingMode: PAY_PER_REQUEST
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
       SSESpecification:
         SSEEnabled: true
 
