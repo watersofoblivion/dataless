@@ -969,7 +969,7 @@ Resources:
             - Key: period
               StringValue: 1 days
             - Key: startDateTime
-              StringValue: "2019-06-06T01:00:00"
+              StringValue: "2019-06-06T00:00:00"
             - Key: occurrences
               StringValue: 1
         - Id: Default
@@ -1199,6 +1199,8 @@ Resources:
               RefValue: AdTrafficTableFormat
             - Key: precondition
               RefValue: AdTrafficTableExists
+            - Key: writeThroughputPercent
+              StringValue: 1.0
         - Id: IncreaseAdTrafficWriteCapacity
           Name: Increase Ad Traffic Table Write Capacity
           Fields:
