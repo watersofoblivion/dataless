@@ -25,7 +25,6 @@ Metadata:
         Parameters:
           - DNSDomainName
           - BaseDNSName
-          - ValidationDomain
           - HostedZoneID
       - Label: VPC
         Parameters:
@@ -80,8 +79,6 @@ Metadata:
         default: Domain name in Route53
       BaseDNSName:
         default: Base DNS name for APIs
-      ValidationDomain:
-        default: Domain name for ACM certificate validation
       EnableVPC:
         default: Creates a VPC
       AccessKeyID:
@@ -167,10 +164,6 @@ Parameters:
   BaseDNSName:
     Type: String
     Description: The base DNS name, such as warehouse.example.com, this warehouse is served from.  Must be a the DNSDomainName or a subdomain of it.
-    Default: ''
-  ValidationDomain:
-    Type: String
-    Description: The DNS domain to validate ACM certificates against, such as example.com.  Should be a the DNSDomainName.
     Default: ''
   HostedZoneID:
     Type: String
@@ -271,11 +264,9 @@ Conditions:
   DNSEnabled: !And
     - !Not [!Equals [!Ref DNSDomainName, ""]]
     - !Not [!Equals [!Ref BaseDNSName, ""]]
-    - !Not [!Equals [!Ref ValidationDomain, ""]]
   InternalHostedZone: !And
     - !Not [!Equals [!Ref DNSDomainName, ""]]
     - !Not [!Equals [!Ref BaseDNSName, ""]]
-    - !Not [!Equals [!Ref ValidationDomain, ""]]
     - !Equals [!Ref HostedZoneID, ""]
   EC2InstanceEnabled: !And
     - !Not [!Equals [!Ref EnableEC2Instance, ""]]
@@ -932,7 +923,7 @@ Resources:
       DomainName: !Ref BaseDNSName
       DomainValidationOptions:
         - DomainName: !Ref BaseDNSName
-          ValidationDomain: !Ref ValidationDomain
+          ValidationDomain: !Ref DNSDomainName
 
   DomainName:
     Type: AWS::ApiGateway::DomainName
