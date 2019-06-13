@@ -989,6 +989,10 @@ Resources:
               StringValue: !Sub "s3://${BucketName}/logs/data-pipeline/"
             - Key: failureAndRerunMode
               StringValue: cascade
+            - Key: maxActiveInstances
+              StringValue: 1
+            - Key: maximumRetries
+              StringValue: 1
         - !If
           - DisablePipelineInstance
           - !Ref AWS::NoValue
