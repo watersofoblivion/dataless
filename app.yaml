@@ -209,7 +209,7 @@ Parameters:
     Type: String
     Description: The instance type of the master instances in the EMR cluster.
     AllowedPattern: "[\u0020-\uD7FF\uE000-\uFFFD\uD800\uDC00-\uDBFF\uDFFF\r\n\t]*"
-    Default: m1.medium
+    Default: m3.xlarge
   EMRMasterInstanceCount:
     Type: Number
     Description: The number of master instances in the EMR cluster.
@@ -220,7 +220,7 @@ Parameters:
     Type: String
     Description: The instance type of the core instances in the EMR cluster.
     AllowedPattern: "[\u0020-\uD7FF\uE000-\uFFFD\uD800\uDC00-\uDBFF\uDFFF\r\n\t]*"
-    Default: m1.medium
+    Default: m3.xlarge
   EMRCoreInstanceCount:
     Type: Number
     Description: The number of core instances in the EMR cluster.

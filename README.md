@@ -1,7 +1,12 @@
 Dataless
 ===
 
-An example hybrid batch/real-time AWS::Serverless data warehouse.
+An template hybrid batch/real-time AWS::Serverless data warehouse.
+
+* [Quickstart](#quickstart)
+* [Architecture](#architecture)
+* [Configuration](#configuration)
+* [Advanced](#advanced)
 
 Quickstart
 ===
@@ -36,22 +41,7 @@ aws cloudformation create-stack \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
 ```
 
-**Recommended**: To pull from a GitHub repository, set some additional parameters.
-
-```bash
-aws cloudformation create-stack \
-  --stack-name ${STACK_NAME} \
-  --template-body "$(cat build.yaml)" \
-  --parameters \
-      ParameterKey=Owner,ParameterValue=<my-username> \
-      ParameterKey=Repo,ParameterValue=dataless \
-      ParameterKey=Branch,ParameterValue=master \
-      ParameterKey=AccessToken,ParameterValue=<github-oauth-token> \
-  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
-```
-
-The `Owner`, `Repo`, and `Branch` properties configure where the build pipeline pulls source code from.  `AccessToken` must be set to a valid [GitHub OAuth token with `repo` permissions](https://docs.aws.amazon.com/codepipeline/latest/userguide/GitHub-authentication.html).  The branch defaults to `master` and can be omitted.
-
+**Recommended**: [Enable GitHub Integration](#github)
 
 ## 3. Config Warehouse
 
@@ -64,42 +54,7 @@ configuration options are required.
 }
 ```
 
-### Recommended: DNS
-
-Optionally, set up DNS by adding the following parameters:
-
-* `DNSDomainName`: A domain name hosted in Route53
-* `ValidationDomain`: A domain set up for ACM validation via either [DNS](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate-dns.html) or [email](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate-email.html)
-* `BaseDNSName`: The DNS name where the warehouse will be mounted
-* `HostedZoneID`: (Conditional) If provided, DNS records will be added in this hosted zone.  If not provided, a hosted zone will be created.  If the domain name already has a hosted zone attached, this must be set to that hosted zone ID.
-
-```json
-{
-  "Parameters": {
-    "DNSDomainName": "example.com",
-    "ValidationDomain": "example.com",
-    "HostedZoneID": "Z1234567890",
-    "BaseDNSName": "dataless.example.com"
-  }
-}
-```
-
-On the first deploy with these options set, Route53 DNS will be set up.  The
-contact listed for email validation will receive an email to confirm a
-certificate.  The deploy will block until the certificate is approved.
-
-#### Without DNS
-
-If these parameters are not included, Route53 will not be set up.  The base URL
-for the Advertising service is exposed via the `BaseURL` output of the nested
-`AdvertisingService` stack, and paths do not have the leading `/advertising`
-prefix.
-
-For example, `https://dataless.example.com/advertising` turns into
-`https://a1b2c3d4e5f6.execute-api.us-east-1.amazonaws.com/Prod`.
-
-DNS settings can be toggled on or off or altered at any time with a config
-change.  Changing the `BaseDNSName` will require a new certificate to be issued.
+**Recommended**: [Enable Route53](#route53)
 
 ## 4. Push
 
@@ -116,8 +71,8 @@ automatically.
 # Note: SSH keys for CodeCommit repos on OSX can be janky.
 # https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-ssh-unixes.html
 REPO_URL=$(aws cloudformation describe-stacks --stack-name ${STACK_NAME} --query "Stacks[0].Outputs[0].OutputValue" --output text)
-git remote add aws ${REPO_URL}
-git push aws master
+git remote add origin ${REPO_URL}
+git push origin master
 ```
 
 Architecture
@@ -196,15 +151,90 @@ Misc.
 An CloudWatch dashboard provides operational visibility into the running of the
 warehouse.
 
-Safe Lambda deploys are enabled with a 5 minute canary by default.  Set
-`DeploymentPreference` to `AllAtOnce` in the config for faster deploys during
-development.
-
 A handful of resources are retained on template deletion, namely the bucket
 containing the data lake, and the source code repository if CodeCommit was used.
 
-Advanced
+Configuration
+===
+
+The template supports multiple configuration options.
+
+Safe Lambda Deploys and API Gateway
 ---
+
+Configure the CodeDeploy deployment configuration with the
+`DeploymentPreference` parameter.  The default is `Canary10Percent5Minutes`.
+For development, `AllAtOnce` can be enabled for faster deploys.
+
+The `Stage` parameter determines the API Gateway stage deployed.  The default is
+`Prod`.
+
+GitHub
+---
+
+Have the build pipeline pull from a GitHub repository by setting configuration
+parameters on the build template.  GitHub source can be toggled on or off at any
+time.
+
+The `Owner`, `Repo`, and `Branch` properties configure where the build pipeline
+pulls source code from.  `AccessToken` must be set to a valid
+[GitHub OAuth token with `repo` permissions](https://docs.aws.amazon.com/codepipeline/latest/userguide/GitHub-authentication.html).
+The branch defaults to `master` and can be omitted.
+
+### Example: Enable GitHub at Stack Creation Time
+
+```bash
+aws cloudformation create-stack \
+  --stack-name ${STACK_NAME} \
+  --template-body "$(cat build.yaml)" \
+  --parameters \
+      ParameterKey=Owner,ParameterValue=watersofoblivion \
+      ParameterKey=Repo,ParameterValue=dataless \
+      ParameterKey=Branch,ParameterValue=master \
+      ParameterKey=AccessToken,ParameterValue=a1b2c3d4e5f6 \
+  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
+```
+
+Route53
+---
+
+Mount the warehouse behind a Route53 domain name by adding the following parameters:
+
+* `DNSDomainName`: A domain name hosted in Route53
+* `ValidationDomain`: A domain set up for ACM validation via either [DNS](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate-dns.html) or [email](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate-email.html)
+* `BaseDNSName`: The DNS name where the warehouse will be mounted
+* `HostedZoneID`: (Conditional) If provided, DNS records will be added in this hosted zone.  If not provided, a hosted zone will be created.  If the domain name already has a hosted zone attached, this must be set to that hosted zone ID.
+
+```json
+{
+  "Parameters": {
+    "DNSDomainName": "example.com",
+    "ValidationDomain": "example.com",
+    "HostedZoneID": "Z1234567890",
+    "BaseDNSName": "dataless.example.com"
+  }
+}
+```
+
+On the first deploy with these options set, Route53 DNS will be set up.  The
+contact listed for email validation will receive an email to confirm a
+certificate.  The deploy will block until the certificate is approved.
+
+### Without DNS
+
+If these parameters are not included, Route53 will not be set up.  The base URL
+for the Advertising service is exposed via the `BaseURL` output of the nested
+`AdvertisingService` stack, and paths do not have the leading `/advertising`
+prefix.
+
+For example, `https://dataless.example.com/advertising` turns into
+`https://a1b2c3d4e5f6.execute-api.us-east-1.amazonaws.com/Prod`.
+
+DNS settings can be toggled on or off or altered at any time with a config
+change.  Changing the `BaseDNSName` will require a new certificate to be issued.
+
+Advanced
+===
 
 The pipeline supports additional Redshift functionality and the ability to use
 a long-running EMR cluster and/or script instance.  This functionality is not
@@ -235,7 +265,44 @@ These resources are provisioned in a VPC, which is automatically enabled when
 any of the resources are enabled and disabled when all of them are disabled.  (Note: If the deploy hangs tearing down the VPC, it is safe to simply delete the
 VPC from the console to un-stick the teardown.)
 
-### Example: Enable Redshift
+Resource-Specific Parameters
+---
+
+### SSH Access
+
+To be able to SSH to either the long-running EMR cluster or script instance, you
+must supply the name of a valid key pair using the `KeyPair` parameter.
+Otherwise, the clusters are created with no SSH access.
+
+### Long-Running Script Instance
+
+You must pass a valid access key ID and secret access key to the Task Runner.
+These can be passed via the `AccessKeyID` and `SecretAccessKey` parameters.  Be
+sure to use a dedicated, permissions limited user to minimize the security risk
+of the credentials being compromised.
+
+The instance type can be set with the `EC2InstanceSize` parameter.  The default
+is `t2.nano`.
+
+### Long-Running EMR Cluster
+
+The size of the cluster can be configured with the
+`EMR(Master|Core)Instance(Type|Count)` options.  The default is 1 m3.xlarge
+instance for both master and core.
+
+The EMR release to use can be configured with the `EMRRelease` parameter.  The
+default is `emr-5.23.0`.
+
+### Redshift
+
+The size of the Redshift cluster can be configured using the `RedshiftNodeType`
+and `RedshiftNumberOfNodes` parameters.
+
+The default database and user credentials can be configured using the
+`RedshiftDatabase`, `RedshiftUsername`, and `RedshiftPassword` parameters.
+
+Example: Enable Redshift
+---
 
 To enable Redshift, first disable the pipeline and enable the Redshift cluster
 by setting `EnablePipeline` to `""` (blank) and `EnableRedshift` to `yes` in
