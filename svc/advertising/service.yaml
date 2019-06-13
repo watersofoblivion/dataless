@@ -1106,7 +1106,7 @@ Resources:
               - Key: masterInstanceType
                 StringValue: m1.medium
               - Key: coreInstanceType
-                StringValue: m1.medium
+                StringValue: m3.xlarge
               - Key: coreInstanceCount
                 StringValue: 10
               - Key: releaseLabel

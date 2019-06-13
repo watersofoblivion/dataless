@@ -42,4 +42,5 @@ FROM
 JOIN clicks
   ON  impressions.day   = clicks.day
   AND impressions.ad_id = clicks.ad_id
+CLUSTER BY 1, 2
 ;
