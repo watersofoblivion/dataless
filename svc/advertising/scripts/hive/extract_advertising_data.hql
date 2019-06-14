@@ -11,5 +11,4 @@ FROM
 LEFT OUTER JOIN advertising.clicks
   ON  impressions.ad_id         = clicks.ad_id
   AND impressions.impression_id = clicks.impression_id
-CLUSTER BY 1
 ;
