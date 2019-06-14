@@ -142,8 +142,8 @@ serve end customers.
 [Advanced](#advanced) below.
 
 The pipeline also moves advertising data into Redshift.  It first exports the
-advertising table to CSV and loads it into the cluster.  Then, it loads the same
-data directly from the data lake using Redshift Spectrum.
+advertising table to CSV and loads it into the cluster.  Then, it loads the data
+in the data lake into the cluster using Redshift Spectrum.
 
 Real-Time
 ---
@@ -334,8 +334,19 @@ curl https://dataless.example.com/advertising/traffic/fc91623b-7c70-42a6-829b-29
 ```
 
 If Redshift is enabled (see [Advanced](#advanced) below,) the instance should
-have two tables, `public.advertising` and `public.advertising_spectrum`, each
-containing the same data as the `advertising.advertising` Athena table.
+have six tables:
+
+* `public.raw_impressions_spectrum`
+* `public.raw_clicks_spectrum`
+* `public.impressions_spectrum`
+* `public.clicks_spectrum`
+* `public.advertising`
+* `public.advertising_spectrum`
+
+The `..._spectrum` tables should contain the same data as the matching tables in
+`advertising` Athena database without the `_spectrum` suffix.  The
+`public.advertising` table should have the same data as the
+`advertising.advertising` Athena table.
 
 Configuration
 ===

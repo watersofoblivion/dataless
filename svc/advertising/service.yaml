@@ -1402,6 +1402,118 @@ Resources:
           - !Ref AWS::NoValue
         - !If
           - RedshiftEnabled
+          - Id: SpectrumLoadRawImpressions
+            Name: Spectrum Load Raw Impressions
+            Fields:
+              - Key: type
+                StringValue: SqlActivity
+              - Key: dependsOn
+                RefValue: UseSpectrumDataLake
+              - Key: database
+                RefValue: RedshiftCluster
+              - !If
+                - EC2InstanceEnabled
+                - Key: workerGroup
+                  StringValue: !Sub "${AWS::StackName}-${AWS::Region}-instance-worker-group"
+                - Key: runsOn
+                  RefValue: EC2Instance
+              - Key: scriptUri
+                StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/load_raw_impressions_from_spectrum.sql"
+              - Key: scriptArgument
+                StringValue: "#{year(@scheduledStartTime)}"
+              - Key: scriptArgument
+                StringValue: "#{month(@scheduledStartTime)}"
+              - Key: scriptArgument
+                StringValue: "#{format(@scheduledStartTime, 'YYYY-MM-dd')}"
+              - Key: scriptArgument
+                StringValue: "#{format(@scheduledEndTime, 'YYYY-MM-dd')}"
+          - !Ref AWS::NoValue
+        - !If
+          - RedshiftEnabled
+          - Id: SpectrumLoadRawClicks
+            Name: Spectrum Load Raw Clicks
+            Fields:
+              - Key: type
+                StringValue: SqlActivity
+              - Key: dependsOn
+                RefValue: UseSpectrumDataLake
+              - Key: database
+                RefValue: RedshiftCluster
+              - !If
+                - EC2InstanceEnabled
+                - Key: workerGroup
+                  StringValue: !Sub "${AWS::StackName}-${AWS::Region}-instance-worker-group"
+                - Key: runsOn
+                  RefValue: EC2Instance
+              - Key: scriptUri
+                StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/load_raw_clicks_from_spectrum.sql"
+              - Key: scriptArgument
+                StringValue: "#{year(@scheduledStartTime)}"
+              - Key: scriptArgument
+                StringValue: "#{month(@scheduledStartTime)}"
+              - Key: scriptArgument
+                StringValue: "#{format(@scheduledStartTime, 'YYYY-MM-dd')}"
+              - Key: scriptArgument
+                StringValue: "#{format(@scheduledEndTime, 'YYYY-MM-dd')}"
+          - !Ref AWS::NoValue
+        - !If
+          - RedshiftEnabled
+          - Id: SpectrumLoadImpressions
+            Name: Spectrum Load Impressions
+            Fields:
+              - Key: type
+                StringValue: SqlActivity
+              - Key: dependsOn
+                RefValue: UseSpectrumDataLake
+              - Key: database
+                RefValue: RedshiftCluster
+              - !If
+                - EC2InstanceEnabled
+                - Key: workerGroup
+                  StringValue: !Sub "${AWS::StackName}-${AWS::Region}-instance-worker-group"
+                - Key: runsOn
+                  RefValue: EC2Instance
+              - Key: scriptUri
+                StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/load_impressions_from_spectrum.sql"
+              - Key: scriptArgument
+                StringValue: "#{year(@scheduledStartTime)}"
+              - Key: scriptArgument
+                StringValue: "#{month(@scheduledStartTime)}"
+              - Key: scriptArgument
+                StringValue: "#{format(@scheduledStartTime, 'YYYY-MM-dd')}"
+              - Key: scriptArgument
+                StringValue: "#{format(@scheduledEndTime, 'YYYY-MM-dd')}"
+          - !Ref AWS::NoValue
+        - !If
+          - RedshiftEnabled
+          - Id: SpectrumLoadClicks
+            Name: Spectrum Load Clicks
+            Fields:
+              - Key: type
+                StringValue: SqlActivity
+              - Key: dependsOn
+                RefValue: UseSpectrumDataLake
+              - Key: database
+                RefValue: RedshiftCluster
+              - !If
+                - EC2InstanceEnabled
+                - Key: workerGroup
+                  StringValue: !Sub "${AWS::StackName}-${AWS::Region}-instance-worker-group"
+                - Key: runsOn
+                  RefValue: EC2Instance
+              - Key: scriptUri
+                StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/redshift/load_clicks_from_spectrum.sql"
+              - Key: scriptArgument
+                StringValue: "#{year(@scheduledStartTime)}"
+              - Key: scriptArgument
+                StringValue: "#{month(@scheduledStartTime)}"
+              - Key: scriptArgument
+                StringValue: "#{format(@scheduledStartTime, 'YYYY-MM-dd')}"
+              - Key: scriptArgument
+                StringValue: "#{format(@scheduledEndTime, 'YYYY-MM-dd')}"
+          - !Ref AWS::NoValue
+        - !If
+          - RedshiftEnabled
           - Id: SpectrumLoadAdvertising
             Name: Spectrum Load Advertising
             Fields:
