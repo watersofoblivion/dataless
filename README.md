@@ -12,8 +12,10 @@ A template hybrid batch/real-time AWS::Serverless data warehouse.
 Quickstart
 ===
 
-This will step you through the initial deploy of the warehouse.  While it is
-deploying, read about Dataless's [Architecture](#architecture).
+This will step you through the initial deploy of the warehouse.  We will fork
+the repo, deploy the CI/CD pipeline, configure no parameters, and push.  While
+the warehouse is deploying, you can read about Dataless's
+[Architecture](#architecture).
 
 **Important:** This template *must* be deployed in `us-east-1` so that ACM
 can issue valid certificates for CloudFront.
@@ -23,7 +25,7 @@ export AWS_REGION="us-east-1"
 export AWS_DEFAULT_REGION="us-east-1"
 ```
 
-## 1. Clone
+## Fork and Clone
 
 Fork and clone the repo.
 
@@ -32,7 +34,7 @@ git clone https://github.com/<my-username>/dataless
 cd dataless
 ```
 
-## 2. Deploy Build Pipeline
+## Deploy CI/CD Pipeline
 
 Deploy the build pipeline CloudFormation template.  Wait for the template to
 completely deploy before continuing.
@@ -48,7 +50,7 @@ aws cloudformation create-stack \
 
 **Recommended**: [Enable GitHub Integration](#github)
 
-## 3. Config Warehouse
+## Configure
 
 The app is configured via a `config/<branch-name>.json` file.  By default, no
 configuration options are required.  Ensure your `config/master.json` looks
@@ -62,7 +64,7 @@ like:
 
 **Recommended**: [Enable Route53](#route53)
 
-## 4. Push
+## Push
 
 Now push to deploy!
 
@@ -89,7 +91,7 @@ three customers: the business as a whole, engineering specifically, and the end
 customer that generated the data.  It has additional hook points for scheduled
 data ingestion.
 
-It is architected with a "data in, information out" philosophy, with
+It is architected on a "data in, information out" philosophy, with instrumented
 applications pushing write-only raw data into the warehouse and fetching
 read-only derived information from it.  It is implemented with a strict "buy,
 don't build" approach, making a conscious decision to use purely AWS services
@@ -142,20 +144,21 @@ serve end customers.
 [Advanced](#advanced) below.
 
 The pipeline also moves advertising data into Redshift.  It first exports the
-advertising table to CSV and loads it into the cluster.  Then, it loads the data
-in the data lake into the cluster using Redshift Spectrum.
+data in Glue to CSV and loads it into the cluster.  Then, it loads the data in
+Glue into the cluster directly using Redshift Spectrum.
 
 Real-Time
 ---
 
 The real-time component sits on top of the real-time capture infrastructure and
-serves primarily engineering.
+serves primarily engineering.  It is designed to allow engineers to rapidly
+iterate on features based on user behavior, using a "Look, Ship, Look."
+technique.
 
 A pair of Kinesis Analytics apps read the real-time capture firehoses.  Each app
 counts events by minute and outputs them to a single Lambda function.  The
 Lambda then publishes the metrics to CloudWatch.  A CloudWatch dashboard has
-been built showing impressions, clicks, and clickthrough rate.  This would allow
-rapid iteration on features based on user behavior.
+been built showing impressions, clicks, and clickthrough rate.  
 
 Misc.
 ---
@@ -195,10 +198,12 @@ In `load-generator/config.yaml`, set your base URL.  If you are using DNS (see
 `https://dataless.example.com/advertising`.)
 
 If you are not using DNS, the config is set up to point to the API Gateway
-instance of the advertising service when the `API_ID`, `REGION`, and `STAGE`
-environment variables are set.  `API_ID` should be set to the `API` output of
-the nested `AdvertisingService` stack, `REGION` should be `us-east-1`, and
-`STAGE` should be `Prod`.
+instance of the advertising service.  There are three environment variables to
+set:
+
+* `API_ID` should be set to the `API` output of the nested `AdvertisingService` stack
+* `REGION` should be `us-east-1`
+* `STAGE` should be `Prod`.
 
 All other parameters are pre-tuned to generate a steady load within the default
 scaling limits.
@@ -214,6 +219,9 @@ Finally, in a separate terminal start the load generator:
 # Without DNS
 API_ID="<api-output-from-advertising-service-stack>" REGION="us-east-1" STAGE="Prod" ./loadgen -c load-generator/config.yaml
 ```
+
+This will generate a dot (`.`) for every batch of 500 records sent to the
+warehouse.  Any errors will be printed to the console.
 
 ### Verify: Check CloudWatch
 
@@ -239,8 +247,8 @@ application will take 60-90 seconds to start.
 Within a minute or two of the applications being started, the graph on the
 `RealTimeAdvertisingDashboard` CloudWatch dashboard should be populated with
 impressions, clicks, and a clickthrough rate.  If all is well, the clickthrough
-rate should be 30% (the `ClickthroughProbability` value set in
-`load-generator/config.yaml`.)
+rate should be 30%, the `ClickthroughProbability` value set in
+`load-generator/config.yaml`.
 
 ETL
 ---
@@ -276,7 +284,7 @@ data will be double ETL-ed into the lake.
 
 Finally, we need to crawl the loaded tables to make the data available in
 Athena.  Since CloudFormation does not yet support crawling existing tables, a
-crawler must be manually created using the "Create Crawler" wizard:
+crawler must be manually created using the wizard:
 
 * In Glue, select "Crawlers" from the left.  
 * Click "Add Crawler", give it the name "dataless-lake-crawler", and click "Next".
@@ -287,8 +295,8 @@ crawler must be manually created using the "Create Crawler" wizard:
 * Leave the default output settings and click "Next".
 * Click "Finish"
 
-Once the crawler has been created, run it when promped (or manually the same way
-as the `raw-crawler`.)
+Once the crawler has been created, run it when prompted (or manually the same
+way as the `raw_crawler`.)
 
 ### Verify: Query Athena
 
@@ -405,7 +413,7 @@ Mount the warehouse behind a Route53 domain name by adding the following paramet
 
 * `DNSDomainName`: A domain name hosted in Route53 set up for ACM validation via either [DNS](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate-dns.html) or [email](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate-email.html)
 * `BaseDNSName`: The DNS name where the warehouse will be mounted
-* `HostedZoneID`: (Conditional) If provided, DNS records will be added in this hosted zone.  If not provided, a hosted zone will be created.  If the domain name already has a hosted zone attached, this must be set to that hosted zone ID.
+* `HostedZoneID`: (Conditional) If provided, DNS records will be added in this hosted zone.  If not provided, a hosted zone will be created.  If the domain name already has a hosted zone attached, it must be set to that hosted zone's ID.
 
 DNS settings can be toggled on or off or altered at any time with a config
 change.  Changing the `BaseDNSName` will require a new certificate to be issued.
@@ -446,7 +454,8 @@ The pipeline can be disabled by setting the `EnablePipeline` config parameter to
 
 The various resources can be enabled by setting the following config parameters
 to `yes`.  Additional parameters are available in the template to tune the
-resources' parameters (instance size, count, etc.).
+resources' parameters (instance size, count, etc.)  The resources are managed
+with three main configuration parameters:
 
 - `EnableEC2Instance`
 - `EnableEMRCluster`
@@ -522,7 +531,7 @@ is `t2.nano`.
 
 The size of the cluster can be configured with the
 `EMR(Master|Core)Instance(Type|Count)` options.  The default is 1 m3.xlarge
-instance for each master and core.
+instance each for master and core.
 
 The EMR release to use can be configured with the `EMRRelease` parameter.  The
 default is `emr-5.23.0`.
