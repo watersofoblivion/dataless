@@ -1623,6 +1623,8 @@ Resources:
               - Key: scriptArgument
                 StringValue: "#{month(@scheduledStartTime)}"
               - Key: scriptArgument
+                StringValue: "#{day(@scheduledStartTime)}"
+              - Key: scriptArgument
                 StringValue: "#{format(@scheduledStartTime, 'YYYY-MM-dd')}"
               - Key: scriptArgument
                 StringValue: "#{format(@scheduledEndTime, 'YYYY-MM-dd')}"
@@ -1650,6 +1652,8 @@ Resources:
                 StringValue: "#{year(@scheduledStartTime)}"
               - Key: scriptArgument
                 StringValue: "#{month(@scheduledStartTime)}"
+              - Key: scriptArgument
+                StringValue: "#{day(@scheduledStartTime)}"
               - Key: scriptArgument
                 StringValue: "#{format(@scheduledStartTime, 'YYYY-MM-dd')}"
               - Key: scriptArgument

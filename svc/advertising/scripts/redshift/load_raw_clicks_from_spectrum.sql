@@ -17,7 +17,8 @@ SELECT
 FROM
   advertising.raw_clicks
 WHERE
-      year = ?
-  AND month = ?
+      partition_0 = ?
+  AND partition_1 = ?
+  AND partition_2 = ?
   AND occurred_at BETWEEN ? AND ?
 ;
