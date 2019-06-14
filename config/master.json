@@ -4,7 +4,6 @@
     "DNSDomainName": "microlith-framework.com",
     "BaseDNSName": "dataless.microlith-framework.com",
     "HostedZoneID": "ZSZL4W7H8OQNY",
-    "EnablePipeline": "",
     "EnableRedshift": "yes"
   }
 }
