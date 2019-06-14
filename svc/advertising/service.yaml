@@ -1278,6 +1278,205 @@ Resources:
           - !Ref AWS::NoValue
         - !If
           - RedshiftEnabled
+          - Id: RedshiftImpressionsTable
+            Name: Redshift Impressions Table
+            Fields:
+              - Key: type
+                StringValue: RedshiftDataNode
+              - Key: database
+                RefValue: RedshiftCluster
+              - Key: tableName
+                StringValue: impressions
+              - Key: createTableSql
+                StringValue: |
+                  CREATE TABLE impressions (
+                    impression_id VARCHAR(64) NOT NULL,
+                    ad_id         VARCHAR(64) NOT NULL,
+                    occurred_at   TIMESTAMP   NOT NULL
+                  )
+                  DISTSTYLE KEY
+                  DISTKEY (ad_id)
+                  ;
+          - !Ref AWS::NoValue
+        - !If
+          - RedshiftEnabled
+          - Id: RedshiftImpressionsStagingTableFormat
+            Name: Redshift Impressions Staging Table Format
+            Fields:
+              - Key: type
+                StringValue: CSV
+              - Key: column
+                StringValue: impression_id STRING
+              - Key: column
+                StringValue: ad_id STRING
+              - Key: column
+                StringValue: occurred_at TIMESTAMP
+          - !Ref AWS::NoValue
+        - !If
+          - RedshiftEnabled
+          - Id: RedshiftImpressionsStagingTable
+            Name: Redshift Impressions Staging Table
+            Fields:
+              - Key: type
+                StringValue: S3DataNode
+              - Key: directoryPath
+                StringValue: !Sub "s3://${BucketName}/data/temp/redshift-impressions-staging-table/"
+              - Key: dataFormat
+                RefValue: RedshiftImpressionsStagingTableFormat
+          - !Ref AWS::NoValue
+        - !If
+          - RedshiftEnabled
+          - Id: StageImpressionsForRedshift
+            Name: Stage Impressions for Redshift
+            Fields:
+              - Key: type
+                StringValue: HiveActivity
+              - Key: scriptUri
+                StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/stage_impressions_for_redshift.hql"
+              - !If
+                  - EMREnabled
+                  - Key: workerGroup
+                    StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+                  - Key: runsOn
+                    RefValue: EMRCluster
+              - Key: input
+                RefValue: DummyInputTable
+              - Key: output
+                RefValue: RedshiftImpressionsStagingTable
+              - Key: scriptVariable
+                StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
+              - Key: scriptVariable
+                StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
+              - Key: scriptVariable
+                StringValue: DATE_START=#{format(@scheduledStartTime, 'YYYY-MM-dd')}
+              - Key: scriptVariable
+                StringValue: DATE_END=#{format(@scheduledEndTime, 'YYYY-MM-dd')}
+          - !Ref AWS::NoValue
+        - !If
+          - RedshiftEnabled
+          - Id: LoadImpressionsIntoRedshift
+            Name: Load Impressions Into Redshift
+            Fields:
+              - Key: type
+                StringValue: RedshiftCopyActivity
+              - Key: dependsOn
+                RefValue: StageImpressionsForRedshift
+              - Key: input
+                RefValue: RedshiftImpressionsStagingTable
+              - Key: output
+                RefValue: RedshiftImpressionsTable
+              - Key: insertMode
+                StringValue: APPEND
+              - !If
+                - EC2InstanceEnabled
+                - Key: workerGroup
+                  StringValue: !Sub "${AWS::StackName}-${AWS::Region}-instance-worker-group"
+                - Key: runsOn
+                  RefValue: EC2Instance
+          - !Ref AWS::NoValue
+        - !If
+          - RedshiftEnabled
+          - Id: RedshiftClicksTable
+            Name: Redshift Clicks Table
+            Fields:
+              - Key: type
+                StringValue: RedshiftDataNode
+              - Key: database
+                RefValue: RedshiftCluster
+              - Key: tableName
+                StringValue: clicks
+              - Key: createTableSql
+                StringValue: |
+                  CREATE TABLE clicks (
+                    click_id      VARCHAR(64) NOT NULL,
+                    impression_id VARCHAR(64) NOT NULL,
+                    ad_id         VARCHAR(64) NOT NULL,
+                    occurred_at   TIMESTAMP
+                  )
+                  DISTSTYLE KEY
+                  DISTKEY (ad_id)
+                  ;
+          - !Ref AWS::NoValue
+        - !If
+          - RedshiftEnabled
+          - Id: RedshiftClicksStagingTableFormat
+            Name: Redshift Clicks Staging Table Format
+            Fields:
+              - Key: type
+                StringValue: CSV
+              - Key: column
+                StringValue: click_id STRING
+              - Key: column
+                StringValue: impression_id STRING
+              - Key: column
+                StringValue: ad_id STRING
+              - Key: column
+                StringValue: occurred_at TIMESTAMP
+          - !Ref AWS::NoValue
+        - !If
+          - RedshiftEnabled
+          - Id: RedshiftClicksStagingTable
+            Name: Redshift Clicks Staging Table
+            Fields:
+              - Key: type
+                StringValue: S3DataNode
+              - Key: directoryPath
+                StringValue: !Sub "s3://${BucketName}/data/temp/redshift-clicks-staging-table/"
+              - Key: dataFormat
+                RefValue: RedshiftClicksStagingTableFormat
+          - !Ref AWS::NoValue
+        - !If
+          - RedshiftEnabled
+          - Id: StageClicksForRedshift
+            Name: Stage Clicks for Redshift
+            Fields:
+              - Key: type
+                StringValue: HiveActivity
+              - Key: scriptUri
+                StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/stage_clicks_for_redshift.hql"
+              - !If
+                  - EMREnabled
+                  - Key: workerGroup
+                    StringValue: !Sub "${AWS::StackName}-${AWS::Region}-emr-worker-group"
+                  - Key: runsOn
+                    RefValue: EMRCluster
+              - Key: input
+                RefValue: DummyInputTable
+              - Key: output
+                RefValue: RedshiftClicksStagingTable
+              - Key: scriptVariable
+                StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
+              - Key: scriptVariable
+                StringValue: PARTITION_MONTH=#{month(@scheduledStartTime)}
+              - Key: scriptVariable
+                StringValue: DATE_START=#{format(@scheduledStartTime, 'YYYY-MM-dd')}
+              - Key: scriptVariable
+                StringValue: DATE_END=#{format(@scheduledEndTime, 'YYYY-MM-dd')}
+          - !Ref AWS::NoValue
+        - !If
+          - RedshiftEnabled
+          - Id: LoadClicksIntoRedshift
+            Name: Load Clicks Into Redshift
+            Fields:
+              - Key: type
+                StringValue: RedshiftCopyActivity
+              - Key: dependsOn
+                RefValue: StageClicksForRedshift
+              - Key: input
+                RefValue: RedshiftClicksStagingTable
+              - Key: output
+                RefValue: RedshiftClicksTable
+              - Key: insertMode
+                StringValue: APPEND
+              - !If
+                - EC2InstanceEnabled
+                - Key: workerGroup
+                  StringValue: !Sub "${AWS::StackName}-${AWS::Region}-instance-worker-group"
+                - Key: runsOn
+                  RefValue: EC2Instance
+          - !Ref AWS::NoValue
+        - !If
+          - RedshiftEnabled
           - Id: RedshiftAdvertisingTable
             Name: Redshift Advertising Table
             Fields:
@@ -1300,8 +1499,8 @@ Resources:
           - !Ref AWS::NoValue
         - !If
           - RedshiftEnabled
-          - Id: RedshiftStagingTableFormat
-            Name: Redshift Staging Table Format
+          - Id: RedshiftAdvertisingStagingTableFormat
+            Name: Redshift Advertising Staging Table Format
             Fields:
               - Key: type
                 StringValue: CSV
@@ -1314,27 +1513,27 @@ Resources:
           - !Ref AWS::NoValue
         - !If
           - RedshiftEnabled
-          - Id: RedshiftStagingTable
-            Name: Redshift Staging Table
+          - Id: RedshiftAdvertisingStagingTable
+            Name: Redshift Advertising Staging Table
             Fields:
               - Key: type
                 StringValue: S3DataNode
               - Key: directoryPath
-                StringValue: !Sub "s3://${BucketName}/data/temp/redshift-staging-table/"
+                StringValue: !Sub "s3://${BucketName}/data/temp/redshift-advertising-staging-table/"
               - Key: dataFormat
-                RefValue: RedshiftStagingTableFormat
+                RefValue: RedshiftAdvertisingStagingTableFormat
           - !Ref AWS::NoValue
         - !If
           - RedshiftEnabled
-          - Id: StageDataForRedshift
-            Name: Stage Data for Redshift
+          - Id: StageAdvertisingForRedshift
+            Name: Stage Advertising for Redshift
             Fields:
               - Key: type
                 StringValue: HiveActivity
               - Key: dependsOn
                 RefValue: ExtractAdvertisingData
               - Key: scriptUri
-                StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/stage_data_for_redshift.hql"
+                StringValue: !Sub "s3://${CodeBucket}/${CodePrefix}/scripts/hive/stage_advertising_for_redshift.hql"
               - !If
                   - EMREnabled
                   - Key: workerGroup
@@ -1344,7 +1543,7 @@ Resources:
               - Key: input
                 RefValue: DummyInputTable
               - Key: output
-                RefValue: RedshiftStagingTable
+                RefValue: RedshiftAdvertisingStagingTable
               - Key: scriptVariable
                 StringValue: PARTITION_YEAR=#{year(@scheduledStartTime)}
               - Key: scriptVariable
@@ -1362,9 +1561,9 @@ Resources:
               - Key: type
                 StringValue: RedshiftCopyActivity
               - Key: dependsOn
-                RefValue: StageDataForRedshift
+                RefValue: StageAdvertisingForRedshift
               - Key: input
-                RefValue: RedshiftStagingTable
+                RefValue: RedshiftAdvertisingStagingTable
               - Key: output
                 RefValue: RedshiftAdvertisingTable
               - Key: insertMode

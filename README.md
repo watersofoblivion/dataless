@@ -334,19 +334,25 @@ curl https://dataless.example.com/advertising/traffic/fc91623b-7c70-42a6-829b-29
 ```
 
 If Redshift is enabled (see [Advanced](#advanced) below,) the instance should
-have six tables:
+have three tables loaded from Glue:
+
+* `public.impressions`
+* `public.clicks`
+* `public.advertising`
+
+The data in these tables should be identical to the data in the similarly named
+tables in the `advertising` Athena database.
+
+It should also have five tables loaded from spectrum:
 
 * `public.raw_impressions_spectrum`
 * `public.raw_clicks_spectrum`
 * `public.impressions_spectrum`
 * `public.clicks_spectrum`
-* `public.advertising`
 * `public.advertising_spectrum`
 
-The `..._spectrum` tables should contain the same data as the matching tables in
-`advertising` Athena database without the `_spectrum` suffix.  The
-`public.advertising` table should have the same data as the
-`advertising.advertising` Athena table.
+These tables should contain the same data as the matching tables in
+`advertising` Athena database without the `_spectrum` suffix.
 
 Configuration
 ===
