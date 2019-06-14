@@ -93,7 +93,7 @@ It is architected with a "data in, information out" philosophy, with
 applications pushing write-only raw data into the warehouse and fetching
 read-only derived information from it.  It is implemented with a strict "buy,
 don't build" approach, making a conscious decision to use purely AWS services
-delivered with CloudFormation.
+continuously delivered with CloudFormation.
 
 There are three main components to the warehouse: the main pipe, the batch
 component, and the real-time component.  The example dataset is a toy
@@ -312,7 +312,7 @@ aws s3 sync s3://watersofoblivion-data/data/raw/ s3://<bucket-name>/data/raw/
 
 Once the data has been synchronized, ETL it into the data lake.  In Glue, re-run
 the `raw_crawler` crawler, then the `ImpressionsPythonETLJob`,
-`ClicksPythonETLJob` jobs, and finally the `manual_crawler` crawler.
+`ClicksPythonETLJob` jobs, and finally the `dataless-lake-crawler` crawler.
 
 ### Activate the Daily Pipeline
 
