@@ -190,7 +190,7 @@ go build -o ./loadgen ./load-generator
 ### Configure the Tool
 
 In `load-generator/config.yaml`, set your base URL.  If you are using DNS (see
-[Advanced](#advanced) below,) the base URL will be
+[Configuration](#configuration) below,) the base URL will be
 `https://<base-dns-name/advertising` (for example,
 `https://dataless.example.com/advertising`.)
 
