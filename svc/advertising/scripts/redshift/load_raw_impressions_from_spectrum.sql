@@ -17,5 +17,5 @@ FROM
 WHERE
       year = ?
   AND month = ?
-  AND impression_at BETWEEN ? AND ?
+  AND occurred_at BETWEEN ? AND ?
 ;

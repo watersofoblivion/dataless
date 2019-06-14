@@ -299,7 +299,7 @@ should be the same as the data in the non-`raw_...` tables.
 Batch Pipeline
 ---
 
-### Sync Existing Dataset
+### Prerequisite: Sync and ETL Existing Dataset
 
 The batch pipeline works on "yesterday"'s data.  To avoid having to wait until
 after midnight UTC, sync a pre-existing data set to the bucket created in the
