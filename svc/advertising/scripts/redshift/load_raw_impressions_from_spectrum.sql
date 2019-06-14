@@ -9,9 +9,9 @@ DISTKEY (ad_id)
 
 INSERT INTO raw_impressions_spectrum
 SELECT
-  impression_id,
-  ad_id,
-  occurred_at
+  impression_id            AS impression_id,
+  ad_id                    AS ad_id,
+  occurred_at :: timestamp AS occurred_at
 FROM
   advertising.raw_impressions
 WHERE
