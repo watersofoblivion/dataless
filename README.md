@@ -64,7 +64,7 @@ like:
 }
 ```
 
-**Recommended**: [Enable Route53](#route53)
+**Recommended**: [Set Deployment Preference](#safe-lambda-deploys-and-api-gateway), [Enable Route53](#route53)
 
 ## Push
 
@@ -381,6 +381,14 @@ For development, it can be set to `AllAtOnce` for faster deploys.
 
 The `Stage` parameter sets the API Gateway stage deployed.  The default is
 `Prod`.
+
+```json
+{
+  "Parameters": {
+    "DeploymentPreference": "AllAtOnce"
+  }
+}
+```
 
 GitHub
 ---
