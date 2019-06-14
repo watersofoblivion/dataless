@@ -40,15 +40,17 @@ Deploy the build pipeline CloudFormation template.  Wait for the template to
 completely deploy before continuing.
 
 ```bash
-STACK_NAME="dataless"
+# A unique prefix for created stacks.
+STACK_PREFIX="dataless"
 
+# Create the stack
 aws cloudformation create-stack \
-  --stack-name ${STACK_NAME} \
+  --stack-name ${STACK_PREFIX} \
   --template-body "$(cat build.yaml)" \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
 ```
 
-**Recommended**: [Enable GitHub Integration](#github)
+**Recommended**: [Enable GitHub](#github)
 
 ## Configure
 
@@ -78,7 +80,7 @@ automatically.
 #
 # Note: SSH keys for CodeCommit repos on OSX can be janky.
 # https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-ssh-unixes.html
-REPO_URL=$(aws cloudformation describe-stacks --stack-name ${STACK_NAME} --query "Stacks[0].Outputs[0].OutputValue" --output text)
+REPO_URL=$(aws cloudformation describe-stacks --stack-name ${STACK_PREFIX} --query "Stacks[0].Outputs[0].OutputValue" --output text)
 git remote add origin ${REPO_URL}
 git push origin master
 ```
@@ -110,8 +112,8 @@ as quickly and reliably as possible, and ETL it into the data lake for further
 processing.
 
 Impression and click data is received via a pair of beacon endpoints in an API
-Gateway API.  Via a pair of Lambda functions, this is published to a Kinesis
-Firehose and persisted to S3 raw as GZipped JSON.
+Gateway API.  This is published to a Kinesis Firehose by a pair of Lambda
+functions and persisted to S3 raw as GZipped JSON.
 
 A daily ETL has been created with Glue.  A crawler and a pair of ETL jobs have
 been configured.  The crawler scans the raw data and makes it available via the
@@ -121,14 +123,13 @@ available via the Glue Catalog.
 
 Once the data is in the Glue Catalog, it is automatically available in Athena
 and QuickSight to serve business customers, and throughout the AWS data
-toolchain.
+toolchain for further processing.
 
 Batch
 ---
 
 The batch component sits on top of the data lake and primarily serves the
-business and end customers.  A batch pipeline has been built with Data Pipeline
-to do this.
+business and end customers.  A batch pipeline has been built with Data Pipeline.
 
 ### Hive
 
@@ -144,8 +145,8 @@ serve end customers.
 [Advanced](#advanced) below.
 
 The pipeline also moves advertising data into Redshift.  It first exports the
-data in Glue to CSV and loads it into the cluster.  Then, it loads the data in
-Glue into the cluster directly using Redshift Spectrum.
+ORC data in Glue to CSV and loads it into the cluster.  Then, it loads all the
+data in Glue into the cluster directly using Redshift Spectrum.
 
 Real-Time
 ---
@@ -169,6 +170,10 @@ warehouse.
 A handful of resources are retained on template deletion, namely the buckets
 containing the data lake and the source code, and the source code repository if
 CodeCommit was used.
+
+Security has been designed into the warehouse.  All data is encrypted in flight
+and at rest and IAM roles have minimal permissions.  (Notable exceptions: EMR
+clusters and script instances are unencrypted, and the API is unauthenticated.)
 
 Self-Guided Demo
 ===
@@ -396,7 +401,7 @@ and `<my-github-oauth-token>` with your GitHub OAuth token.
 
 ```bash
 aws cloudformation create-stack \
-  --stack-name ${STACK_NAME} \
+  --stack-name ${STACK_PREFIX} \
   --template-body "$(cat build.yaml)" \
   --parameters \
       ParameterKey=Owner,ParameterValue=<my-github-username-or-org> \
