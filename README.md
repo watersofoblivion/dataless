@@ -1,7 +1,7 @@
 Dataless
 ===
 
-An template hybrid batch/real-time AWS::Serverless data warehouse.
+A template hybrid batch/real-time AWS::Serverless data warehouse.
 
 * [Quickstart](#quickstart)
 * [Architecture](#architecture)
@@ -457,42 +457,6 @@ any of the resources are enabled and disabled when all of them are disabled.
 (Note: If the deploy hangs tearing down the VPC, it is safe to simply delete the
 VPC from the console to un-stick the teardown.)
 
-Resource-Specific Parameters
----
-
-### SSH Access
-
-To be able to SSH to either the long-running EMR cluster or script instance, you
-must supply the name of a valid key pair using the `KeyPair` parameter.
-Otherwise, the clusters are created with no SSH access.
-
-### Long-Running Script Instance
-
-You must pass a valid access key ID and secret access key to the Task Runner.
-These can be passed via the `AccessKeyID` and `SecretAccessKey` parameters.  Be
-sure to use a dedicated, permissions limited user to minimize the security risk
-of the credentials being compromised.
-
-The instance type can be set with the `EC2InstanceSize` parameter.  The default
-is `t2.nano`.
-
-### Long-Running EMR Cluster
-
-The size of the cluster can be configured with the
-`EMR(Master|Core)Instance(Type|Count)` options.  The default is 1 m3.xlarge
-instance for each master and core.
-
-The EMR release to use can be configured with the `EMRRelease` parameter.  The
-default is `emr-5.23.0`.
-
-### Redshift
-
-The size of the Redshift cluster can be configured using the `RedshiftNodeType`
-and `RedshiftNumberOfNodes` parameters.
-
-The default database and user credentials can be configured using the
-`RedshiftDatabase`, `RedshiftUsername`, and `RedshiftPassword` parameters.
-
 Example: Enable Redshift
 ---
 
@@ -534,3 +498,39 @@ git add config/master.json
 git commit -m "Re-enabling Pipeline"
 git push origin master
 ```
+
+Resource-Specific Parameters
+---
+
+### SSH Access
+
+To be able to SSH to either the long-running EMR cluster or script instance, you
+must supply the name of a valid key pair using the `KeyPair` parameter.
+Otherwise, the clusters are created with no SSH access.
+
+### Long-Running Script Instance
+
+You must pass a valid access key ID and secret access key to the Task Runner.
+These can be passed via the `AccessKeyID` and `SecretAccessKey` parameters.  Be
+sure to use a dedicated, permissions limited user to minimize the security risk
+of the credentials being compromised.
+
+The instance type can be set with the `EC2InstanceSize` parameter.  The default
+is `t2.nano`.
+
+### Long-Running EMR Cluster
+
+The size of the cluster can be configured with the
+`EMR(Master|Core)Instance(Type|Count)` options.  The default is 1 m3.xlarge
+instance for each master and core.
+
+The EMR release to use can be configured with the `EMRRelease` parameter.  The
+default is `emr-5.23.0`.
+
+### Redshift
+
+The size of the Redshift cluster can be configured using the `RedshiftNodeType`
+and `RedshiftNumberOfNodes` parameters.
+
+The default database and user credentials can be configured using the
+`RedshiftDatabase`, `RedshiftUsername`, and `RedshiftPassword` parameters.
