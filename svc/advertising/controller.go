@@ -132,12 +132,12 @@ func (controller *Controller) PublishToCloudWatch(ctx context.Context, input eve
 }
 
 func (controller *Controller) GetAdTraffic(ctx context.Context, evt events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	ad, found, err := uuid.Parse(evt.PathParameters["ad-id"])
+	ad, err := uuid.Parse(evt.PathParameters["ad-id"])
 	if err != nil {
 		return rest.Respond(http.StatusBadRequest, err, nil)
 	}
 
-	from := time.Now().Format(DateFormatDay)
+	from := time.Now()
 	if fromParam, found := evt.QueryStringParameters["from"]; found {
 		from, err = time.Parse(fromParam, DateFormatDay)
 		if err != nil {
@@ -145,7 +145,7 @@ func (controller *Controller) GetAdTraffic(ctx context.Context, evt events.APIGa
 		}
 	}
 
-	to := time.Now().Format(DateFormatDay)
+	to := time.Now()
 	if toParam, found := evt.QueryStringParameters["to"]; found {
 		to, err = time.Parse(toParam, DateFormatDay)
 		if err != nil {
@@ -169,7 +169,7 @@ func (controller *Controller) GetAdTraffic(ctx context.Context, evt events.APIGa
 		}
 	}
 
-	days, next, err := controller.AdTrafficTable.Days(ctx, from, to, page, limit)
+	days, next, err := controller.AdTrafficTable.Days(ctx, ad, from, to, page, limit)
 	if err != nil {
 		return rest.Respond(http.StatusInternalServerError, err, nil)
 	}
@@ -179,7 +179,7 @@ func (controller *Controller) GetAdTraffic(ctx context.Context, evt events.APIGa
 		Next  string   `json:"next"`
 		Days  []*AdDay `json:"days"`
 	}{
-		Count: len(days),
+		Count: int64(len(days)),
 		Days:  days,
 	}
 	if len(next) > 0 {

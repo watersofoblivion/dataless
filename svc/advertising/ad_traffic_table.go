@@ -16,7 +16,7 @@ import (
 const DateFormatDay = "2006-01-02"
 
 type AdTrafficTable interface {
-	Days(ctx context.Context, from, to time.Time, page map[string]*dynamodb.AttributeValue, limit int64) ([]*AdDay, map[string]*dynamodb.AttributeValue, error)
+	Days(ctx context.Context, ad uuid.UUID, from, to time.Time, page map[string]*dynamodb.AttributeValue, limit int64) ([]*AdDay, map[string]*dynamodb.AttributeValue, error)
 }
 
 type dynamoAdTrafficTable struct {
@@ -75,8 +75,8 @@ type MockAdTrafficTable struct {
 	mock.Mock
 }
 
-func (mock *MockAdTrafficTable) Days(ctx context.Context, from, to time.Time, page map[string]*dynamodb.AttributeValue, limit int64) (days []*AdDay, next map[string]*dynamodb.AttributeValue, err error) {
-	args := mock.Called(ctx, from, to, page, limit)
+func (mock *MockAdTrafficTable) Days(ctx context.Context, ad uuid.UUID, from, to time.Time, page map[string]*dynamodb.AttributeValue, limit int64) (days []*AdDay, next map[string]*dynamodb.AttributeValue, err error) {
+	args := mock.Called(ctx, ad, from, to, page, limit)
 
 	if daysArg := args.Get(0); daysArg != nil {
 		days = daysArg.([]*AdDay)
@@ -85,7 +85,7 @@ func (mock *MockAdTrafficTable) Days(ctx context.Context, from, to time.Time, pa
 		next = nextArg.(map[string]*dynamodb.AttributeValue)
 	}
 
-	return daysArg, nextArg, args.Error(2)
+	return days, next, args.Error(2)
 }
 
 type AdDay struct {
