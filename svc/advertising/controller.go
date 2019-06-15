@@ -1,12 +1,15 @@
 package advertising
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -15,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/firehose"
+	"github.com/google/uuid"
 	"github.com/jonboulle/clockwork"
 
 	"github.com/watersofoblivion/sam/amz/amzmock"
@@ -128,5 +132,65 @@ func (controller *Controller) PublishToCloudWatch(ctx context.Context, input eve
 }
 
 func (controller *Controller) GetAdTraffic(ctx context.Context, evt events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	return rest.Respond(http.StatusInternalServerError, fmt.Errorf("not implemented"), nil)
+	ad, found, err := uuid.Parse(evt.PathParameters["ad-id"])
+	if err != nil {
+		return rest.Respond(http.StatusBadRequest, err, nil)
+	}
+
+	from := time.Now().Format(DateFormatDay)
+	if fromParam, found := evt.QueryStringParameters["from"]; found {
+		from, err = time.Parse(fromParam, DateFormatDay)
+		if err != nil {
+			return rest.Respond(http.StatusBadRequest, err, nil)
+		}
+	}
+
+	to := time.Now().Format(DateFormatDay)
+	if toParam, found := evt.QueryStringParameters["to"]; found {
+		to, err = time.Parse(toParam, DateFormatDay)
+		if err != nil {
+			return rest.Respond(http.StatusBadRequest, err, nil)
+		}
+	}
+
+	var page map[string]*dynamodb.AttributeValue
+	if pageParam, found := evt.QueryStringParameters["page"]; found {
+		b64 := base64.NewDecoder(base64.StdEncoding, strings.NewReader(pageParam))
+		if err := json.NewDecoder(b64).Decode(&page); err != nil {
+			return rest.Respond(http.StatusBadRequest, err, nil)
+		}
+	}
+
+	limit := int64(0)
+	if limitParam, found := evt.QueryStringParameters["limit"]; found {
+		limit, err = strconv.ParseInt(limitParam, 10, 64)
+		if err != nil {
+			return rest.Respond(http.StatusBadRequest, err, nil)
+		}
+	}
+
+	days, next, err := controller.AdTrafficTable.Days(ctx, from, to, page, limit)
+	if err != nil {
+		return rest.Respond(http.StatusInternalServerError, err, nil)
+	}
+
+	resp := struct {
+		Count int64    `json:"count"`
+		Next  string   `json:"next"`
+		Days  []*AdDay `json:"days"`
+	}{
+		Count: len(days),
+		Days:  days,
+	}
+	if len(next) > 0 {
+		buf := new(bytes.Buffer)
+		b64 := base64.NewEncoder(base64.StdEncoding, buf)
+		if err := json.NewEncoder(b64).Encode(next); err != nil {
+			return rest.Respond(http.StatusInternalServerError, err, nil)
+		}
+		b64.Close()
+		resp.Next = buf.String()
+	}
+
+	return rest.Respond(http.StatusOK, resp, nil)
 }

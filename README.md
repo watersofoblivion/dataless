@@ -111,9 +111,9 @@ The main pipe's purpose is to capture raw data, persist it to long-term storage
 as quickly and reliably as possible, and ETL it into the data lake for further
 processing.
 
-Impression and click data is received via a pair of beacon endpoints in an API
-Gateway API.  This is published to a Kinesis Firehose by a pair of Lambda
-functions and persisted to S3 raw as GZipped JSON.
+Impression and click data is received by a pair of beacon endpoints in an API
+Gateway.  This is published to a Kinesis Firehose by a pair of Lambda functions
+and persisted to S3 raw as GZipped JSON.
 
 A daily ETL has been created with Glue.  A crawler and a pair of ETL jobs have
 been configured.  The crawler scans the raw data and makes it available via the
@@ -121,9 +121,9 @@ Glue Catalog.  The ETL jobs -one per datatype- pick up the raw data and write it
 back down into Hive-partitioned ORC tables in S3, and make those tables
 available via the Glue Catalog.
 
-Once the data is in the Glue Catalog, it is automatically available in Athena
-and QuickSight to serve business customers, and throughout the AWS data
-toolchain for further processing.
+Once the data is in the Glue Catalog it is automatically available in Athena and
+QuickSight to serve business customers and throughout the AWS data toolchain for
+further processing.
 
 Batch
 ---
