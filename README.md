@@ -64,7 +64,7 @@ like:
 }
 ```
 
-**Recommended**: [Set Deployment Preference](#safe-lambda-deploys-and-api-gateway), [Enable Route53](#route53)
+**Recommended**: [Set Deployment Preference](#safe-lambda-deploys-and-api-gateway-stage), [Enable Route53](#route53)
 
 ## Push
 
@@ -372,10 +372,10 @@ Configuration
 
 The template supports multiple configuration options.
 
-Safe Lambda Deploys and API Gateway
+Safe Lambda Deploys and API Gateway Stage
 ---
 
-Configure the CodeDeploy deployment configuration with the
+The CodeDeploy deployment configuration can be set with the
 `DeploymentPreference` parameter.  The default is `Canary10Percent5Minutes`.
 For development, it can be set to `AllAtOnce` for faster deploys.
 
@@ -428,9 +428,6 @@ Mount the warehouse behind a Route53 domain name by adding the following paramet
 * `BaseDNSName`: The DNS name where the warehouse will be mounted
 * `HostedZoneID`: (Conditional) If provided, DNS records will be added in this hosted zone.  If not provided, a hosted zone will be created.  If the domain name already has a hosted zone attached, it must be set to that hosted zone's ID.
 
-DNS settings can be toggled on or off or altered at any time with a config
-change.  Changing the `BaseDNSName` will require a new certificate to be issued.
-
 ```json
 {
   "Parameters": {
@@ -444,6 +441,9 @@ change.  Changing the `BaseDNSName` will require a new certificate to be issued.
 On the first deploy with these options set, Route53 DNS will be set up.  The
 contact listed for email validation will receive an email to confirm a
 certificate.  The deploy will block until the certificate is approved.
+
+DNS settings can be toggled on or off or altered at any time with a config
+change.  Changing the `BaseDNSName` will require a new certificate to be issued.
 
 Advanced
 ===

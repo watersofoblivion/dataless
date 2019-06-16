@@ -169,10 +169,19 @@ func (controller *Controller) GetAdTraffic(ctx context.Context, evt events.APIGa
 		}
 	}
 
+	log.Printf("Ad: %q", ad.String())
+	log.Printf("From: %q", from.Format(DateFormatDay))
+	log.Printf("To: %q", to.Format(DateFormatDay))
+	log.Printf("Page: %#v", page)
+	log.Printf("Limit: %d", limit)
+
 	days, next, err := controller.AdTrafficTable.Days(ctx, ad, from, to, page, limit)
 	if err != nil {
 		return rest.Respond(http.StatusInternalServerError, err, nil)
 	}
+
+	log.Printf("Days: %#v", days)
+	log.Printf("Next: %#v", next)
 
 	resp := struct {
 		Count int64    `json:"count"`
