@@ -137,17 +137,17 @@ func (controller *Controller) GetAdTraffic(ctx context.Context, evt events.APIGa
 		return rest.Respond(http.StatusBadRequest, err, nil)
 	}
 
-	from := time.Now()
-	if fromParam, found := evt.QueryStringParameters["from"]; found {
-		from, err = time.Parse(DateFormatDay, fromParam)
+	start := time.Now()
+	if startParam, found := evt.QueryStringParameters["start"]; found {
+		start, err = time.Parse(DateFormatDay, startParam)
 		if err != nil {
 			return rest.Respond(http.StatusBadRequest, err, nil)
 		}
 	}
 
-	to := time.Now()
-	if toParam, found := evt.QueryStringParameters["to"]; found {
-		to, err = time.Parse(DateFormatDay, toParam)
+	end := time.Now()
+	if endParam, found := evt.QueryStringParameters["end"]; found {
+		end, err = time.Parse(DateFormatDay, endParam)
 		if err != nil {
 			return rest.Respond(http.StatusBadRequest, err, nil)
 		}
@@ -169,19 +169,10 @@ func (controller *Controller) GetAdTraffic(ctx context.Context, evt events.APIGa
 		}
 	}
 
-	log.Printf("Ad: %q", ad.String())
-	log.Printf("From: %q", from.Format(DateFormatDay))
-	log.Printf("To: %q", to.Format(DateFormatDay))
-	log.Printf("Page: %#v", page)
-	log.Printf("Limit: %d", limit)
-
-	days, next, err := controller.AdTrafficTable.Days(ctx, ad, from, to, page, limit)
+	days, next, err := controller.AdTrafficTable.Days(ctx, ad, start, end, page, limit)
 	if err != nil {
 		return rest.Respond(http.StatusInternalServerError, err, nil)
 	}
-
-	log.Printf("Days: %#v", days)
-	log.Printf("Next: %#v", next)
 
 	resp := struct {
 		Count int64    `json:"count"`

@@ -2,7 +2,6 @@ package advertising
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -57,14 +56,10 @@ func (table *dynamoAdTrafficTable) Days(ctx context.Context, ad uuid.UUID, from,
 		input.SetLimit(limit)
 	}
 
-	log.Printf("Query Input: %#v", input)
-
 	output, err := table.ddb.QueryWithContext(ctx, input)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	log.Printf("Query Output: %#v", output)
 
 	items := make([]*AdDay, aws.Int64Value(output.Count))
 	for i, item := range output.Items {
