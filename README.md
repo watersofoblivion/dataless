@@ -327,6 +327,8 @@ Once the data has been synchronized, ETL it into the data lake.  In Glue, re-run
 the `raw_crawler` crawler, then the `ImpressionsPythonETLJob`,
 `ClicksPythonETLJob` jobs, and finally the `dataless-lake-crawler` crawler.
 
+The data in the dataset is from 2019-06-06.
+
 ### Activate the Daily Pipeline
 
 Activate the pipeline.  Navigate to Data Pipeline in the AWS console, and select
@@ -344,6 +346,22 @@ with the ID of a random ad (taken from DynamoDB):
 ```bash
 # https://<base-dns-name>/advertising/traffic/{ad-id}?start=<YYYY-mm-dd>&end=<YYYY-mm-dd>
 curl https://dataless.example.com/advertising/traffic/fc91623b-7c70-42a6-829b-29b0eb3d61de?start=2019-06-06&end=2019-06-06
+```
+
+The result should be something like:
+
+```json
+{
+  "count": 1,
+  "next": "",
+  "days": [
+    {
+      "day": "2019-06-06",
+      "impressions": 2,
+      "clicks": 2
+    }
+  ]
+}
 ```
 
 If Redshift is enabled (see [Advanced](#advanced) below,) the instance should
