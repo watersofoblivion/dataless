@@ -139,7 +139,7 @@ func (controller *Controller) GetAdTraffic(ctx context.Context, evt events.APIGa
 
 	from := time.Now()
 	if fromParam, found := evt.QueryStringParameters["from"]; found {
-		from, err = time.Parse(fromParam, DateFormatDay)
+		from, err = time.Parse(DateFormatDay, fromParam)
 		if err != nil {
 			return rest.Respond(http.StatusBadRequest, err, nil)
 		}
@@ -147,7 +147,7 @@ func (controller *Controller) GetAdTraffic(ctx context.Context, evt events.APIGa
 
 	to := time.Now()
 	if toParam, found := evt.QueryStringParameters["to"]; found {
-		to, err = time.Parse(toParam, DateFormatDay)
+		to, err = time.Parse(DateFormatDay, toParam)
 		if err != nil {
 			return rest.Respond(http.StatusBadRequest, err, nil)
 		}
