@@ -26,25 +26,38 @@ import (
 	"github.com/watersofoblivion/sam/rest"
 )
 
+// Controller is the main controller for the Advertising service.
 type Controller struct {
-	Clock          clockwork.Clock
-	Impressions    *rest.CaptureController
-	Clicks         *rest.CaptureController
-	Metrics        *inst.MetricsPublisher
+	// Clock for mocking.
+	Clock clockwork.Clock
+
+	// Nested controllers to capture impressions and clicks data and publish it to
+	// a Kinesis Firehose.
+	Impressions *rest.CaptureController
+	Clicks      *rest.CaptureController
+
+	// Publisher to push metrics from the real-time apps into CloudWatch.
+	Metrics *inst.MetricsPublisher
+
+	// The DynamoDB table holding Ad traffic information.
 	AdTrafficTable AdTrafficTable
 }
 
+// Environment variables
 const (
 	EnvVarImpressionsDeliveryStreamName string = "IMPRESSIONS_DELIVERY_STREAM_NAME"
 	EnvVarClicksDeliveryStreamName      string = "CLICKS_DELIVERY_STREAM_NAME"
 	EnvVarAdTrafficTableName            string = "AD_TRAFFIC_TABLE_NAME"
 )
 
+// Batch keys for data ingestion
 const (
 	BatchKeyImpressions string = "impressions"
 	BatchKeyClicks      string = "clicks"
 )
 
+// EnvController constructs a controller from environment variables.  This is
+// the constructor to use in the Lambda executable.
 func EnvController() *Controller {
 	sess := session.New()
 
@@ -66,6 +79,7 @@ func EnvController() *Controller {
 	return NewController(impressions, clicks, metrics, adTraffic)
 }
 
+// NewController constructs a controller from the injected dependencies.
 func NewController(impressions, clicks *rest.CaptureController, metrics *inst.MetricsPublisher, adTraffic AdTrafficTable) *Controller {
 	return &Controller{
 		Clock:          clockwork.NewRealClock(),
@@ -76,6 +90,9 @@ func NewController(impressions, clicks *rest.CaptureController, metrics *inst.Me
 	}
 }
 
+// MockController constructs a controller with mock dependencies.  The
+// controller and the mocks are passed to the callback.  After the callback
+// returns, expectations are automatically asserted on the mocks.
 func MockedController(t *testing.T, impressionsDeliveryStreamName, clicksDeliveryStreamName string, fn func(controller *Controller, clock clockwork.Clock, fh *amzmock.Firehose, adTraffic *MockAdTrafficTable)) {
 	adTraffic := new(MockAdTrafficTable)
 	fh := new(amzmock.Firehose)
@@ -92,15 +109,21 @@ func MockedController(t *testing.T, impressionsDeliveryStreamName, clicksDeliver
 	adTraffic.AssertExpectations(t)
 }
 
+// CaptureImpressions writes impression events to a Kinesis Firehose by
+// delegating to the Impressions CaptureController.
 func (controller *Controller) CaptureImpressions(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	return controller.Impressions.Capture(ctx, req)
 }
 
+// CaptureClicks writes click events to a Kinesis Firehose by delegating to the
+// Clicks CaptureController.
 func (controller *Controller) CaptureClicks(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	return controller.Clicks.Capture(ctx, req)
 }
 
-func (controller *Controller) PublishToCloudWatch(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEvent) (events.KinesisAnalyticsOutputDeliveryResponse, error) {
+// PublishToCloudWatc captures events from the Kinesis Analytics real-time
+// applications and relays them into CloudWatch metrics.
+func (controller *Controller) PublishToCloudWatch(ctx context.Context, input events.KinesisAnalyticsOutputDeliveryEvent) events.KinesisAnalyticsOutputDeliveryResponse {
 	results := map[string]string{}
 
 	for _, record := range input.Records {
@@ -128,9 +151,15 @@ func (controller *Controller) PublishToCloudWatch(ctx context.Context, input eve
 		})
 	}
 
-	return resp, nil
+	return resp
 }
 
+// GetAdTraffic queries the Ad Traffic DynamoDB table for summary information
+// about a particular Ad over a given time range.
+//
+// The time range can be controlled with the "start" and "end" query parameters.
+// Results are paged, and paging can be controlled by the "page" and "limit"
+// query parameters.
 func (controller *Controller) GetAdTraffic(ctx context.Context, evt events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	ad, err := uuid.Parse(evt.PathParameters["ad-id"])
 	if err != nil {

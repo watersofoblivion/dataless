@@ -13,10 +13,19 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+// DateFormatDay is the format for dates in the table.
 const DateFormatDay = "2006-01-02"
 
+// An AdTrafficTable is a table containing summary information about traffic to
+// ads.
 type AdTrafficTable interface {
-	Days(ctx context.Context, ad uuid.UUID, from, to time.Time, page map[string]*dynamodb.AttributeValue, limit int64) ([]*AdDay, map[string]*dynamodb.AttributeValue, error)
+	// Days queries the table and fetches a page of daily summaries between
+	// "start" and "end".  The "page" and "limit" arguments should control paging.
+	//
+	// The returned values should be the zero or more days in the page of results,
+	// and the key to fetch the next page.  If there is a problem fetching the
+	// summaries start the table, this method should return an error.
+	Days(ctx context.Context, ad uuid.UUID, start, end time.Time, page map[string]*dynamodb.AttributeValue, limit int64) ([]*AdDay, map[string]*dynamodb.AttributeValue, error)
 }
 
 type dynamoAdTrafficTable struct {
@@ -24,6 +33,7 @@ type dynamoAdTrafficTable struct {
 	ddb       dynamodbiface.DynamoDBAPI
 }
 
+// NewAdTrafficTable constructs an AdTrafficTable backed by DynamoDB.
 func NewAdTrafficTable(tableName string, ddb dynamodbiface.DynamoDBAPI) AdTrafficTable {
 	return &dynamoAdTrafficTable{
 		tableName: tableName,
@@ -31,11 +41,12 @@ func NewAdTrafficTable(tableName string, ddb dynamodbiface.DynamoDBAPI) AdTraffi
 	}
 }
 
-func (table *dynamoAdTrafficTable) Days(ctx context.Context, ad uuid.UUID, from, to time.Time, page map[string]*dynamodb.AttributeValue, limit int64) ([]*AdDay, map[string]*dynamodb.AttributeValue, error) {
+// Days implements the AdTrafficTable interface by querying the DynamoDB table.
+func (table *dynamoAdTrafficTable) Days(ctx context.Context, ad uuid.UUID, start, end time.Time, page map[string]*dynamodb.AttributeValue, limit int64) ([]*AdDay, map[string]*dynamodb.AttributeValue, error) {
 	keyCondition := expression.Key("ad_id").Equal(expression.Value(ad.String())).
 		And(expression.Key("day").Between(
-			expression.Value(from.Format(DateFormatDay)),
-			expression.Value(to.Format(DateFormatDay))))
+			expression.Value(start.Format(DateFormatDay)),
+			expression.Value(end.Format(DateFormatDay))))
 
 	expr, err := expression.NewBuilder().
 		WithKeyCondition(keyCondition).
@@ -71,12 +82,14 @@ func (table *dynamoAdTrafficTable) Days(ctx context.Context, ad uuid.UUID, from,
 	return items, output.LastEvaluatedKey, nil
 }
 
+// MockAdTrafficTable is a mock for testing.
 type MockAdTrafficTable struct {
 	mock.Mock
 }
 
-func (mock *MockAdTrafficTable) Days(ctx context.Context, ad uuid.UUID, from, to time.Time, page map[string]*dynamodb.AttributeValue, limit int64) (days []*AdDay, next map[string]*dynamodb.AttributeValue, err error) {
-	args := mock.Called(ctx, ad, from, to, page, limit)
+// Days implements the AdTrafficTable interface.
+func (mock *MockAdTrafficTable) Days(ctx context.Context, ad uuid.UUID, start, end time.Time, page map[string]*dynamodb.AttributeValue, limit int64) (days []*AdDay, next map[string]*dynamodb.AttributeValue, err error) {
+	args := mock.Called(ctx, ad, start, end, page, limit)
 
 	if daysArg := args.Get(0); daysArg != nil {
 		days = daysArg.([]*AdDay)
