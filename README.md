@@ -4,21 +4,21 @@ Dataless
 A template hybrid batch/real-time AWS::Serverless data warehouse.
 
 * [Quickstart](#quickstart)
-* [Architecture](#architecture)
+* [Overview](#overview)
 * [Self-Guided Demo](#self-guided-demo)
-* [Configuration](#configuration)
 * [Advanced](#advanced)
+* [Configuration](#configuration)
 
 Quickstart
 ===
 
-This will step you through the initial deploy of the warehouse.  We will fork
-the repo, deploy the CI/CD pipeline, configure no parameters, and push.  While
-the warehouse is deploying, you can read about Dataless's
-[Architecture](#architecture).
+This will step you through the initial deploy of the warehouse.  The deploy is
+fully automated, but can take up to 30 minutes depending on configuration.
+While it is deploying, you can read an [overview](#overview) of Dataless.
 
 **Important:** This template *must* be deployed in `us-east-1` so that ACM
-can issue valid certificates for CloudFront.
+can issue valid certificates for CloudFront.  Be sure to set the appropriate
+environment variables in your terminal:
 
 ```bash
 export AWS_REGION="us-east-1"
@@ -34,24 +34,6 @@ git clone https://github.com/<my-username>/dataless
 cd dataless
 ```
 
-## Deploy CI/CD Pipeline
-
-Deploy the build pipeline CloudFormation template.  Wait for the template to
-completely deploy before continuing.
-
-```bash
-# A unique prefix for created stacks.
-STACK_PREFIX="dataless"
-
-# Create the stack
-aws cloudformation create-stack \
-  --stack-name ${STACK_PREFIX} \
-  --template-body "$(cat build.yaml)" \
-  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
-```
-
-**Recommended**: [Enable GitHub](#github)
-
 ## Configure
 
 The app is configured via a `config/<branch-name>.json` file.  By default, no
@@ -66,13 +48,31 @@ like:
 
 **Recommended**: [Set Deployment Preference](#safe-lambda-deploys-and-api-gateway-stage), [Enable Route53](#route53)
 
+## Deploy CI/CD Pipeline
+
+Deploy the build pipeline CloudFormation template with the AWS CLI.  Wait for
+the template to completely deploy before continuing.
+
+```bash
+# A unique prefix for created stacks.
+STACK_PREFIX="dataless"
+
+# Create the stack
+aws cloudformation create-stack \
+  --stack-name ${STACK_PREFIX} \
+  --template-body "$(cat build.yaml)" \
+  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
+```
+
+**Recommended**: [Enable GitHub](#github)
+
 ## Push
 
-Now push to deploy!
+Push code to your repo to deploy.
 
-If using CodeCommit, perform the initial push.  The repo URL is in the template
-outputs and can be fetched as below.  If using GitHub, the pipeline will run
-automatically.
+If using GitHub, the initial pipeline run will trigger automatically.  If using
+CodeCommit, you must perform the initial push.  The repo URL is in the template
+outputs and can be fetched as below.  
 
 ```bash
 # Push this repository to the created CodeCommit repo.  It may take a minute or
@@ -85,16 +85,23 @@ git remote add origin ${REPO_URL}
 git push origin master
 ```
 
-Architecture
+Overview
 ===
+
+Dataless is a template hybrid batch/real-time data warehouse in AWS::Serverless.
+
+* *Data Warehouse*: Captures, stores, processes, serves, and visualizes data.
+* *Hybrid Batch/Real-Time*: The same data is processed in real-time and batch.
+* *AWS::Serverless*: All AWS, all the time, written in CloudFormation.
+* *Template*: A working example to study and a starting point for larger things.
 
 The warehouse is designed to capture real-time tracking data and use it to serve
 three customers: the business as a whole, engineering specifically, and the end
 customer that generated the data.  It has additional hook points for scheduled
 data ingestion.
 
-It is architected on a "data in, information out" philosophy, with instrumented
-applications pushing write-only raw data into the warehouse and fetching
+It is architected on a "data in, information out" philosophy, with data
+generators pushing write-only raw data into the warehouse and users fetching
 read-only derived information from it.  It is implemented with a strict "buy,
 don't build" approach, making a conscious decision to use purely AWS services
 continuously delivered with CloudFormation.
@@ -104,26 +111,31 @@ component, and the real-time component.  The example dataset is a toy
 online-advertising dataset of ad impressions and clicks.  Data can be generated
 by an ad-hoc tool.
 
+* [Main Pipe](#main-pipe)
+* [Batch](#batch)
+* [Real-Time](#real-time)
+* [Misc.](#misc)
+
 Main Pipe
 ---
 
 The main pipe's purpose is to capture raw data, persist it to long-term storage
-as quickly and reliably as possible, and ETL it into the data lake for further
-processing.
+as quickly and reliably as possible, ETL it into the data lake, and make it
+available for further processing.
 
-Impression and click data is received by a pair of beacon endpoints in an API
-Gateway.  This is published to a Kinesis Firehose by a pair of Lambda functions
-and persisted to S3 raw as GZipped JSON.
+Impression and click data is received by beacon endpoints in an API Gateway.
+This is published to Kinesis Firehose by Lambda functions and persisted to S3
+raw as GZipped JSON.
 
-A daily ETL has been created with Glue.  A crawler and a pair of ETL jobs have
-been configured.  The crawler scans the raw data and makes it available via the
+A daily ETL has been created with Glue.  A crawler and ETL jobs have been
+configured.  The crawler scans the raw data and makes it available via the
 Glue Catalog.  The ETL jobs -one per datatype- pick up the raw data and write it
 back down into Hive-partitioned ORC tables in S3, and make those tables
 available via the Glue Catalog.
 
 Once the data is in the Glue Catalog it is automatically available in Athena and
 QuickSight to serve business customers and throughout the AWS data toolchain for
-further processing.
+processing.
 
 Batch
 ---
@@ -134,32 +146,30 @@ business and end customers.  A batch pipeline has been built with Data Pipeline.
 ### Hive
 
 The Hive portion of the pipeline does two things.  First, it materializes an
-advertising view managed by Glue.  This table is available to business
-customers.  Second, it derives per-ad traffic data by day and populates a
-DynamoDB table. An endpoint has been set up for services to query this data to
-serve end customers.
+advertising view (managed by Glue) and makes it available to business customers.
+Second, it derives per-ad traffic data by day, populates a DynamoDB table, and
+serves this data to end customers via API Gateway.
 
 ### Redshift
 
-**Note**: To get this functionality, you must enable Redshift.  See
-[Advanced](#advanced) below.
+The pipeline also moves advertising data into Redshift.  (**Note**: To get this
+functionality, you must enable Redshift.  See [Advanced](#advanced) below.)
 
-The pipeline also moves advertising data into Redshift.  It first exports the
-ORC data in Glue to CSV and loads it into the cluster.  Then, it loads all the
-data in Glue into the cluster directly using Redshift Spectrum.
+It first exports the ORC data in Glue to CSV and loads it into the cluster.
+Then, it loads all the data in Glue into the cluster directly using Redshift
+Spectrum.
 
 Real-Time
 ---
 
 The real-time component sits on top of the real-time capture infrastructure and
-serves primarily engineering.  It is designed to allow engineers to rapidly
-iterate on features based on user behavior, using a "Look, Ship, Look."
-technique.
+serves primarily engineering.  It is designed to allow engineers to iterate on
+user behavior in real-time.
 
-A pair of Kinesis Analytics apps read the real-time capture firehoses.  Each app
-counts events by minute and outputs them to a single Lambda function.  The
-Lambda then publishes the metrics to CloudWatch.  A CloudWatch dashboard has
-been built showing impressions, clicks, and clickthrough rate.  
+Kinesis Analytics apps read the real-time capture Firehoses.  They count events
+by minute and output them to a single Lambda function which then publishes the
+metrics to CloudWatch.  A CloudWatch dashboard has been built showing
+impressions, clicks, and clickthrough rate.  
 
 Misc.
 ---
@@ -182,14 +192,23 @@ The self-guided demo will take you through the basic operations of the data
 warehouse.  We will generate some load, enable the real-time analytics, ETL the
 data into the Glue catalog, and finally run the batch pipeline.
 
-The demo should take about 2 hours to complete, mostly waiting on automation.
+In a production setup, these demo tasks would be scheduled or triggered instead
+of manual.  They are not scheduled in the repo for demonstration and cost-saving
+purposes.  Most steps will be about a minute of clicking in the console,
+followed by a possibly long wait for automation.
+
+* [Generate Load](#generate-load)
+* [Real-Time](#real-time-1)
+* [ETL](#etl)
+* [Batch Pipeline](#batch-pipeline)
 
 Generate Load
 ---
 
 ### Build the Tool
 
-To generate load, first build the ad-hoc `load-generator` tool.
+To generate load, first build the ad-hoc `load-generator` tool.  It is written
+in [Go](https://golang.org), so you will need the `go` tool to build it.
 
 ```bash
 go build -o ./loadgen ./load-generator
@@ -199,7 +218,7 @@ go build -o ./loadgen ./load-generator
 
 In `load-generator/config.yaml`, set your base URL.  If you are using DNS (see
 [Configuration](#configuration) below,) the base URL will be
-`https://<base-dns-name/advertising` (for example,
+`https://<base-dns-name>/advertising` (for example,
 `https://dataless.example.com/advertising`.)
 
 If you are not using DNS, the config is set up to point to the API Gateway
@@ -211,11 +230,12 @@ set:
 * `STAGE` should be `Prod`.
 
 All other parameters are pre-tuned to generate a steady load within the default
-scaling limits.
+scaling limits.  Do not adjust them.
 
 ### Run the Tool
 
-Finally, in a separate terminal start the load generator:
+Finally, in a separate terminal start the load generator and pass in the
+configuration file:
 
 ```bash
 # With DNS
@@ -247,6 +267,10 @@ For each of the "RealTimeImpressions" and "RealTimeClicks" applications, select
 the applications, click "Actions", and select "Run Application".  Each
 application will take 60-90 seconds to start.
 
+**Note**: Kinesis Stream Analytics is $0.11/hour/app and does not have a free
+tier.  Be sure to stop the applications when done to avoid any additional
+charges.
+
 ### Verify: Check CloudWatch
 
 Within a minute or two of the applications being started, the graph on the
@@ -264,8 +288,7 @@ metrics in the `OpsDashboard` once data has been flushed.
 
 To ETL the data into the data lake, we will use Glue.  We will crawl the raw
 data, ETL it into the lake with PySpark, and finally crawl the ETL-ed tables to
-make the data available in Athena.  In a production scenario, this process would
-be scheduled on a nightly cron.  For the demo, we will run the jobs by hand.
+make the data available in Athena.
 
 ### Run the Raw Data Crawler
 
@@ -341,7 +364,7 @@ The pipeline will take approximately an hour to run.
 Once the pipeline has completed, the `advertising.advertising` table in Athena
 should be populated with data, and the `AdTrafficTable` DynamoDB table should
 be populated with ad traffic data.  You can now cURL the ad traffic endpoint
-with the ID of a random ad (taken from DynamoDB):
+with the ID of a random ad (taken manually from DynamoDB):
 
 ```bash
 # https://<base-dns-name>/advertising/traffic/{ad-id}?start=<YYYY-mm-dd>&end=<YYYY-mm-dd>
@@ -389,6 +412,10 @@ Configuration
 ===
 
 The template supports multiple configuration options.
+
+* [Safe Lambda Deploys and API Gateway State](#safe-lambda-deploys-and-api-gateway-stage)
+* [GitHub](#github)
+* [Route53](#route53)
 
 Safe Lambda Deploys and API Gateway Stage
 ---
