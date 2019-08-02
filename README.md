@@ -503,15 +503,15 @@ enabled by default, as it incurs ongoing costs.
   * [SSH Access](#ssh-access)
   * [Long-Running Script Instance](#long-running-script-instance)
   * [Long-Running EMR Cluster](#long-running-emr-cluster)
-  * [Redshift](#redshift)
+  * [Redshift](#redshift-1)
 
 Deploy
 ---
 
-Enabling it requires a two-deploy rollout since it alters the structure of the
-pipeline.  (Note: If the pipeline has not yet been activated, the resources can
-be toggled ad libitum.  Once the pipeline has been activated, the multi-deploy
-rollout is required.)
+Enabling advanced functionality requires a two-deploy rollout since it alters
+the structure of the data pipeline.  (Note: If the pipeline has not yet been
+activated, the resources can be toggled ad libitum.  Once the pipeline has been
+activated, the multi-deploy rollout is required.)
 
 To enable or disable advanced functionality:
 
