@@ -1,7 +1,10 @@
 Dataless
 ===
 
-A template hybrid batch/real-time AWS::Serverless data warehouse.
+Dataless is an toy data product in [AWS::Serverless](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/).
+
+If you want to deploy and use Dataless, start with the Quickstart.  Otherwise,
+jump ahead to the Overview.
 
 * [Quickstart](#quickstart)
 * [Overview](#overview)
@@ -16,14 +19,18 @@ This will step you through the initial deploy of the warehouse.  The deploy is
 fully automated, but can take up to 30 minutes depending on configuration.
 While it is deploying, you can read an [overview](#overview) of Dataless.
 
-**Important:** This template *must* be deployed in `us-east-1` so that ACM
-can issue valid certificates for CloudFront.  Be sure to set the appropriate
-environment variables in your terminal:
+**Important:** This template *must* be deployed in `us-east-1` if DNS is
+enabled.  Be sure to set the appropriate environment variables in your terminal:
 
 ```bash
 export AWS_REGION="us-east-1"
 export AWS_DEFAULT_REGION="us-east-1"
 ```
+
+* [Fork and Clone](#fork-and-clone)
+* [Configure](#configure)
+* [Deploy CI/CD Pipeline](#deploy-ci-cd-pipeline)
+* [Push](#push)
 
 ## Fork and Clone
 
@@ -50,7 +57,7 @@ like:
 
 ## Deploy CI/CD Pipeline
 
-Deploy the build pipeline CloudFormation template with the AWS CLI.  Wait for
+Deploy the build pipeline CloudFormation template using the AWS CLI.  Wait for
 the template to completely deploy before continuing.
 
 ```bash
@@ -88,88 +95,77 @@ git push origin master
 Overview
 ===
 
-Dataless is a template hybrid batch/real-time data warehouse in AWS::Serverless.
+Dataless is a toy data product in AWS::Serverless.  It captures real-time user
+tracking data and uses it to serve both the end customer that generated the data
+and the business offering the service.
 
-* *Data Warehouse*: Captures, stores, processes, serves, and visualizes data.
-* *Hybrid Batch/Real-Time*: The same data is processed in real-time and batch.
-* *AWS::Serverless*: All AWS, all the time, written in CloudFormation.
-* *Template*: A working example to study and a starting point for larger things.
+It is designed to be "data in, information out": raw data is written to the
+warehouse and derived information is served from it.  It is implemented with a
+"buy, don't build" approach, using strictly AWS services configured with
+CloudFormation.
 
-The warehouse is designed to capture real-time tracking data and use it to serve
-three customers: the business as a whole, engineering specifically, and the end
-customer that generated the data.  It has additional hook points for scheduled
-data ingestion.
+The example product used is a simplistic online advertising service: ad
+impressions and clicks are captured and clickthrough information is served.
+Dataless is intended as a reference implementation focusing on infrastructure
+and as a template for further development, so the product has been kept
+intentionally simple.
 
-It is architected on a "data in, information out" philosophy, with data
-generators pushing write-only raw data into the warehouse and users fetching
-read-only derived information from it.  It is implemented with a strict "buy,
-don't build" approach, making a conscious decision to use purely AWS services
-continuously delivered with CloudFormation.
+Architecturally, there are three main components to the warehouse: the capture
+component, the batch component, and the real-time component.  
 
-There are three main components to the warehouse: the main pipe, the batch
-component, and the real-time component.  The example dataset is a toy
-online-advertising dataset of ad impressions and clicks.  Data can be generated
-by an ad-hoc tool.
-
-* [Main Pipe](#main-pipe)
+* [Capture](#capture)
 * [Batch](#batch)
 * [Real-Time](#real-time)
 * [Misc.](#misc)
 
-Main Pipe
+Capture
 ---
 
-The main pipe's purpose is to capture raw data, persist it to long-term storage
-as quickly and reliably as possible, ETL it into the data lake, and make it
-available for further processing.
+The capture component's purpose is to capture raw data, persist it to long-term
+storage as quickly and reliably as possible, ETL it into the data lake, and make
+it available for further processing.
 
 Impression and click data is received by beacon endpoints in an API Gateway.
-This is published to Kinesis Firehose by Lambda functions and persisted to S3
-raw as GZipped JSON.
+The endpoints publish the data to Kinesis Firehose, which writes it to S3 in
+raw format.
 
-A daily ETL has been created with Glue.  A crawler and ETL jobs have been
-configured.  The crawler scans the raw data and makes it available via the
-Glue Catalog.  The ETL jobs -one per datatype- pick up the raw data and write it
-back down into Hive-partitioned ORC tables in S3, and make those tables
-available via the Glue Catalog.
+A daily ETL has been created with Glue.  A crawler scans the raw data and makes
+it available as Glue tables.  ETL jobs -one per datatype- rewrite the raw data
+into optimized Glue tables.
 
-Once the data is in the Glue Catalog it is automatically available in Athena and
-QuickSight to serve business customers and throughout the AWS data toolchain for
-processing.
+Once the data is ETL-ed into Glue, it is universally available.  All data in
+Glue is immediately usable in Athena, QuickSight, Redshift Spectrum, and EMR.
 
 Batch
 ---
 
-The batch component sits on top of the data lake and primarily serves the
-business and end customers.  A batch pipeline has been built with Data Pipeline.
+The batch component both provides internal business customers with periodic
+reporting, and provides end customers with analytics about their ads.
 
-### Hive
+It is built on top of the data lake using AWS Data Pipeline.  The pipeline uses
+EMR (and optionally Redshift) to process data.
 
-The Hive portion of the pipeline does two things.  First, it materializes an
-advertising view (managed by Glue) and makes it available to business customers.
-Second, it derives per-ad traffic data by day, populates a DynamoDB table, and
-serves this data to end customers via API Gateway.
+### EMR
+
+The EMR portion of the pipeline primarily makes use of Hive.  First, it uses
+Hive to materialize a view in Glue for business customers.
+
+Next, it uses Hive to derive ad traffic data for end customers.  The data is
+loaded into a DynamoDB table and is served to customers via API Gateway.
 
 ### Redshift
 
-The pipeline also moves advertising data into Redshift.  (**Note**: To get this
-functionality, you must enable Redshift.  See [Advanced](#advanced) below.)
-
-It first exports the ORC data in Glue to CSV and loads it into the cluster.
-Then, it loads all the data in Glue into the cluster directly using Redshift
-Spectrum.
+If Redshift is enabled (see [Advanced](#advanced) below,) the pipeline also
+loads the data into Redshift.  It uses Redshift Spectrum to load all of the Glue
+data onto the cluster, and loads the results of earlier Hive queries directly
+onto the cluster from EMR.
 
 Real-Time
 ---
 
-The real-time component sits on top of the real-time capture infrastructure and
-serves primarily engineering.  It is designed to allow engineers to iterate on
-user behavior in real-time.
-
-Kinesis Analytics apps read the real-time capture Firehoses.  They count events
-by minute and output them to a single Lambda function which then publishes the
-metrics to CloudWatch.  A CloudWatch dashboard has been built showing
-impressions, clicks, and clickthrough rate.  
+The real-time component processes user data in real time.  It is built on the
+capture infrastructure and uses Kinesis Analytics to build a CloudWatch
+dashboard showing global impressions, clicks, and clickthrough rate.  
 
 Misc.
 ---
@@ -177,25 +173,25 @@ Misc.
 An CloudWatch dashboard provides operational visibility into the running of the
 warehouse.
 
-A handful of resources are retained on template deletion, namely the buckets
-containing the data lake and the source code, and the source code repository if
-CodeCommit was used.
-
 Security has been designed into the warehouse.  All data is encrypted in flight
 and at rest and IAM roles have minimal permissions.  (Notable exceptions: EMR
 clusters and script instances are unencrypted, and the API is unauthenticated.)
+
+A handful of resources are retained on template deletion, namely the buckets
+containing the data lake and the source code, and the source code repository if
+CodeCommit was used.
 
 Self-Guided Demo
 ===
 
 The self-guided demo will take you through the basic operations of the data
-warehouse.  We will generate some load, enable the real-time analytics, ETL the
-data into the Glue catalog, and finally run the batch pipeline.
+warehouse.  You will generate some load, enable real-time analytics, ETL data
+into Glue, and run the batch pipeline.
 
 In a production setup, these demo tasks would be scheduled or triggered instead
-of manual.  They are not scheduled in the repo for demonstration and cost-saving
-purposes.  Most steps will be about a minute of clicking in the console,
-followed by a possibly long wait for automation.
+of manual.  They are not for demonstration and cost-saving purposes.  Most steps
+will be about a minute of clicking in the console, followed by a (possibly long)
+wait for automation to complete.
 
 * [Generate Load](#generate-load)
 * [Real-Time](#real-time-1)
@@ -226,7 +222,7 @@ instance of the advertising service.  There are three environment variables to
 set:
 
 * `API_ID` should be set to the `API` output of the nested `AdvertisingService` stack
-* `REGION` should be `us-east-1`
+* `REGION` should be the region the stack is deployed in.
 * `STAGE` should be `Prod`.
 
 All other parameters are pre-tuned to generate a steady load within the default
@@ -276,8 +272,8 @@ charges.
 Within a minute or two of the applications being started, the graph on the
 `RealTimeAdvertisingDashboard` CloudWatch dashboard should be populated with
 impressions, clicks, and a clickthrough rate.  If all is well, the clickthrough
-rate should be 30%, the `ClickthroughProbability` value set in
-`load-generator/config.yaml`.
+rate should be 30% (the `ClickthroughProbability` value set in
+`load-generator/config.yaml`.)
 
 ETL
 ---
@@ -286,9 +282,9 @@ ETL
 before ETL-ing data to ensure Kinesis Firehose has flushed to S3.  You will see
 metrics in the `OpsDashboard` once data has been flushed.
 
-To ETL the data into the data lake, we will use Glue.  We will crawl the raw
-data, ETL it into the lake with PySpark, and finally crawl the ETL-ed tables to
-make the data available in Athena.
+To ETL the data into the data lake, use Glue.  You will crawl the raw data, ETL
+it into the lake with PySpark, and finally crawl the ETL-ed tables to make the
+data available in Athena.
 
 ### Run the Raw Data Crawler
 
@@ -297,22 +293,22 @@ Select the `raw_crawler` crawler and click "Run Crawler".
 
 ### Run the ETL Jobs
 
-Once the crawler has completed, ETL the discovered raw data into the lake using
-the supplied jobs.  From the left, select "Jobs".  For each of the
+Once the crawler has completed, ETL the crawled raw data into the lake using the
+supplied jobs.  From the left, select "Jobs".  For each of the
 `ImpressionsPythonETLJob` and `ClicksPythonETLJob` jobs, select the job, click
 "Action", and select "Run Job".  On the pop-up, click "Run Job".  (Note: the
 jobs will take 15-30 minutes to start while the on-demand Spark cluster spins
-up the first time.)
+up the first time.)  Alternatively, run the `ImpressionsScalaETLJob` and
+`ClicksScalaETLJob` jobs.
 
-Alternatively, run the `ImpressionsScalaETLJob` and `ClicksScalaETLJob` jobs.
-The Python and Scala jobs are equivalent.  If both sets of jobs are run, the
-data will be double ETL-ed into the lake.
+**Note**: The Python and Scala jobs are equivalent.  If both sets of jobs are
+run, the data will be double ETL-ed into the lake.
 
 ### Create and Run the Lake Crawler
 
-Finally, we need to crawl the loaded tables to make the data available in
-Athena.  Since CloudFormation does not yet support crawling existing tables, a
-crawler must be manually created using the wizard:
+Finally, crawl the loaded tables to make the data available in Athena.  Since
+CloudFormation does not yet support crawling existing tables, a crawler must be
+manually created using the wizard:
 
 * In Glue, select "Crawlers" from the left.  
 * Click "Add Crawler", give it the name "dataless-lake-crawler", and click "Next".
